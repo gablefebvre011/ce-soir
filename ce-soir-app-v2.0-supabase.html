@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>CE SOIR — Carte live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;0,900;1,600;1,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  :root{
+    --bg:#060a14;
+    --bg2:#0a0f1e;
+    --panel:#0d1526;
+    --panel2:#111a2e;
+    --line:rgba(255,255,255,.08);
+    --text:#f4f5f9;
+    --muted:#8b93a8;
+    --muted2:#5c6479;
+    --magenta:#0084ff;
+    --magenta2:#4fc3ff;
+    --violet:#0047ff;
+    --violet2:#5eb8ff;
+    --online:#c6ff2e;
+    --flame:#ff5e3a;
+    --flame2:#ffb020;
+    --recent:#2dd4bf;
+    --offline:#f4436c;
+    --gold:#4fc3ff;
+    --radius:20px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Inter',system-ui,sans-serif;
+    background:#000;
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:0;
+  }
+  .display{font-family:'Playfair Display',Georgia,serif;}
+
+  /* ===== App shell ===== */
+  .app{
+    position:relative;
+    width:430px;
+    max-width:100vw;
+    height:100vh;
+    max-height:932px;
+    background:var(--bg);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    box-shadow:0 0 100px rgba(0,140,255,.4);
+  }
+  @media (min-width:431px){
+    .app{ border-radius:36px; height:900px; margin:16px; border:1px solid rgba(255,255,255,.06); }
+  }
+
+  /* ===== Top bar ===== */
+  .topbar{
+    position:absolute; top:0; left:0; right:0; z-index:950;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 18px 10px;
+    background:linear-gradient(180deg, rgba(4,6,12,.92) 0%, rgba(4,6,12,.55) 70%, transparent 100%);
+  }
+  .icon-btn{
+    width:38px; height:38px; border-radius:50%;
+    background:rgba(255,255,255,.06);
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--text); cursor:pointer;
+  }
+  .icon-btn svg{width:18px;height:18px;}
+  .brand{
+    display:flex; align-items:center; gap:6px;
+    font-family:'Playfair Display'; font-style:italic; font-weight:800; font-size:21px; letter-spacing:.3px;
+  }
+  .brand .heart{ color:var(--magenta); font-size:14px; transform:translateY(-8px); }
+
+  /* ===== Views ===== */
+  .view{ position:absolute; inset:0; display:none; flex-direction:column; }
+  .view.active{ display:flex; }
+
+  /* ===== MAP VIEW ===== */
+  #view-carte{ background:#060a14; }
+  .map-wrap{ position:relative; flex:1; overflow:hidden; }
+  #leafletMap{ position:absolute; inset:0; background:#060a14; }
+  .leaflet-container{ background:#060a14 !important; font-family:'Inter',sans-serif !important; }
+  .map-vignette{ position:absolute; inset:0; background:radial-gradient(70% 55% at 50% 45%, transparent 55%, rgba(2,4,10,.4) 100%); pointer-events:none; z-index:450; }
+  .leaflet-control-attribution{
+    background:rgba(6,9,18,.75) !important; color:var(--muted2) !important; font-size:8.5px !important;
+    border-radius:6px !important; padding:1px 6px !important;
+  }
+  .leaflet-control-attribution a{ color:var(--muted) !important; }
+  .leaflet-control-zoom{ display:none; }
+
+  /* --- "Night Earth" style: teinte les tuiles en lumières dorées sur fond sombre --- */
+  .leaflet-tile-pane{
+    filter: hue-rotate(155deg) saturate(1.6) brightness(1.55) contrast(1.05);
+  }
+  .map-wrap::after{
+    content:'';
+    position:absolute; inset:0; pointer-events:none; z-index:440;
+    background:
+      radial-gradient(ellipse 70% 55% at 50% 42%, rgba(0,160,255,.28), transparent 62%),
+      radial-gradient(ellipse 90% 70% at 50% 55%, rgba(60,190,255,.14), transparent 72%);
+    mix-blend-mode:screen;
+    animation: flashPulse 3.2s ease-in-out infinite;
+  }
+  @keyframes flashPulse{ 0%,100%{ opacity:.7; } 50%{ opacity:1; } }
+
+  /* --- custom markers drawn inside leaflet divIcons --- */
+  .lf-icon-wrap{ background:none !important; border:none !important; }
+  .lf-bubble{
+    width:50px; height:50px; border-radius:50%; position:relative; cursor:pointer;
+    animation:float 6s ease-in-out infinite;
+    filter:drop-shadow(0 3px 10px rgba(0,0,0,.55));
+    transition:transform .32s cubic-bezier(.34,1.56,.64,1), filter .32s ease;
+  }
+  .lf-bubble.active{
+    transform:scale(1.75);
+    animation-play-state:paused;
+    filter:drop-shadow(0 6px 22px rgba(0,0,0,.7));
+    z-index:1000;
+  }
+  .lf-bubble.active img{ box-shadow:0 0 0 4px rgba(0,140,255,.55), 0 0 30px rgba(0,170,255,.9); }
+  .lf-bubble img{
+    width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;
+    border:2.5px solid var(--offline);
+  }
+  .lf-bubble.online img{ border-color:var(--online); box-shadow:0 0 22px rgba(198,255,46,.75); }
+  .lf-bubble.recent img{ border-color:var(--recent); box-shadow:0 0 18px rgba(45,212,191,.6); }
+  /* ===== Mode CE SOIR / profil chaud ===== */
+  .lf-bubble.hot::before{ content:''; position:absolute; inset:-7px; z-index:0; border-radius:50%; background:conic-gradient(var(--flame),var(--flame2),#ff7a18,var(--flame)); -webkit-mask:radial-gradient(circle,transparent 62%,#000 64%,#000 75%,transparent 77%); mask:radial-gradient(circle,transparent 62%,#000 64%,#000 75%,transparent 77%); animation:hotSpin 2.2s linear infinite,hotPulse 1.5s ease-in-out infinite; filter:drop-shadow(0 0 8px rgba(255,94,58,.8)); pointer-events:none; }
+  .lf-bubble.hot img{ position:relative; z-index:1; border-color:var(--flame); box-shadow:0 0 10px rgba(255,94,58,.55),0 0 24px rgba(255,176,32,.45); }
+  .lf-bubble.hot .lf-dot{ z-index:3; }
+  .hot-badge{ position:absolute; right:-5px; top:-8px; z-index:4; width:19px; height:19px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; background:linear-gradient(135deg,var(--flame),var(--flame2)); border:2px solid var(--bg); box-shadow:0 0 10px rgba(255,94,58,.7); }
+  @keyframes hotSpin{to{transform:rotate(360deg)}}
+  @keyframes hotPulse{0%,100%{opacity:.85;transform:scale(.98)}50%{opacity:1;transform:scale(1.04)}}
+  .lf-dot{
+    position:absolute; bottom:1px; right:1px; width:11px; height:11px; border-radius:50%;
+    background:var(--offline); border:2px solid var(--bg);
+  }
+  .lf-bubble.online .lf-dot{ background:var(--online); box-shadow:0 0 8px var(--online); }
+  .lf-bubble.recent .lf-dot{ background:var(--recent); }
+  @keyframes float{ 0%,100%{margin-top:0px;} 50%{margin-top:-6px;} }
+
+  .lf-me{
+    width:16px; height:16px; border-radius:50%;
+    background:var(--violet2); box-shadow:0 0 0 5px rgba(0,140,255,.35), 0 0 28px rgba(0,170,255,.9);
+    position:relative;
+  }
+  .lf-me.hot{ box-shadow:0 0 0 5px rgba(255,94,58,.28),0 0 28px rgba(255,94,58,.9); }
+  .lf-me.hot::before{ content:'🔥'; position:absolute; inset:-7px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:9px; background:conic-gradient(var(--flame),var(--flame2),var(--flame)); -webkit-mask:radial-gradient(circle,transparent 38%,#000 42%,#000 68%,transparent 72%); mask:radial-gradient(circle,transparent 38%,#000 42%,#000 68%,transparent 72%); animation:hotSpin 2.2s linear infinite; filter:drop-shadow(0 0 7px rgba(255,94,58,.8)); pointer-events:none; }
+  .lf-me::before, .lf-me::after{
+    content:''; position:absolute; inset:0; border-radius:50%;
+    border:2px solid var(--magenta2); animation:radar 2.6s ease-out infinite;
+  }
+  .lf-me::after{ animation-delay:1.3s; }
+  @keyframes radar{ 0%{transform:scale(1); opacity:.9;} 100%{transform:scale(11); opacity:0;} }
+
+  .lf-me-tag.leaflet-tooltip{
+    background:rgba(0,140,255,.95) !important; border:none !important; color:#fff !important;
+    box-shadow:0 0 16px rgba(0,170,255,.8) !important;
+    font-weight:700 !important; font-size:10px !important; padding:2px 9px !important;
+    border-radius:20px !important; box-shadow:none !important;
+  }
+  .lf-me-tag.leaflet-tooltip::before{ display:none !important; }
+
+  .lf-eta-tag.leaflet-tooltip{
+    background:#0c1424 !important; border:1px solid var(--online) !important; color:var(--online) !important;
+    font-size:10px !important; font-weight:700 !important; padding:3px 9px !important;
+    border-radius:20px !important; box-shadow:none !important;
+  }
+  .lf-eta-tag.leaflet-tooltip::before{ display:none !important; }
+
+  /* map top controls */
+  .map-controls{
+    position:absolute; top:76px; right:14px; z-index:900;
+    display:flex; flex-direction:column; gap:10px; align-items:flex-end;
+  }
+  .live-pill{
+    background:rgba(10,15,30,.85); border:1px solid var(--line); backdrop-filter:blur(6px);
+    padding:6px 12px; border-radius:20px; font-size:11px; font-weight:600; color:var(--muted);
+    display:flex; align-items:center; gap:6px;
+  }
+  .live-pill .lv{ width:6px; height:6px; border-radius:50%; background:var(--online); box-shadow:0 0 6px var(--online); }
+  .live-pill b{ color:var(--text); font-family:'Inter'; }
+
+  .legend{
+    position:absolute; left:14px; bottom:118px; z-index:900;
+    background:rgba(10,15,30,.85); border:1px solid var(--line); backdrop-filter:blur(6px);
+    border-radius:14px; padding:10px 12px; font-size:10.5px; color:var(--muted);
+  }
+  .legend div{ display:flex; align-items:center; gap:7px; margin:3px 0; }
+  .legend span{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+
+  .filters-fab{
+    position:absolute; right:14px; bottom:118px; z-index:900;
+    background:linear-gradient(135deg, var(--magenta), var(--violet));
+    border:none; color:#fff; font-weight:700; font-size:12.5px;
+    padding:10px 16px; border-radius:24px; display:flex; align-items:center; gap:7px;
+    box-shadow:0 6px 26px rgba(0,140,255,.55); cursor:pointer;
+  }
+  .filters-fab svg{ width:14px; height:14px; }
+  .filters-badge{
+    background:#fff; color:var(--magenta); border-radius:10px; font-size:9.5px; font-weight:800;
+    padding:1px 5px; min-width:14px; text-align:center;
+  }
+
+  /* ===== Bottom nav ===== */
+  .bottomnav{
+    position:relative; z-index:960; margin-top:auto;
+    display:flex; justify-content:space-around; align-items:center;
+    padding:10px 6px calc(env(safe-area-inset-bottom) + 10px);
+    background:rgba(6,9,18,.92); border-top:1px solid var(--line); backdrop-filter:blur(10px);
+  }
+  .navbtn{
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    color:var(--muted2); font-size:10.5px; font-weight:600; background:none; border:none; cursor:pointer;
+    padding:4px 10px; position:relative;
+  }
+  .navbtn svg{ width:21px; height:21px; }
+  .navbtn.active{ color:var(--magenta2); }
+  .navbtn .nbadge{
+    position:absolute; top:-2px; right:4px; background:var(--magenta); color:#fff;
+    font-size:9px; font-weight:800; border-radius:8px; padding:0 4px; line-height:14px;
+  }
+
+  /* ===== Profile bottom sheet ===== */
+  .sheet-backdrop{
+    position:absolute; inset:0; background:rgba(0,0,0,.55); z-index:960;
+    opacity:0; pointer-events:none; transition:opacity .25s;
+  }
+  .sheet-backdrop.show{ opacity:1; pointer-events:auto; }
+  .sheet{
+    position:absolute; left:0; right:0; bottom:0; z-index:970;
+    background:var(--panel);
+    border-radius:26px 26px 0 0;
+    border:1px solid var(--line); border-bottom:none;
+    transform:translateY(100%); transition:transform .32s cubic-bezier(.22,.9,.32,1);
+    max-height:88%; overflow-y:auto;
+  }
+  .sheet.open{ transform:translateY(0); }
+  .sheet-handle{ width:36px; height:4px; background:rgba(255,255,255,.2); border-radius:4px; margin:10px auto 0; }
+  .sheet-close{
+    position:absolute; top:14px; right:14px; z-index:2;
+    width:30px; height:30px; border-radius:50%; background:rgba(0,0,0,.5);
+    border:1px solid var(--line); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .sheet.profile-card{
+    left:14px; right:14px; bottom:14px;
+    border-radius:26px;
+    border:1.5px solid rgba(79,195,255,.6);
+    box-shadow:0 0 0 1px rgba(79,195,255,.25), 0 18px 60px rgba(0,0,0,.6), 0 0 46px rgba(79,195,255,.3);
+    max-height:82%;
+    transform:translateY(130%) scale(.96);
+    transition:transform .34s cubic-bezier(.22,.9,.32,1);
+  }
+  .sheet.profile-card.open{ transform:translateY(0) scale(1); }
+  .profile-photo{ width:100%; height:230px; object-fit:cover; }
+  .profile-body{ padding:16px 18px 22px; }
+  .profile-name{ font-family:'Playfair Display'; font-size:22px; font-weight:800; display:flex; align-items:center; gap:6px; }
+  .verified{ color:#4db8ff; }
+  .vibe-pill{
+    display:flex; align-items:center; gap:8px; margin-top:8px; padding:9px 14px;
+    background:linear-gradient(135deg, rgba(0,140,255,.16), rgba(79,195,255,.10));
+    border:1px solid rgba(79,195,255,.35); border-radius:14px;
+  }
+  .vibe-pill .vibe-emoji{ font-size:18px; line-height:1; flex-shrink:0; }
+  .vibe-pill .vibe-text{ font-size:13.5px; font-weight:600; color:#d7ecff; line-height:1.35; }
+  .vibe-pill .vibe-label{ display:block; font-size:9.5px; font-weight:800; letter-spacing:.6px; color:var(--magenta2); text-transform:uppercase; margin-bottom:1px; }
+  .profile-status{ display:flex; align-items:center; gap:6px; color:var(--online); font-size:12.5px; font-weight:600; margin-top:10px; }
+  .profile-status .dot{ width:7px; height:7px; border-radius:50%; background:var(--online); }
+  .profile-loc{ display:flex; align-items:flex-start; gap:8px; color:var(--muted); font-size:12.5px; margin-top:12px; line-height:1.5; }
+  .profile-loc svg{ width:15px; height:15px; margin-top:1px; flex-shrink:0; color:var(--muted2); }
+  .profile-loc .addr-lines div{ color:#dfe2ee; }
+  .profile-loc .precision{ color:var(--muted2) !important; margin-top:2px; }
+  .profile-loc.dist{ margin-top:8px; }
+  .cta-row{ display:flex; gap:10px; margin-top:16px; }
+  .btn-primary{
+    flex:1; background:linear-gradient(135deg, var(--magenta), var(--magenta2));
+    color:#fff; border:none; border-radius:14px; padding:14px; font-weight:700; font-size:14.5px; cursor:pointer;
+  }
+  .btn-ghost{
+    width:48px; border-radius:14px; background:rgba(255,255,255,.06); border:1px solid var(--line);
+    color:var(--text); font-size:18px; cursor:pointer;
+  }
+  .about-block{ margin-top:20px; padding-top:16px; border-top:1px solid var(--line); }
+  .about-title{ font-size:11px; font-weight:800; letter-spacing:1.2px; color:var(--muted2); margin-bottom:8px; }
+  .about-text{ font-size:13.5px; color:#c7cbdb; line-height:1.55; }
+  .kv-row{ display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.05); font-size:13px; }
+  .kv-row span:first-child{ color:var(--muted); }
+  .kv-row span:last-child{ font-weight:600; }
+  .tags{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .tag{ background:rgba(0,140,255,.16); color:var(--magenta2); font-size:11.5px; font-weight:600; padding:5px 11px; border-radius:20px; box-shadow:0 0 10px rgba(0,140,255,.25); }
+
+  /* ===== Filters sheet ===== */
+  .filters-body{ padding:18px 18px 26px; }
+  .filters-title{ font-family:'Playfair Display'; font-weight:800; font-size:18px; margin:6px 0 16px; }
+  .chip-group{ margin-bottom:18px; }
+  .chip-label{ font-size:11px; font-weight:800; letter-spacing:1px; color:var(--muted2); margin-bottom:9px; text-transform:uppercase; }
+  .chip-wrap{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{
+    padding:9px 14px; border-radius:20px; border:1px solid var(--line); background:rgba(255,255,255,.04);
+    font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer; transition:.15s;
+  }
+  .chip.active{ background:rgba(0,140,255,.18); border-color:var(--magenta); color:#9fd8ff; box-shadow:0 0 12px rgba(0,140,255,.35); }
+  .btn-apply{ width:100%; margin-top:6px; }
+
+  /* ===== Découvrir view ===== */
+  #view-decouvrir{ background:var(--bg); padding-top:78px; }
+  .discover-head{ padding:0 20px 12px; }
+  .discover-head h2{ font-family:'Playfair Display'; font-size:20px; margin:0 0 2px; }
+  .discover-head p{ color:var(--muted); font-size:12.5px; margin:0; }
+  .card-stack{ position:relative; flex:1; margin:6px 18px 0; }
+  .swipe-card{
+    position:absolute; inset:0; border-radius:24px; overflow:hidden;
+    background:#0c1220; border:1px solid var(--line);
+    background-size:cover; background-position:center;
+    display:flex; align-items:flex-end;
+    touch-action:none; cursor:grab; user-select:none;
+    transition:transform .35s cubic-bezier(.2,.8,.2,1), opacity .35s ease;
+    will-change:transform;
+  }
+  .swipe-card.dragging{ transition:none; cursor:grabbing; }
+  .swipe-card.hot-card{ border:1.5px solid rgba(255,94,58,.55); box-shadow:0 0 0 1px rgba(255,94,58,.16),0 0 30px rgba(255,94,58,.13); }
+  .discover-hot-badge{ position:absolute; top:16px; left:16px; z-index:3; padding:7px 11px; border-radius:20px; background:linear-gradient(135deg,var(--flame),var(--flame2)); color:#fff; font-size:9.5px; font-weight:800; letter-spacing:.35px; box-shadow:0 0 16px rgba(255,94,58,.45); }
+  .swipe-card .grad{
+    position:absolute; inset:0; background:linear-gradient(0deg, rgba(3,5,10,.92) 0%, rgba(3,5,10,.15) 55%, transparent 75%);
+  }
+  .swipe-card .info{ position:relative; z-index:2; padding:20px; width:100%; }
+  .swipe-card .name{ font-family:'Playfair Display'; font-size:24px; font-weight:800; display:flex; align-items:center; gap:6px; }
+  .swipe-card .meta{ color:#d7dae6; font-size:12.5px; margin-top:4px; }
+  .swipe-card .tags{ margin-top:10px; }
+  .empty-deck{ display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; color:var(--muted); padding:0 30px; }
+  .empty-deck .display{ font-size:18px; color:var(--text); margin-bottom:6px; }
+
+  .swipe-stamp{
+    position:absolute; top:28px; z-index:3; padding:8px 16px; border-radius:10px;
+    font-family:'Playfair Display'; font-weight:800; font-size:20px; letter-spacing:1px;
+    border:3px solid; opacity:0; pointer-events:none; text-transform:uppercase;
+    transition:opacity .1s ease;
+  }
+  .swipe-stamp.like-stamp{ left:24px; color:var(--online); border-color:var(--online); transform:rotate(-14deg); text-shadow:0 0 12px rgba(198,255,46,.6); }
+  .swipe-stamp.nope-stamp{ right:24px; color:var(--offline); border-color:var(--offline); transform:rotate(14deg); text-shadow:0 0 12px rgba(244,67,108,.6); }
+
+  .flame-burst{
+    position:absolute; inset:0; z-index:4; display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity .25s ease;
+  }
+  .flame-burst.show{ opacity:1; }
+  .flame-burst svg{ width:90px; height:90px; color:var(--flame); filter:drop-shadow(0 0 18px rgba(255,94,58,.85)); animation:flamePop .55s ease; }
+  @keyframes flamePop{ 0%{ transform:scale(.3); opacity:0; } 55%{ transform:scale(1.15); opacity:1; } 100%{ transform:scale(1); opacity:1; } }
+
+  .swipe-actions{ display:flex; justify-content:center; gap:20px; padding:20px 0 10px; }
+  .sbtn{
+    width:56px; height:56px; border-radius:50%; border:1.5px solid var(--line);
+    background:var(--panel2); display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .sbtn svg{ width:24px; height:24px; }
+  .sbtn.pass{ color:var(--offline); }
+  .sbtn.like{ width:64px; height:64px; background:linear-gradient(135deg, var(--magenta), var(--magenta2)); color:#fff; border:none; }
+  .sbtn.flame{ color:#fff; background:linear-gradient(135deg, var(--flame), var(--flame2)); border:none; box-shadow:0 0 16px rgba(255,94,58,.45); }
+  .sbtn.flame:active{ transform:scale(.92); }
+
+  .flame-toast{
+    position:absolute; left:50%; bottom:92px; transform:translateX(-50%) translateY(20px);
+    background:linear-gradient(135deg, var(--flame), var(--flame2)); color:#fff;
+    font-family:'Inter'; font-weight:700; font-size:13px; padding:10px 18px; border-radius:30px;
+    display:flex; align-items:center; gap:8px; box-shadow:0 8px 24px rgba(255,94,58,.4);
+    opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease; z-index:70; white-space:nowrap;
+  }
+  .flame-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .flame-toast svg{ width:16px; height:16px; flex-shrink:0; }
+
+  .match-overlay{
+    position:absolute; inset:0; z-index:60; background:rgba(4,6,14,.92);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+    opacity:0; pointer-events:none; transition:opacity .3s; padding:30px;
+  }
+  .match-overlay.show{ opacity:1; pointer-events:auto; }
+  .match-photos{ display:flex; margin-bottom:22px; }
+  .match-photos img{ width:96px; height:96px; border-radius:50%; object-fit:cover; border:3px solid var(--bg); }
+  .match-photos img:last-child{ margin-left:-24px; }
+  .match-overlay h2{ font-family:'Playfair Display'; font-size:26px; margin:0 0 8px; }
+  .match-overlay p{ color:var(--muted); font-size:13px; margin:0 0 22px; }
+
+  /* ===== Messages view ===== */
+  #view-messages{ padding-top:78px; background:var(--bg); }
+  .msg-title{ padding:0 20px 14px; font-family:'Playfair Display'; font-size:22px; font-weight:800; }
+  .conv-list{ flex:1; overflow-y:auto; padding:0 12px; }
+  .conv-item{ display:flex; align-items:center; gap:12px; padding:11px 8px; border-radius:14px; cursor:pointer; }
+  .conv-item:active{ background:rgba(255,255,255,.05); }
+  .conv-avatar{ position:relative; flex-shrink:0; }
+  .conv-avatar img{ width:52px; height:52px; border-radius:50%; object-fit:cover; }
+  .conv-avatar .dot{ position:absolute; bottom:0; right:0; width:12px; height:12px; border-radius:50%; border:2px solid var(--bg); background:var(--offline); }
+  .conv-avatar.online .dot{ background:var(--online); }
+  .conv-mid{ flex:1; min-width:0; }
+  .conv-name-row{ display:flex; justify-content:space-between; align-items:baseline; }
+  .conv-name{ font-weight:700; font-size:14.5px; }
+  .conv-time{ font-size:10.5px; color:var(--muted2); }
+  .conv-preview{ color:var(--muted); font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }
+  .conv-unread{ background:var(--magenta); color:#fff; font-size:10.5px; font-weight:800; border-radius:10px; min-width:19px; height:19px; display:flex; align-items:center; justify-content:center; padding:0 4px; }
+
+  /* Chat thread */
+  #view-chat{ background:var(--bg); }
+  .chat-head{
+    display:flex; align-items:center; gap:12px; padding:16px 16px 14px;
+    border-bottom:1px solid var(--line); background:var(--bg2);
+  }
+  .chat-head img{ width:38px; height:38px; border-radius:50%; object-fit:cover; }
+  .chat-head .who b{ display:block; font-size:14.5px; }
+  .chat-head .who span{ font-size:11px; color:var(--online); }
+  .chat-body{ flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .bubble-msg{ max-width:75%; padding:10px 13px; border-radius:16px; font-size:13.5px; line-height:1.45; }
+  .bubble-msg.them{ align-self:flex-start; background:var(--panel2); border-bottom-left-radius:4px; }
+  .bubble-msg.me{ align-self:flex-end; background:linear-gradient(135deg, var(--magenta), var(--magenta2)); color:#fff; border-bottom-right-radius:4px; }
+  .chat-input-row{ display:flex; gap:10px; padding:12px 14px calc(env(safe-area-inset-bottom) + 12px); border-top:1px solid var(--line); background:var(--bg2); }
+  .chat-input-row input{
+    flex:1; background:var(--panel2); border:1px solid var(--line); border-radius:22px; padding:11px 16px;
+    color:var(--text); font-size:13.5px; outline:none;
+  }
+  .chat-send{ width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg, var(--magenta), var(--violet)); border:none; color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .chat-send svg{ width:18px; height:18px; }
+  .back-btn{ background:none; border:none; color:var(--text); cursor:pointer; display:flex; }
+  .back-btn svg{ width:20px; height:20px; }
+
+  /* ===== Profil view ===== */
+  #view-profil{ padding-top:78px; background:var(--bg); overflow-y:auto; }
+  .profil-hero{ display:flex; flex-direction:column; align-items:center; padding:6px 20px 22px; text-align:center; }
+  .profil-hero .hot-avatar{ position:relative; display:inline-flex; padding:7px; border-radius:50%; background:conic-gradient(var(--flame),var(--flame2),var(--flame)); box-shadow:0 0 22px rgba(255,94,58,.55); animation:hotPulse 1.5s ease-in-out infinite; }
+  .profil-hero img{ width:92px; height:92px; border-radius:50%; object-fit:cover; border:3px solid var(--violet2); }
+  .profil-hero .hot-avatar img{ border-color:var(--flame); }
+  .hot-avatar-badge{ position:absolute; right:0; bottom:3px; width:26px; height:26px; border-radius:50%; background:linear-gradient(135deg,var(--flame),var(--flame2)); border:3px solid var(--bg); align-items:center; justify-content:center; font-size:14px; box-shadow:0 0 12px rgba(255,94,58,.7); }
+  .profil-hero h2{ font-family:'Playfair Display'; margin:12px 0 2px; font-size:19px; }
+  .profil-hero p{ color:var(--muted); font-size:12.5px; margin:0; }
+  .section-title{ padding:0 20px; font-size:11px; font-weight:800; letter-spacing:1.1px; color:var(--muted2); margin:22px 0 10px; text-transform:uppercase; }
+  .hot-status-card{ margin:0 20px; padding:15px; border-radius:17px; border:1px solid rgba(255,94,58,.28); background:linear-gradient(135deg,rgba(255,94,58,.10),rgba(255,176,32,.06)); }
+  .hot-status-row{ display:flex; align-items:center; gap:12px; }
+  .hot-status-icon{ width:42px; height:42px; flex:0 0 42px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; background:rgba(255,94,58,.14); }
+  .hot-status-copy{ flex:1; min-width:0; }
+  .hot-status-copy b{ display:block; font-size:14px; }
+  .hot-status-copy span{ display:block; margin-top:3px; color:var(--muted); font-size:11px; line-height:1.35; }
+  .hot-toggle{ position:relative; width:52px; height:30px; flex:0 0 52px; }
+  .hot-toggle input{ opacity:0; width:0; height:0; position:absolute; }
+  .hot-slider{ position:absolute; inset:0; border-radius:30px; background:#252b3a; border:1px solid rgba(255,255,255,.12); cursor:pointer; transition:.2s; }
+  .hot-slider::before{ content:''; position:absolute; width:22px; height:22px; left:3px; top:3px; border-radius:50%; background:#fff; transition:.2s; box-shadow:0 2px 7px rgba(0,0,0,.35); }
+  .hot-toggle input:checked + .hot-slider{ background:linear-gradient(135deg,var(--flame),var(--flame2)); box-shadow:0 0 15px rgba(255,94,58,.45); }
+  .hot-toggle input:checked + .hot-slider::before{ transform:translateX(22px); }
+  .hot-status-note{ margin-top:10px; color:var(--muted2); font-size:10.5px; line-height:1.4; }
+  .vis-options{ padding:0 20px; display:flex; flex-direction:column; gap:9px; }
+  .vis-opt{ display:flex; align-items:center; gap:12px; padding:13px 14px; border-radius:14px; border:1px solid var(--line); background:var(--panel2); cursor:pointer; }
+  .vis-opt.active{ border-color:var(--gold); background:rgba(79,195,255,.14); box-shadow:0 0 12px rgba(79,195,255,.3); }
+  .vis-opt .ring{ width:16px; height:16px; border-radius:50%; border:2px solid var(--muted2); flex-shrink:0; }
+  .vis-opt.active .ring{ border-color:var(--gold); background:var(--gold); }
+  .vis-opt b{ font-size:13.5px; display:block; }
+  .vis-opt span{ font-size:11px; color:var(--muted); }
+  .stat-row{ display:flex; gap:10px; padding:0 20px; margin-top:6px; }
+  .stat-card{ flex:1; background:var(--panel2); border:1px solid var(--line); border-radius:14px; padding:14px; text-align:center; }
+  .stat-card b{ display:block; font-family:'Playfair Display'; font-size:20px; }
+  .stat-card span{ font-size:10.5px; color:var(--muted); }
+
+  /* ===== Ma vibe du moment (édition) ===== */
+  .my-vibe-card{ margin:0 20px; background:var(--panel2); border:1px solid var(--line); border-radius:16px; padding:14px; }
+  .my-vibe-preview{
+    display:flex; align-items:center; gap:10px; padding:10px 12px; margin-bottom:12px;
+    background:linear-gradient(135deg, rgba(0,140,255,.16), rgba(79,195,255,.10));
+    border:1px solid rgba(79,195,255,.35); border-radius:14px;
+  }
+  .my-vibe-preview .vibe-emoji{ font-size:20px; line-height:1; flex-shrink:0; }
+  .my-vibe-preview .vibe-text{ font-size:13.5px; font-weight:600; color:#d7ecff; line-height:1.35; }
+  .my-vibe-preview .vibe-text.placeholder{ color:var(--muted); font-weight:500; font-style:italic; }
+  .my-vibe-preview .vibe-label{ display:block; font-size:9.5px; font-weight:800; letter-spacing:.6px; color:var(--magenta2); text-transform:uppercase; margin-bottom:1px; }
+  .emoji-picker{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .emoji-opt{
+    width:38px; height:38px; border-radius:11px; border:1.5px solid var(--line); background:var(--bg);
+    display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer;
+  }
+  .emoji-opt.active{ border-color:var(--magenta); background:rgba(0,140,255,.18); box-shadow:0 0 10px rgba(0,140,255,.35); }
+  .vibe-input-wrap{ position:relative; }
+  .vibe-input{
+    width:100%; background:var(--bg); border:1.5px solid var(--line); border-radius:12px; color:var(--text);
+    font-size:13.5px; padding:12px 14px; font-family:inherit; resize:none;
+  }
+  .vibe-input:focus{ outline:none; border-color:var(--magenta); box-shadow:0 0 0 3px rgba(0,140,255,.18); }
+  .vibe-charcount{ text-align:right; font-size:10.5px; color:var(--muted2); margin-top:5px; }
+  .vibe-saved-hint{
+    font-size:10.5px; color:var(--online); margin-top:6px; opacity:0; transition:opacity .25s ease; display:flex; align-items:center; gap:5px;
+  }
+  .vibe-saved-hint.show{ opacity:1; }
+
+  /* ===== Tes photos (galerie) ===== */
+  .photo-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; padding:0 20px; }
+  .photo-tile{
+    position:relative; aspect-ratio:3/4; border-radius:14px; overflow:hidden;
+    background:var(--panel2); border:1.5px solid var(--line);
+  }
+  .photo-tile img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .photo-tile.empty{
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    border:1.5px dashed var(--line); background:rgba(255,255,255,.02);
+  }
+  .photo-tile.empty:active{ background:rgba(0,140,255,.08); border-color:var(--magenta2); }
+  .photo-tile.empty svg{ width:24px; height:24px; color:var(--muted2); }
+  .photo-tile .primary-badge{
+    position:absolute; top:6px; left:6px; background:rgba(0,140,255,.85); color:#fff;
+    font-size:9px; font-weight:800; letter-spacing:.4px; text-transform:uppercase;
+    padding:3px 7px; border-radius:8px;
+  }
+  .photo-tile .remove-btn{
+    position:absolute; top:6px; right:6px; width:22px; height:22px; border-radius:50%;
+    background:rgba(4,6,14,.75); border:1px solid rgba(255,255,255,.25); color:#fff;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .photo-tile .remove-btn svg{ width:12px; height:12px; }
+  .photo-hint{ padding:8px 20px 0; font-size:11px; color:var(--muted); }
+  input[type="file"].photo-file-input{ display:none; }
+
+  ::-webkit-scrollbar{ width:0; height:0; }
+
+  /* ===== CE SOIR NOW / RADAR / GAMIFICATION ===== */
+  .now-pill{background:linear-gradient(135deg,var(--flame),var(--flame2));border:0;color:#fff;font-weight:800;font-size:11px;padding:9px 13px;border-radius:22px;box-shadow:0 0 20px rgba(255,94,58,.35);cursor:pointer;display:flex;align-items:center;gap:6px;}
+  .radar-mode .map-vignette{background:radial-gradient(circle at center,rgba(255,94,58,.12),transparent 45%),radial-gradient(70% 55% at 50% 45%,transparent 45%,rgba(2,4,10,.55) 100%);}
+  .radar-ring{position:absolute;inset:12%;border:1px solid rgba(255,94,58,.35);border-radius:50%;z-index:445;pointer-events:none;animation:radarBig 3s ease-out infinite;}
+  .radar-ring.r2{inset:24%;animation-delay:1s}.radar-ring.r3{inset:36%;animation-delay:2s}
+  @keyframes radarBig{0%{transform:scale(.7);opacity:0}25%{opacity:.8}100%{transform:scale(1.25);opacity:0}}
+  .radar-overlay,.meet-overlay{position:absolute;inset:0;z-index:1200;background:rgba(3,6,14,.72);backdrop-filter:blur(14px);display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:.25s}
+  .radar-overlay.show,.meet-overlay.show{opacity:1;pointer-events:auto}
+  .radar-sheet,.meet-sheet{width:100%;background:linear-gradient(180deg,#10192c,#09101f);border:1px solid var(--line);border-bottom:0;border-radius:28px 28px 0 0;padding:20px 18px 26px;box-shadow:0 -20px 70px rgba(0,0,0,.45)}
+  .radar-sheet h2,.meet-sheet h2{font-family:'Playfair Display';font-size:24px;margin:0 0 4px}.radar-sub{color:var(--muted);font-size:12px;margin-bottom:16px}
+  .heat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.heat-card{padding:12px;border-radius:15px;background:rgba(255,255,255,.045);border:1px solid var(--line)}.heat-card b{display:block;font-size:13px}.heat-card span{font-size:18px}.heat-card small{display:block;color:var(--muted);margin-top:4px}
+  .radar-stat{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--line);font-size:13px}.radar-stat strong{font-size:18px}
+  .mini-close{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#fff;float:right;cursor:pointer}
+  .mission-card{margin:0 18px 12px;padding:14px;border-radius:18px;background:linear-gradient(135deg,rgba(255,94,58,.12),rgba(255,176,32,.07));border:1px solid rgba(255,94,58,.25)}.mission-card .ey{font-size:10px;font-weight:800;letter-spacing:1px;color:var(--flame2)}.mission-card b{display:block;margin:4px 0;font-size:14px}.mission-progress{height:6px;background:rgba(255,255,255,.08);border-radius:8px;overflow:hidden}.mission-progress i{display:block;height:100%;width:58%;background:linear-gradient(90deg,var(--flame),var(--flame2));border-radius:8px}.mission-card small{color:var(--muted);font-size:10px}
+  .now-status{margin:10px 18px 0;padding:12px;border-radius:16px;background:rgba(255,255,255,.045);border:1px solid var(--line)}.now-status-row{display:flex;align-items:center;justify-content:space-between;gap:10px}.now-status b{font-size:12.5px}.now-status span{display:block;color:var(--muted);font-size:10.5px;margin-top:3px}.status-options{display:flex;gap:6px;margin-top:10px}.status-option{flex:1;padding:8px 5px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;text-align:center}.status-option.active{border-color:rgba(255,94,58,.65);color:#fff;background:rgba(255,94,58,.13)}
+  .aligned-pill{margin-top:10px;padding:9px 11px;border-radius:13px;background:rgba(198,255,46,.08);border:1px solid rgba(198,255,46,.22);color:#dfff91;font-size:11px;font-weight:700}.aligned-pill.hot{background:rgba(255,94,58,.1);border-color:rgba(255,94,58,.25);color:#ffc0aa}
+  .meet-card{margin-top:12px;padding:12px;border-radius:15px;background:rgba(79,195,255,.07);border:1px solid rgba(79,195,255,.2)}.meet-card b{font-size:12px}.meet-card p{margin:4px 0;color:var(--muted);font-size:10.5px}.meet-card button{margin-top:7px;width:100%;padding:9px;border:0;border-radius:11px;background:rgba(79,195,255,.16);color:#dff6ff;font-weight:800;cursor:pointer}
+  .toast-lite{position:absolute;left:18px;right:18px;bottom:90px;z-index:1300;padding:12px 14px;border-radius:15px;background:rgba(13,21,38,.96);border:1px solid rgba(255,94,58,.3);box-shadow:0 12px 40px rgba(0,0,0,.4);transform:translateY(20px);opacity:0;pointer-events:none;transition:.25s;font-size:12px;font-weight:700}.toast-lite.show{transform:none;opacity:1}
+  .countdown{display:inline-flex;align-items:center;gap:5px;margin-left:5px;padding:3px 7px;border-radius:10px;background:rgba(255,94,58,.15);color:#ffb8a6;font-size:9px;font-weight:800}
+
+
+  /* ===== CE SOIR unified experience v1.9 ===== */
+  .now-pulse{animation:nowPulse 1.8s ease-in-out infinite}
+  @keyframes nowPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,94,58,.25)}50%{box-shadow:0 0 0 10px rgba(255,94,58,0)}}
+  .aligned-pill{display:inline-flex;align-items:center;gap:5px;margin-top:7px;padding:5px 9px;border-radius:999px;background:rgba(198,255,46,.1);border:1px solid rgba(198,255,46,.25);color:var(--online);font-size:10px;font-weight:800}
+  .chat-quick{display:flex;gap:7px;padding:8px 14px;overflow-x:auto;border-top:1px solid var(--line);background:rgba(10,15,30,.72)}
+  .chat-quick button{white-space:nowrap;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:999px;padding:7px 10px;font-size:11px}
+  .meet-mini{margin:10px 0;padding:10px 12px;border-radius:14px;background:rgba(0,140,255,.08);border:1px solid rgba(0,140,255,.2);font-size:11px;color:var(--muted)}
+  .meet-mini b{display:block;color:var(--text);margin-bottom:3px}
+  .hot-action{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:999px;padding:8px 12px;background:linear-gradient(135deg,var(--flame),var(--flame2));color:#fff;font-weight:800;font-size:11px}
+  .city-heat{margin:0 18px 12px;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.035);border:1px solid var(--line)}
+  .city-heat .heat-row{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted);margin-top:7px}.city-heat .heat-row b{color:var(--text)}
+  .mission-card.done{border-color:rgba(198,255,46,.35);background:rgba(198,255,46,.07)}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- TOP BAR (shared) -->
+  <div class="topbar">
+    <button class="icon-btn" id="btn-menu" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="brand">CE SOIR<span class="heart">♥</span></div>
+    <button class="icon-btn" id="btn-filters-top" aria-label="Filtres">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="16" cy="12" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="10" cy="18" r="2" fill="currentColor" stroke="none"/></svg>
+    </button>
+  </div>
+
+  <!-- ===== CARTE (HOME) ===== -->
+  <div class="view active" id="view-carte">
+    <div class="map-wrap" id="mapWrap">
+      <div id="leafletMap"></div>
+      <div class="map-vignette"></div>
+    </div>
+
+    <div class="map-controls">
+      <div class="live-pill"><span class="lv"></span> <b id="liveCount">1&nbsp;284</b>&nbsp;en ligne</div>
+      <button class="now-pill" id="btnNow">🔥 NOW</button>
+      <button class="icon-btn" id="btn-recenter" aria-label="Recentrer sur moi">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+      </button>
+    </div>
+
+    <div class="legend">
+      <div><span style="background:var(--online);"></span>En ligne maintenant</div>
+      <div><span style="background:var(--recent);"></span>En ligne récemment</div>
+      <div><span style="background:var(--offline);"></span>Hors ligne</div>
+    </div>
+
+    <button class="filters-fab" id="btn-filters-fab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="16" cy="12" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="10" cy="18" r="2" fill="currentColor" stroke="none"/></svg>
+      Filtres <span class="filters-badge" id="filtersBadge" style="display:none;">0</span>
+    </button>
+    <div class="radar-ring"></div><div class="radar-ring r2"></div><div class="radar-ring r3"></div>
+    <div class="toast-lite" id="nearbyToast">👀 <span id="nearbyToastText">3 personnes cherchent quelqu’un dans ton secteur.</span></div>
+    <div class="radar-overlay" id="radarOverlay">
+      <div class="radar-sheet">
+        <button class="mini-close" id="radarClose">×</button>
+        <h2>🔥 CE SOIR — NOW</h2><div class="radar-sub">Le radar des intentions autour de toi. Les positions restent approximatives tant qu’une rencontre n’est pas confirmée.</div>
+        <div class="radar-stat"><span>Disponibles maintenant</span><strong id="nowCount">18</strong></div>
+        <div class="radar-stat"><span>À moins de 2 km</span><strong id="nearCount">7</strong></div>
+        <div class="radar-stat"><span>Vibe alignée avec toi</span><strong id="alignCount">4</strong></div>
+        <div class="heat-grid"><div class="heat-card"><span>🔥🔥🔥</span><b>Mile End</b><small>Très chaud</small></div><div class="heat-card"><span>🔥🔥</span><b>Plateau</b><small>Ça chauffe</small></div><div class="heat-card"><span>🌤️</span><b>Hochelaga</b><small>Actif</small></div></div>
+        <button class="btn-primary" id="radarJoin">🔥 Je suis partant</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DÉCOUVRIR ===== -->
+  <div class="view" id="view-decouvrir">
+    <div class="discover-head">
+      <h2>Disponibles ce soir</h2>
+      <p id="discoverSub">Glisse pour voir qui est autour de toi <span class="countdown" id="tonightCountdown">CE SOIR</span></p>
+    </div>
+    <div class="mission-card"><span class="ey">MISSION DE CE SOIR</span><b>🔥 Trouve quelqu’un ouvert à une rencontre</b><div class="mission-progress"><i id="missionBar"></i></div><small id="missionText">1/2 rencontre potentielle repérée</small></div>
+    <div class="city-heat"><b>🌡️ Température autour de toi</b><div class="heat-row"><span>Plateau</span><b>🔥🔥🔥 Très chaud</b></div><div class="heat-row"><span>Mile End</span><b>🔥🔥 Actif</b></div><div class="heat-row"><span>Hochelaga</span><b>🌤️ Ça commence</b></div></div>
+    <div class="card-stack" id="cardStack"></div>
+    <div class="swipe-actions">
+      <button class="sbtn pass" id="btn-pass">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <button class="sbtn like" id="btn-like">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.7-10-9.3C.5 8.1 2 4.5 5.6 4c2-.3 3.7.7 4.9 2.3C11.7 4.7 13.4 3.7 15.4 4c3.6.5 5.1 4.1 3.6 7.7C19.5 16.3 12 21 12 21z"/></svg>
+      </button>
+      <button class="sbtn flame" id="btn-star" title="Coup de cœur">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.5 2c.6 2.4-.3 3.9-1.7 5.4-1.6 1.7-3.3 3.5-3.3 6.4a5.5 5.5 0 0 0 11 0c0-2-1-3.5-2-4.7-.2.9-.7 1.6-1.4 2-.3-2.7-1.4-4.1-2.6-5.5A6 6 0 0 1 12.5 2z"/></svg>
+      </button>
+    </div>
+    <div class="flame-toast" id="flameToast">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.5 2c.6 2.4-.3 3.9-1.7 5.4-1.6 1.7-3.3 3.5-3.3 6.4a5.5 5.5 0 0 0 11 0c0-2-1-3.5-2-4.7-.2.9-.7 1.6-1.4 2-.3-2.7-1.4-4.1-2.6-5.5A6 6 0 0 1 12.5 2z"/></svg>
+      <span id="flameToastText">Coup de cœur envoyé 🔥</span>
+    </div>
+
+    <div class="match-overlay" id="matchOverlay">
+      <div class="match-photos">
+        <img src="https://i.pravatar.cc/200?img=12" alt="">
+        <img id="matchPhoto" src="" alt="">
+      </div>
+      <h2 class="display">C'est un match ! 💕</h2>
+      <p>Vous êtes tous les deux disponibles ce soir.</p>
+      <button class="btn-primary" style="max-width:220px;" id="matchMsgBtn">Envoyer un message</button>
+    </div>
+  </div>
+
+  <!-- ===== MESSAGES (list) ===== -->
+  <div class="view" id="view-messages">
+    <div class="msg-title display">Messages</div>
+    <div class="conv-list" id="convList"></div>
+  </div>
+
+  <!-- ===== CHAT THREAD ===== -->
+  <div class="view" id="view-chat">
+    <div class="chat-head">
+      <button class="back-btn" id="btn-chat-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <img id="chatAvatar" src="" alt="">
+      <div class="who">
+        <b id="chatName"></b>
+        <span id="chatStatus">En ligne</span>
+      </div>
+    </div>
+    <div class="chat-body" id="chatBody"></div>
+    <div class="chat-quick" id="chatQuick">
+      <button data-quick="🔥 Je suis partant">🔥 Je suis partant</button>
+      <button data-quick="📍 On trouve un point à mi-chemin?">📍 Mi-chemin</button>
+      <button data-quick="⏱️ Dans 30 min">⏱️ Dans 30 min</button>
+      <button data-quick="🍸 Un verre?">🍸 Un verre?</button>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" placeholder="Écris un message…">
+      <button class="chat-send" id="chatSend">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== PROFIL ===== -->
+  <div class="view" id="view-profil">
+    <div class="profil-hero">
+      <div class="hero-avatar" id="heroAvatarWrap">
+        <img src="https://i.pravatar.cc/200?img=68" alt="" id="heroPhoto">
+        <span class="hot-avatar-badge" id="heroHotBadge" style="display:none;">🔥</span>
+      </div>
+      <h2>Toi</h2>
+      <p>Montréal · Le Plateau</p>
+    </div>
+
+    <div class="section-title">Ta vibe du moment</div>
+    <div class="my-vibe-card">
+      <div class="my-vibe-preview">
+        <span class="vibe-emoji" id="myVibeEmoji">✨</span>
+        <div>
+          <span class="vibe-label">Aperçu — visible sur ton profil</span>
+          <span class="vibe-text placeholder" id="myVibeTextPreview">Ajoute ton envie du moment</span>
+        </div>
+      </div>
+      <div class="emoji-picker" id="emojiPicker"></div>
+      <div class="vibe-input-wrap">
+        <textarea class="vibe-input" id="myVibeInput" maxlength="60" rows="2" placeholder="Ex. : Envie de sortir prendre un verre, là maintenant."></textarea>
+      </div>
+      <div class="vibe-charcount" id="vibeCharCount">0/60</div>
+      <div class="vibe-saved-hint" id="vibeSavedHint">✔ Vibe mise à jour</div>
+    </div>
+
+    <div class="section-title">Ton statut ce soir</div>
+    <div class="hot-status-card">
+      <div class="hot-status-row">
+        <div class="hot-status-icon">🔥</div>
+        <div class="hot-status-copy"><b>À la recherche d'un rendez-vous ce soir</b><span>Affiche un contour de flammes sur ta bulle pour signaler que tu es ouvert·e à une rencontre.</span></div>
+        <label class="hot-toggle" aria-label="Activer le mode recherche ce soir"><input type="checkbox" id="myHotToggle"><span class="hot-slider"></span></label>
+      </div>
+      <div class="hot-status-note">Tu peux le désactiver à tout moment. Le statut est uniquement visuel dans cette démo.</div>
+    </div>
+    <div class="now-status">
+      <div class="now-status-row"><div><b>Quand es-tu disponible ?</b><span>Affiche une intention plus précise que « ce soir ».</span></div><span id="myAvailabilityLabel">Maintenant</span></div>
+      <div class="status-options" id="myAvailability"><button class="status-option active" data-min="0">🔥 Maintenant</button><button class="status-option" data-min="30">30 min</button><button class="status-option" data-min="60">1 h</button><button class="status-option" data-min="120">Plus tard</button></div>
+    </div>
+
+    <div class="section-title">Tes photos</div>
+    <p class="photo-hint">La première photo est celle qui apparaît sur ta bulle sur la carte et dans Découvrir. Ajoute jusqu'à 6 photos.</p>
+    <div class="photo-grid" id="photoGrid"></div>
+    <input type="file" accept="image/*" class="photo-file-input" id="photoFileInput">
+
+    <div class="stat-row">
+      <div class="stat-card"><b id="statMatches">7</b><span>Étincelles</span></div>
+      <div class="stat-card"><b id="statViews">142</b><span>Vues cette semaine</span></div>
+      <div class="stat-card"><b>4</b><span>Soirs actifs</span></div>
+    </div>
+
+    <div class="section-title">Ton mode de visibilité</div>
+    <div class="vis-options" id="visOptions">
+      <div class="vis-opt active" data-mode="visible">
+        <div class="ring"></div>
+        <div><b>Visible</b><span>Apparaître sur la carte</span></div>
+      </div>
+      <div class="vis-opt" data-mode="approx">
+        <div class="ring"></div>
+        <div><b>Visible mais approximatif</b><span>Distance approximative seulement</span></div>
+      </div>
+      <div class="vis-opt" data-mode="moving">
+        <div class="ring"></div>
+        <div><b>En déplacement</b><span>Montre que tu es en route</span></div>
+      </div>
+      <div class="vis-opt" data-mode="hidden">
+        <div class="ring"></div>
+        <div><b>Invisible</b><span>Ne pas apparaître sur la carte</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PROFILE BOTTOM SHEET ===== -->
+  <div class="sheet-backdrop" id="sheetBackdrop"></div>
+  <div class="sheet profile-card" id="profileSheet">
+    <button class="sheet-close" id="sheetClose">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <img class="profile-photo" id="pPhoto" src="" alt="">
+    <div class="profile-body">
+      <div class="profile-name"><span id="pName"></span><span class="verified">✔</span><span id="pHotBadge" class="hot-badge" style="display:none; position:relative; top:auto; right:auto;">🔥</span></div>
+      <div class="vibe-pill">
+        <span class="vibe-emoji" id="pVibeEmoji">✨</span>
+        <div>
+          <span class="vibe-label">Envie du moment</span>
+          <span class="vibe-text" id="pVibeText"></span>
+        </div>
+      </div>
+      <div class="profile-status"><span class="dot" id="pStatusDot"></span><span id="pStatusText"></span></div>
+      <div class="profile-loc">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <div class="addr-lines">
+          <div id="pStreet"></div>
+          <div id="pCity"></div>
+          <div class="precision" id="pPrecision"></div>
+        </div>
+      </div>
+      <div class="profile-loc dist">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8zm0 11a3 3 0 110-6 3 3 0 010 6z"/></svg>
+        <span id="pDist"></span>
+      </div>
+      <div class="aligned-pill" id="pAligned">🔥 Vibe alignée — vous cherchez tous les deux une rencontre ce soir.</div>
+      <div class="meet-card"><b>📍 Point de rencontre intelligent</b><p>On évite de partager ton adresse exacte. CE SOIR peut proposer un point à mi-chemin.</p><button id="pMeetBtn">Trouver un point à mi-chemin</button></div>
+      <div class="cta-row">
+        <button class="btn-primary" id="pSendMsg">Envoyer un message</button>
+        <button class="btn-ghost">⋯</button>
+      </div>
+      <div class="about-block">
+        <div class="about-title">À PROPOS</div>
+        <div class="about-text" id="pBio"></div>
+      </div>
+      <div class="about-block">
+        <div class="kv-row"><span>Intention</span><span id="pIntention"></span></div>
+        <div class="kv-row"><span>Taille</span><span id="pHeight"></span></div>
+        <div class="kv-row"><span>Langues</span><span id="pLangues"></span></div>
+        <div class="kv-row" style="border-bottom:none;"><span>Dernière connexion</span><span id="pLastSeen"></span></div>
+        <div class="tags" id="pTags"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== FILTERS SHEET ===== -->
+  <div class="sheet-backdrop" id="filtersBackdrop"></div>
+  <div class="sheet" id="filtersSheet">
+    <div class="sheet-handle"></div>
+    <div class="filters-body">
+      <div class="filters-title display">Filtres</div>
+      <div class="chip-group">
+        <div class="chip-label">Sexe</div>
+        <div class="chip-wrap" id="chipSexes"></div>
+      </div>
+      <div class="chip-group">
+        <div class="chip-label">Secteur</div>
+        <div class="chip-wrap" id="chipSecteurs"></div>
+      </div>
+      <div class="chip-group">
+        <div class="chip-label">Intention</div>
+        <div class="chip-wrap" id="chipIntentions"></div>
+      </div>
+      <button class="btn-primary btn-apply" id="applyFilters">Voir les résultats</button>
+    </div>
+  </div>
+
+  <!-- ===== BOTTOM NAV ===== -->
+  <div class="bottomnav">
+    <button class="navbtn active" data-tab="carte">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+      Carte
+    </button>
+    <button class="navbtn" data-tab="decouvrir">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6c-1.7-1.7-4.5-1.7-6.2 0L12 7.2 9.4 4.6c-1.7-1.7-4.5-1.7-6.2 0-1.7 1.7-1.7 4.5 0 6.2L12 19.4l8.8-8.6c1.7-1.7 1.7-4.5 0-6.2z"/></svg>
+      Découvrir
+    </button>
+    <button class="navbtn" data-tab="messages">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+      Messages
+      <span class="nbadge" id="navMsgBadge">3</span>
+    </button>
+    <button class="navbtn" data-tab="profil">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profil
+    </button>
+  </div>
+
+</div>
+
+<script>
+/* ================= SUPABASE CLIENT ================= */
+const SUPABASE_URL = "https://venugcwtqmwrgnqdhylr.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_WRvdoAUQOv2VldJT67bX_w_NYsIl0Nm";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ================= DATA ================= */
+const USER_LOC = { lat:45.5357584, lng:-73.5690103 };
+
+// PROFILES est rempli au démarrage via loadProfilesFromSupabase() (voir plus bas).
+// Reste un `let` (pas un const) car le tableau est remplacé une fois les données reçues.
+let PROFILES = [];
+
+async function loadProfilesFromSupabase(){
+  const { data, error } = await supabase
+    .from('profils')
+    .select('*');
+
+  if(error){
+    console.error('Erreur de chargement des profils Supabase:', error);
+    return [];
+  }
+
+  // Convertit les colonnes snake_case de Supabase vers le format camelCase attendu par l'app
+  return (data || []).map(row => ({
+    id: row.id,
+    hot: row.hot,
+    availabilityMin: row.availability_min,
+    name: row.name,
+    age: row.age,
+    sexe: row.sexe,
+    avatar: row.avatar,
+    status: row.status,
+    zone: row.zone,
+    address: row.address,
+    intention: row.intention,
+    vibeEmoji: row.vibe_emoji,
+    vibeText: row.vibe_text,
+    tags: row.tags || [],
+    height: row.height,
+    langues: row.langues,
+    lastSeen: row.last_seen,
+    bio: row.bio,
+    lat: row.lat,
+    lng: row.lng,
+  }));
+}
+
+function haversineKm(lat1,lon1,lat2,lon2){
+  const R=6371, toRad=d=>d*Math.PI/180;
+  const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
+  const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+const SECTEURS = ["Plateau","Mile End","Hochelaga","Centre-ville","Vieux-Montréal","Petite-Italie","Rosemont","Outremont"];
+const INTENTIONS = ["Rencontre spontanée","Flirt","Connexion casual","Sortie / Activité","Voir où ça mène","Relation sérieuse"];
+const SEXES = ["Femme","Homme","Non-binaire"];
+
+const CONVERSATIONS = [
+  {id:1, name:"Émilie", avatar:"https://i.pravatar.cc/400?img=45", online:true, unread:2, time:"21:43", preview:"Tu es libre ce soir? 😊",
+    thread:[
+      {from:"them", text:"Hey! Qu'est-ce qui t'a donné envie d'activer le mode CE SOIR? 😄"},
+      {from:"me", text:"J'avais envie d'une bonne conversation et de voir où la soirée peut mener 😅"},
+      {from:"them", text:"Parfait, moi aussi! Tu es plus café tranquille ou sortie?"},
+    ]},
+  {id:2, name:"Sophie", avatar:"https://i.pravatar.cc/400?img=32", online:true, unread:1, time:"21:30", preview:"Ça te tente un verre?",
+    thread:[
+      {from:"them", text:"Ça te tente un verre au Plateau vers 20h?"},
+    ]},
+  {id:3, name:"Julien", avatar:"https://i.pravatar.cc/400?img=13", online:true, unread:0, time:"21:15", preview:"On se rejoint où?",
+    thread:[
+      {from:"them", text:"On se rejoint où finalement?"},
+      {from:"me", text:"Le café sur Saint-Viateur, ça marche?"},
+    ]},
+  {id:4, name:"Mélanie", avatar:"https://i.pravatar.cc/400?img=47", online:true, unread:0, time:"20:58", preview:"J'adore ton vibe 🔥",
+    thread:[
+      {from:"them", text:"J'adore ton vibe 🔥"},
+      {from:"me", text:"Haha merci! Toi aussi."},
+    ]},
+];
+
+const AUTO_REPLIES = ["Haha, j'aime ça 😄", "Ça me tente vraiment!", "On confirme ça pour ce soir alors?", "T'es où en ce moment?"];
+
+/* ================= STATE ================= */
+let activeFilters = { sexes:new Set(), secteurs:new Set(), intentions:new Set() };
+let discoverQueue = []; // rempli après le chargement live des profils (voir initProfiles)
+let discoverIdx = 0;
+let activeChatId = null;
+let myHot = localStorage.getItem('ceSoirMyHot') === '1';
+let myAvailabilityMin = parseInt(localStorage.getItem('ceSoirAvailability') || '0',10);
+let radarActive = false;
+let ownMarker = null;
+let lastViewedProfile = null;
+let missionProgress = parseInt(localStorage.getItem('ceSoirMission') || '0',10);
+let pendingMatchProfile = null;
+
+/* ================= MAP (Leaflet, real streets & buildings) ================= */
+const map = L.map('leafletMap', { zoomControl:false, attributionControl:true, minZoom:12, maxZoom:18 })
+  .setView([USER_LOC.lat, USER_LOC.lng], 15);
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap &copy; CARTO',
+  subdomains: 'abcd',
+  maxZoom: 19
+}).addTo(map);
+
+// "Toi" marker with radar pulse, on the real spot you're standing
+ownMarker = L.marker([USER_LOC.lat, USER_LOC.lng], {
+  icon: L.divIcon({ html:`<div class="lf-me ${myHot ? 'hot' : ''}"></div>`, className:'lf-icon-wrap', iconSize:[16,16], iconAnchor:[8,8] }),
+  interactive:false
+}).addTo(map)
+  .bindTooltip('Toi', { permanent:true, direction:'bottom', offset:[0,10], className:'lf-me-tag' })
+  .openTooltip();
+
+const bubbleMarkers = new Map();
+
+function addBubbleMarker(p){
+  const marker = L.marker([p.lat, p.lng], {
+    icon: L.divIcon({
+      html:`<div class="lf-bubble ${p.status}${p.hot ? ' hot' : ''}"><img src="${p.avatar}" alt="${p.name}">${p.hot ? '<span class="hot-badge">🔥</span>' : ''}<span class="lf-dot"></span></div>`,
+      className:'lf-icon-wrap', iconSize:[50,50], iconAnchor:[25,25]
+    })
+  }).addTo(map);
+  marker.on('click', ()=> selectBubble(p.id, marker));
+
+  if(p.status==='online' && p.distanceKm < 0.5){
+    marker.bindTooltip(Math.max(1, Math.round(p.distanceKm*15)) + ' min', {
+      permanent:true, direction:'top', offset:[0,-22], className:'lf-eta-tag'
+    });
+  }
+  bubbleMarkers.set(p.id, marker);
+}
+
+/* Charge les profils depuis Supabase (remplace les données mockées) et construit la carte */
+async function initProfiles(){
+  const loaded = await loadProfilesFromSupabase();
+  PROFILES = loaded.map(p=>{
+    if(p.availabilityMin==null) p.availabilityMin = 120;
+    p.distanceKm = haversineKm(USER_LOC.lat, USER_LOC.lng, p.lat, p.lng);
+    return p;
+  });
+
+  PROFILES.forEach(addBubbleMarker);
+  discoverQueue = [...PROFILES];
+  renderBubbles();
+
+  if(PROFILES.length === 0){
+    showToast('Aucun profil trouvé pour l\'instant.');
+  }
+}
+initProfiles();
+
+function renderBubbles(){
+  PROFILES.forEach(p=>{
+    const marker = bubbleMarkers.get(p.id);
+    if(passesFilters(p)){ if(!map.hasLayer(marker)) marker.addTo(map); }
+    else{ if(map.hasLayer(marker)) map.removeLayer(marker); }
+  });
+}
+function passesFilters(p){
+  const g = activeFilters.sexes, s = activeFilters.secteurs, i = activeFilters.intentions;
+  if(g.size && !g.has(p.sexe)) return false;
+  if(s.size && !s.has(p.zone)) return false;
+  if(i.size && !i.has(p.intention)) return false;
+  return true;
+}
+document.getElementById('btn-recenter').addEventListener('click', ()=> map.setView([USER_LOC.lat, USER_LOC.lng], 15));
+
+// NOW / radar
+document.getElementById('btnNow').classList.add('now-pulse');
+document.getElementById('btnNow').addEventListener('click',openRadar);
+document.getElementById('radarClose').addEventListener('click',closeRadar);
+document.getElementById('radarOverlay').addEventListener('click',e=>{if(e.target.id==='radarOverlay')closeRadar();});
+document.getElementById('radarJoin').addEventListener('click',()=>{ myHot=true; localStorage.setItem('ceSoirMyHot','1'); refreshMyHotUI(); refreshMyHotMap(); closeRadar(); showToast('🔥 Tu apparais maintenant dans le radar CE SOIR.'); });
+setRadar(false);
+
+/* live counter tick */
+let liveN = 1284;
+setInterval(()=>{
+  liveN += Math.floor(Math.random()*5)-2;
+  document.getElementById('liveCount').textContent = liveN.toLocaleString('fr-CA');
+}, 4000);
+
+/* ================= BULLE ACTIVE (agrandissement au clic) ================= */
+let activeBubbleEl = null;
+let activeBubbleMarker = null;
+function selectBubble(id, marker){
+  // Réinitialise l'ancienne bulle agrandie, s'il y en a une
+  deselectBubble();
+  const el = marker.getElement();
+  const bubbleEl = el ? el.querySelector('.lf-bubble') : null;
+  if(bubbleEl){
+    bubbleEl.classList.add('active');
+    activeBubbleEl = bubbleEl;
+    activeBubbleMarker = marker;
+    marker.setZIndexOffset(1000);
+  }
+  openProfile(id);
+}
+function deselectBubble(){
+  if(activeBubbleEl){ activeBubbleEl.classList.remove('active'); activeBubbleEl = null; }
+  if(activeBubbleMarker){ activeBubbleMarker.setZIndexOffset(0); activeBubbleMarker = null; }
+}
+
+/* ================= PROFILE SHEET ================= */
+const profileSheet = document.getElementById('profileSheet');
+const sheetBackdrop = document.getElementById('sheetBackdrop');
+function openProfile(id){
+  const p = PROFILES.find(x=>x.id===id);
+  if(!p) return;
+  lastViewedProfile=p;
+  // On ouvre la fiche EN PREMIER : même si le remplissage plus bas
+  // échoue sur un champ, la fiche reste visible au lieu de rester invisible.
+  profileSheet.classList.add('open');
+  sheetBackdrop.classList.add('show');
+  try{
+    document.getElementById('pPhoto').src = p.avatar;
+    document.getElementById('pName').textContent = `${p.name}, ${p.age}`;
+    const pHotBadge = document.getElementById('pHotBadge');
+    pHotBadge.style.display = p.hot ? 'inline-flex' : 'none';
+    document.getElementById('pVibeEmoji').textContent = p.vibeEmoji || '✨';
+    document.getElementById('pVibeText').textContent = p.vibeText || '';
+    document.getElementById('pStatusDot').style.background = p.status==='online' ? 'var(--online)' : p.status==='recent' ? 'var(--recent)' : 'var(--offline)';
+    document.getElementById('pStatusText').textContent = p.status==='online' ? 'En ligne' : p.status==='recent' ? 'En ligne récemment' : 'Hors ligne';
+    document.getElementById('pStatusText').style.color = p.status==='online' ? 'var(--online)' : p.status==='recent' ? 'var(--recent)' : 'var(--offline)';
+    const addrParts = p.address.split(',');
+    const precisionM = 5 + ((p.id*7) % 30); // valeur déterministe de démo
+    document.getElementById('pStreet').textContent = addrParts[0].trim();
+    document.getElementById('pCity').textContent = `Montréal, QC · ${(addrParts[1]||p.zone).trim()}`;
+    document.getElementById('pPrecision').textContent = `Précision : ${precisionM} mètres`;
+    document.getElementById('pDist').textContent = `À ${p.distanceKm.toLocaleString('fr-CA',{minimumFractionDigits:2,maximumFractionDigits:2})} km de toi`;
+    document.getElementById('pBio').textContent = p.bio;
+    document.getElementById('pIntention').textContent = p.intention;
+    document.getElementById('pHeight').textContent = p.height;
+    document.getElementById('pLangues').textContent = p.langues;
+    document.getElementById('pLastSeen').textContent = p.lastSeen;
+    document.getElementById('pTags').innerHTML = p.tags.map(t=>`<span class="tag">${t}</span>`).join('');
+    const aligned = document.getElementById('pAligned'); if(aligned){ aligned.style.display=p.hot?'block':'none'; aligned.textContent=p.hot?'🔥 Vibe alignée — même énergie ce soir':''; }
+    document.getElementById('pMeetBtn').onclick=()=>showMeetingPoint(p);
+    document.getElementById('pSendMsg').onclick = ()=> { closeProfile(); goToChatByName(p.name, p.avatar); };
+  }catch(err){
+    console.error('Erreur lors du remplissage de la fiche profil :', err);
+  }
+}
+
+function showMeetingPoint(p){
+  const km=(p.distanceKm||0); const mins=Math.max(3,Math.round(km*7));
+  const names=['Café à mi-chemin','Place publique à mi-chemin','Bar tranquille à mi-chemin'];
+  const choice=names[p.id%names.length];
+  showToast(`📍 ${choice} · environ ${mins} min chacun. Aucun emplacement précis partagé.`);
+}
+function showToast(text){ const t=document.getElementById('nearbyToast'); if(!t)return; document.getElementById('nearbyToastText').textContent=text; t.classList.add('show'); clearTimeout(showToast._t); showToast._t=setTimeout(()=>t.classList.remove('show'),2600); }
+function setRadar(on){ radarActive=on; const wrap=document.getElementById('mapWrap'); if(wrap) wrap.classList.toggle('radar-mode',on); const rings=document.querySelectorAll('.radar-ring'); rings.forEach(r=>r.style.display=on?'block':'none'); }
+function openRadar(){ document.getElementById('radarOverlay').classList.add('show'); setRadar(true); showToast('👀 3 personnes cherchent quelqu’un dans ton secteur.'); }
+function closeRadar(){ document.getElementById('radarOverlay').classList.remove('show'); setRadar(false); }
+
+function closeProfile(){
+  profileSheet.classList.remove('open'); sheetBackdrop.classList.remove('show');
+  deselectBubble();
+}
+document.getElementById('sheetClose').addEventListener('click', closeProfile);
+sheetBackdrop.addEventListener('click', closeProfile);
+
+/* ================= FILTERS SHEET ================= */
+const filtersSheet = document.getElementById('filtersSheet');
+const filtersBackdrop = document.getElementById('filtersBackdrop');
+function buildChips(){
+  const sexWrap = document.getElementById('chipSexes');
+  sexWrap.innerHTML = SEXES.map(s=>`<div class="chip" data-val="${s}">${s}</div>`).join('');
+  const secWrap = document.getElementById('chipSecteurs');
+  secWrap.innerHTML = SECTEURS.map(s=>`<div class="chip" data-val="${s}">${s}</div>`).join('');
+  const intWrap = document.getElementById('chipIntentions');
+  intWrap.innerHTML = INTENTIONS.map(i=>`<div class="chip" data-val="${i}">${i}</div>`).join('');
+  sexWrap.querySelectorAll('.chip').forEach(c=> c.addEventListener('click', ()=> toggleChip(c, activeFilters.sexes)));
+  secWrap.querySelectorAll('.chip').forEach(c=> c.addEventListener('click', ()=> toggleChip(c, activeFilters.secteurs)));
+  intWrap.querySelectorAll('.chip').forEach(c=> c.addEventListener('click', ()=> toggleChip(c, activeFilters.intentions)));
+}
+function toggleChip(el, set){
+  const v = el.dataset.val;
+  if(set.has(v)){ set.delete(v); el.classList.remove('active'); }
+  else{ set.add(v); el.classList.add('active'); }
+}
+buildChips();
+function openFilters(){ filtersSheet.classList.add('open'); filtersBackdrop.classList.add('show'); }
+function closeFilters(){ filtersSheet.classList.remove('open'); filtersBackdrop.classList.remove('show'); }
+document.getElementById('btn-filters-fab').addEventListener('click', openFilters);
+document.getElementById('btn-filters-top').addEventListener('click', openFilters);
+filtersBackdrop.addEventListener('click', closeFilters);
+document.getElementById('applyFilters').addEventListener('click', ()=>{
+  closeFilters();
+  renderBubbles();
+  const total = activeFilters.sexes.size + activeFilters.secteurs.size + activeFilters.intentions.size;
+  const badge = document.getElementById('filtersBadge');
+  if(total>0){ badge.style.display='inline-block'; badge.textContent = total; }
+  else{ badge.style.display='none'; }
+});
+
+/* ================= TABS ================= */
+/* ================= MA VIBE DU MOMENT ================= */
+const VIBE_EMOJIS = ['✨','🍸','☕','🎸','🌆','🕯️','💫','🍺','🍕','🌳','🥯','🎤','💬','🎧','🚶','🔥','😴','🍷','🌙','🎬'];
+let myVibe = { emoji:'✨', text:'' };
+
+function renderEmojiPicker(){
+  const wrap = document.getElementById('emojiPicker');
+  wrap.innerHTML = VIBE_EMOJIS.map(e=>`<button type="button" class="emoji-opt${e===myVibe.emoji?' active':''}" data-emoji="${e}">${e}</button>`).join('');
+  wrap.querySelectorAll('.emoji-opt').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      myVibe.emoji = btn.dataset.emoji;
+      wrap.querySelectorAll('.emoji-opt').forEach(b=> b.classList.toggle('active', b===btn));
+      updateMyVibePreview();
+      saveMyVibe();
+    });
+  });
+}
+function updateMyVibePreview(){
+  document.getElementById('myVibeEmoji').textContent = myVibe.emoji;
+  const textEl = document.getElementById('myVibeTextPreview');
+  if(myVibe.text.trim()){
+    textEl.textContent = myVibe.text.trim();
+    textEl.classList.remove('placeholder');
+  } else {
+    textEl.textContent = 'Ajoute ton envie du moment';
+    textEl.classList.add('placeholder');
+  }
+}
+function saveMyVibe(){
+  // Reflète la vibe éditée sur "ton" propre profil (démo en mémoire, pas de backend).
+  const hint = document.getElementById('vibeSavedHint');
+  hint.classList.add('show');
+  clearTimeout(saveMyVibe._t);
+  saveMyVibe._t = setTimeout(()=> hint.classList.remove('show'), 1400);
+}
+const myVibeInput = document.getElementById('myVibeInput');
+myVibeInput.addEventListener('input', ()=>{
+  myVibe.text = myVibeInput.value;
+  document.getElementById('vibeCharCount').textContent = `${myVibeInput.value.length}/60`;
+  updateMyVibePreview();
+});
+myVibeInput.addEventListener('blur', ()=>{ if(myVibe.text.trim()) saveMyVibe(); });
+renderEmojiPicker();
+updateMyVibePreview();
+
+/* ================= TES PHOTOS (galerie) ================= */
+const MAX_PHOTOS = 6;
+let myPhotos = ['https://i.pravatar.cc/300?img=68', null, null, null, null, null];
+let pendingSlotIndex = null;
+const photoFileInput = document.getElementById('photoFileInput');
+
+function renderPhotoGrid(){
+  const grid = document.getElementById('photoGrid');
+  grid.innerHTML = myPhotos.map((url, i)=>{
+    if(url){
+      return `<div class="photo-tile" data-idx="${i}">
+        ${i===0 ? '<span class="primary-badge">Principale</span>' : ''}
+        <img src="${url}" alt="">
+        <div class="remove-btn" data-remove="${i}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+      </div>`;
+    }
+    return `<div class="photo-tile empty" data-add="${i}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </div>`;
+  }).join('');
+
+  grid.querySelectorAll('[data-add]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      pendingSlotIndex = parseInt(el.dataset.add);
+      photoFileInput.click();
+    });
+  });
+  grid.querySelectorAll('[data-remove]').forEach(el=>{
+    el.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const idx = parseInt(el.dataset.remove);
+      myPhotos[idx] = null;
+      // Comble le trou en décalant les photos suivantes vers l'avant
+      myPhotos = myPhotos.filter(p=>p) .concat(new Array(MAX_PHOTOS).fill(null)).slice(0, MAX_PHOTOS);
+      renderPhotoGrid();
+      updateHeroPhoto();
+    });
+  });
+}
+function updateHeroPhoto(){
+  const hero = document.getElementById('heroPhoto');
+  if(hero && myPhotos[0]) hero.src = myPhotos[0];
+}
+
+let myVisibility = localStorage.getItem('ceSoirVisibility') || 'visible';
+
+/* ================= MODE CE SOIR ================= */
+function refreshMyHotUI(){
+  const toggle=document.getElementById('myHotToggle'); if(toggle) toggle.checked=myHot;
+  const wrap=document.getElementById('heroAvatarWrap'); const badge=document.getElementById('heroHotBadge');
+  if(wrap) wrap.classList.toggle('hot-avatar',myHot); if(badge) badge.style.display=myHot?'flex':'none';
+  document.querySelectorAll('#myAvailability .status-option').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.min,10)===myAvailabilityMin));
+  const al=document.getElementById('myAvailabilityLabel'); if(al) al.textContent=myAvailabilityMin===0?'Maintenant':myAvailabilityMin<60?`Dans ${myAvailabilityMin} min`:myAvailabilityMin===60?'Dans 1 h':'Plus tard';
+}
+function refreshMyHotMap(){ const el=document.querySelector('.lf-me'); if(el) el.classList.toggle('hot',myHot); if(ownMarker){ if(myVisibility==='hidden') ownMarker.remove(); else if(!map.hasLayer(ownMarker)) ownMarker.addTo(map); } }
+const myHotToggle=document.getElementById('myHotToggle');
+if(myHotToggle){ myHotToggle.checked=myHot; myHotToggle.addEventListener('change',()=>{ myHot=myHotToggle.checked; localStorage.setItem('ceSoirMyHot',myHot?'1':'0'); refreshMyHotUI(); refreshMyHotMap(); }); }
+refreshMyHotUI();
+updateMission(0);
+document.querySelectorAll('#myAvailability .status-option').forEach(btn=>btn.addEventListener('click',()=>{ myAvailabilityMin=parseInt(btn.dataset.min,10); localStorage.setItem('ceSoirAvailability',String(myAvailabilityMin)); refreshMyHotUI(); }));
+photoFileInput.addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file || pendingSlotIndex===null) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    myPhotos[pendingSlotIndex] = reader.result;
+    renderPhotoGrid();
+    updateHeroPhoto();
+    pendingSlotIndex = null;
+  };
+  reader.readAsDataURL(file);
+  photoFileInput.value = '';
+});
+renderPhotoGrid();
+
+const views = { carte:'view-carte', decouvrir:'view-decouvrir', messages:'view-messages', profil:'view-profil' };
+document.querySelectorAll('.navbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=> switchTab(btn.dataset.tab));
+});
+function switchTab(tab){
+  document.querySelectorAll('.navbtn').forEach(b=> b.classList.toggle('active', b.dataset.tab===tab));
+  Object.values(views).forEach(id=> document.getElementById(id).classList.remove('active'));
+  document.getElementById('view-chat').classList.remove('active');
+  document.getElementById(views[tab]).classList.add('active');
+  if(tab==='decouvrir') renderDiscoverCard();
+  if(tab==='messages') renderConvList();
+}
+
+/* ================= DÉCOUVRIR ================= */
+function renderDiscoverCard(){
+  const stack = document.getElementById('cardStack');
+  stack.innerHTML = '';
+  if(discoverIdx >= discoverQueue.length){
+    stack.innerHTML = `<div class="empty-deck"><div class="display">T'as vu tout le monde ce soir 🌙</div><p>Reviens plus tard ou élargis ton secteur dans les filtres.</p></div>`;
+    return;
+  }
+  const p = discoverQueue[discoverIdx];
+  const card = document.createElement('div');
+  card.className = `swipe-card${p.hot ? ' hot-card' : ''}`;
+  card.style.backgroundImage = `url('${p.avatar}')`;
+  card.innerHTML = `
+    <div class="grad"></div>
+    ${p.hot ? `<div class="discover-hot-badge">🔥 DISPONIBLE CE SOIR <span class="countdown">${p.availabilityMin===0?'MAINTENANT':'BIENTÔT'}</span></div>` : ''}
+    <div class="swipe-stamp like-stamp" id="likeStamp">J'aime</div>
+    <div class="swipe-stamp nope-stamp" id="nopeStamp">Nope</div>
+    <div class="flame-burst" id="flameBurst">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.5 2c.6 2.4-.3 3.9-1.7 5.4-1.6 1.7-3.3 3.5-3.3 6.4a5.5 5.5 0 0 0 11 0c0-2-1-3.5-2-4.7-.2.9-.7 1.6-1.4 2-.3-2.7-1.4-4.1-2.6-5.5A6 6 0 0 1 12.5 2z"/></svg>
+    </div>
+    <div class="info">
+      <div class="name">${p.name}, ${p.age} <span class="verified">✔</span></div>
+      <div class="meta">${p.intention} · ${p.zone} · ${p.distanceKm.toFixed(1)} km ${p.hot?`<span class="countdown">${p.availabilityMin===0?"MAINTENANT":"DANS "+p.availabilityMin+" MIN"}</span>`:""}</div>
+      <div class="tags">${p.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+    </div>`;
+  stack.appendChild(card);
+  attachSwipeHandlers(card);
+}
+function nextCard(){ discoverIdx++; renderDiscoverCard(); }
+
+function updateMission(step=1){
+  if(step>0) missionProgress=Math.min(2,missionProgress+step);
+  localStorage.setItem('ceSoirMission',String(missionProgress));
+  const bar=document.getElementById('missionBar'), text=document.getElementById('missionText'), card=document.querySelector('.mission-card');
+  if(bar) bar.style.width=(missionProgress/2*100)+'%';
+  if(text) text.textContent=missionProgress>=2?'🎉 Mission accomplie — soirée lancée!':`${missionProgress}/2 rencontre potentielle repérée`;
+  if(card) card.classList.toggle('done',missionProgress>=2);
+}
+function showMatch(p){
+  pendingMatchProfile=p;
+  document.getElementById('matchPhoto').src = p.avatar;
+  const title=document.querySelector('#matchOverlay h2');
+  if(title) title.textContent=p.hot?'🔥 Vous êtes chauds pour ce soir!':'C’est un match ! 💕';
+  const sub=document.querySelector('#matchOverlay p');
+  if(sub) sub.textContent=p.hot?'Vous avez tous les deux signalé une intention pour ce soir.':'Vous vous êtes tous les deux plu.';
+  document.getElementById('matchOverlay').classList.add('show');
+  updateMission(1);
+  document.getElementById('matchMsgBtn').onclick = ()=>{
+    document.getElementById('matchOverlay').classList.remove('show');
+    goToChatByName(p.name, p.avatar);
+  };
+}
+
+function doLike(){
+  if(discoverIdx >= discoverQueue.length) return;
+  const p = discoverQueue[discoverIdx];
+  const isMatch = p.hot ? Math.random() < 0.82 : Math.random() < 0.55;
+  if(isMatch){ showMatch(p); } else { nextCard(); }
+}
+function doPass(){
+  if(discoverIdx >= discoverQueue.length) return;
+  nextCard();
+}
+function doCoupDeCoeur(){
+  if(discoverIdx >= discoverQueue.length) return;
+  const p = discoverQueue[discoverIdx];
+  const burst = document.getElementById('flameBurst');
+  if(burst) burst.classList.add('show');
+  const toastText = document.getElementById('flameToastText');
+  const toast = document.getElementById('flameToast');
+  toastText.textContent = `Coup de cœur envoyé à ${p.name} 🔥`;
+  toast.classList.add('show');
+  setTimeout(()=> toast.classList.remove('show'), 1800);
+  // Un coup de cœur signale un désir fort : chance de match nettement plus élevée
+  const isMatch = Math.random() < 0.85;
+  setTimeout(()=>{
+    if(isMatch){ showMatch(p); } else { nextCard(); }
+  }, 550);
+}
+
+function attachSwipeHandlers(card){
+  let startX = 0, startY = 0, dx = 0, dy = 0, dragging = false;
+  const likeStamp = card.querySelector('#likeStamp');
+  const nopeStamp = card.querySelector('#nopeStamp');
+  const THRESH = 100;
+
+  function onDown(x, y){
+    dragging = true; startX = x; startY = y; dx = 0; dy = 0;
+    card.classList.add('dragging');
+  }
+  function onMove(x, y){
+    if(!dragging) return;
+    dx = x - startX; dy = y - startY;
+    const rot = dx / 18;
+    card.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg)`;
+    const ratio = Math.min(Math.abs(dx) / THRESH, 1);
+    if(dx > 0){ likeStamp.style.opacity = ratio; nopeStamp.style.opacity = 0; }
+    else if(dx < 0){ nopeStamp.style.opacity = ratio; likeStamp.style.opacity = 0; }
+    else { likeStamp.style.opacity = 0; nopeStamp.style.opacity = 0; }
+  }
+  function onUp(){
+    if(!dragging) return;
+    dragging = false;
+    card.classList.remove('dragging');
+    if(dx > THRESH){
+      card.style.transform = `translate(${window.innerWidth}px, ${dy}px) rotate(24deg)`;
+      card.style.opacity = '0';
+      setTimeout(doLike, 220);
+    } else if(dx < -THRESH){
+      card.style.transform = `translate(-${window.innerWidth}px, ${dy}px) rotate(-24deg)`;
+      card.style.opacity = '0';
+      setTimeout(doPass, 220);
+    } else {
+      card.style.transform = '';
+      likeStamp.style.opacity = 0;
+      nopeStamp.style.opacity = 0;
+    }
+  }
+
+  card.addEventListener('pointerdown', (e)=>{ card.setPointerCapture(e.pointerId); onDown(e.clientX, e.clientY); });
+  card.addEventListener('pointermove', (e)=> onMove(e.clientX, e.clientY));
+  card.addEventListener('pointerup', onUp);
+  card.addEventListener('pointercancel', onUp);
+}
+
+document.getElementById('btn-pass').addEventListener('click', doPass);
+document.getElementById('btn-star').addEventListener('click', doCoupDeCoeur);
+document.getElementById('btn-like').addEventListener('click', doLike);
+document.getElementById('matchOverlay').addEventListener('click', (e)=>{
+  if(e.target.id==='matchOverlay'){ e.target.classList.remove('show'); nextCard(); }
+});
+
+/* ================= MESSAGES / CHAT ================= */
+function renderConvList(){
+  const list = document.getElementById('convList');
+  list.innerHTML = CONVERSATIONS.map(c=>`
+    <div class="conv-item" data-id="${c.id}">
+      <div class="conv-avatar ${c.online?'online':''}"><img src="${c.avatar}"><span class="dot"></span></div>
+      <div class="conv-mid">
+        <div class="conv-name-row"><span class="conv-name">${c.name}</span><span class="conv-time">${c.time}</span></div>
+        <div class="conv-preview">${c.preview}</div>
+      </div>
+      ${c.unread>0?`<span class="conv-unread">${c.unread}</span>`:''}
+    </div>`).join('');
+  list.querySelectorAll('.conv-item').forEach(el=>{
+    el.addEventListener('click', ()=> openChat(parseInt(el.dataset.id)));
+  });
+}
+function goToChatByName(name, avatar){
+  let conv = CONVERSATIONS.find(c=>c.name===name);
+  if(!conv){
+    conv = {id: Date.now(), name, avatar, online:true, unread:0, time:'maintenant', preview:'Nouvelle conversation', thread:[]};
+    CONVERSATIONS.unshift(conv);
+  }
+  openChat(conv.id);
+}
+function openChat(id){
+  activeChatId = id;
+  const c = CONVERSATIONS.find(x=>x.id===id);
+  c.unread = 0;
+  document.getElementById('chatAvatar').src = c.avatar;
+  document.getElementById('chatName').textContent = c.name;
+  const profile=PROFILES.find(x=>x.name===c.name);
+  document.getElementById('chatStatus').textContent = profile?.hot ? `🔥 ${profile.availabilityMin===0?'Disponible maintenant':'Disponible ce soir'}` : (c.online ? 'En ligne' : 'Hors ligne');
+  renderChatBody(c);
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-chat').classList.add('active');
+}
+function renderChatBody(c){
+  const body = document.getElementById('chatBody');
+  body.innerHTML = c.thread.map(m=>`<div class="bubble-msg ${m.from==='me'?'me':'them'}">${m.text}</div>`).join('');
+  body.scrollTop = body.scrollHeight;
+}
+document.getElementById('btn-chat-back').addEventListener('click', ()=>{
+  document.getElementById('view-chat').classList.remove('active');
+  document.getElementById('view-messages').classList.add('active');
+  renderConvList();
+});
+document.querySelectorAll('#chatQuick button').forEach(btn=>btn.addEventListener('click',()=>{
+  const text=btn.dataset.quick;
+  const input=document.getElementById('chatInput');
+  input.value=text; input.focus();
+}));
+
+function sendChatMessage(){
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text || activeChatId===null) return;
+  const c = CONVERSATIONS.find(x=>x.id===activeChatId);
+  c.thread.push({from:'me', text});
+  input.value='';
+  renderChatBody(c);
+  if(/partant|mi-chemin|verre|30 min/i.test(text)) updateMission(1);
+  setTimeout(()=>{
+    let reply;
+    if(/mi-chemin/i.test(text)) reply='📍 Oui! On peut choisir un endroit à mi-chemin.';
+    else if(/partant/i.test(text)) reply='🔥 Moi aussi. On organise ça?';
+    else if(/30 min/i.test(text)) reply='⏱️ Parfait, je serai dispo dans environ 30 min.';
+    else if(/verre/i.test(text)) reply='🍸 Ça me tente. On se rejoint où?';
+    else reply = AUTO_REPLIES[Math.floor(Math.random()*AUTO_REPLIES.length)];
+    c.thread.push({from:'them', text:reply});
+    c.preview = reply; c.time = 'maintenant';
+    renderChatBody(c);
+  }, 1200);
+}
+document.getElementById('chatSend').addEventListener('click', sendChatMessage);
+document.getElementById('chatInput').addEventListener('keydown', e=>{ if(e.key==='Enter') sendChatMessage(); });
+
+document.querySelectorAll('.vis-opt').forEach(o=>o.classList.toggle('active',o.dataset.mode===myVisibility));
+
+/* ================= PROFIL ================= */
+document.querySelectorAll('.vis-opt').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    document.querySelectorAll('.vis-opt').forEach(o=>o.classList.remove('active'));
+    el.classList.add('active');
+    myVisibility=el.dataset.mode; localStorage.setItem('ceSoirVisibility',myVisibility); refreshMyHotMap();
+  });
+});
+
+/* ================= MENU (stub) ================= */
+document.getElementById('btn-menu').addEventListener('click', ()=> switchTab('profil'));
+</script>
+</body>
+</html>
