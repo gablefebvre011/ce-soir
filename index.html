@@ -1399,7 +1399,23 @@
 
 <script>
 /* ================= DATA ================= */
-const USER_LOC = { lat:45.5357584, lng:-73.5690103 };
+let USER_LOC = { lat:45.5357584, lng:-73.5690103 }; // valeur par défaut (Plateau-Mont-Royal), remplacée par getRealUserLocation() si le GPS est disponible
+
+// Demande la position GPS réelle du navigateur. Si l'utilisateur refuse ou si la géoloc échoue,
+// on garde silencieusement la position par défaut (Plateau-Mont-Royal) sans bloquer l'app.
+function getRealUserLocation(){
+  return new Promise((resolve)=>{
+    if(!navigator.geolocation){ resolve(false); return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos)=>{
+        USER_LOC = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        resolve(true);
+      },
+      ()=>{ resolve(false); }, // permission refusée ou erreur : on garde la position par défaut
+      { enableHighAccuracy:true, timeout:8000, maximumAge:60000 }
+    );
+  });
+}
 
 /* ================= SUPABASE ================= */
 const SUPABASE_URL = 'https://xdqyciiydyrcihlawbew.supabase.co';
@@ -2566,6 +2582,7 @@ authForm.addEventListener('submit', async (e)=>{
 
 async function onAuthSuccess(user){
   currentUserId = user.id;
+  await getRealUserLocation(); // essaie d'obtenir la vraie position GPS avant de calculer les distances
   const ok = await loadProfilesFromSupabase();
   if(!ok){
     // L'erreur est déjà affichée; on révèle le formulaire pour permettre de réessayer plutôt que de rester bloqué sur le spinner de boot.
