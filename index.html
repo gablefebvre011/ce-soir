@@ -2660,12 +2660,25 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize', sche
 // Charge les profils Supabase (si configuré) par-dessus les données de démo, puis
 // s'abonne aux changements en temps réel (nouveau statut, nouveau profil, etc.).
 const splashStart = Date.now();
+let splashPostActionsRun = false;
+// Actions à faire une fois le splash caché (recalage de la carte, overlay de préférences).
+// Séparées de la classe CSS "hide" pour ne jamais être sautées si le splash a déjà
+// été caché ailleurs dans le code (ex: écran de connexion) avant l'appel à hideSplash().
+function runSplashPostActions(){
+  if(splashPostActionsRun) return;
+  splashPostActionsRun = true;
+  scheduleMapResize();
+  maybeShowPrefOverlay();
+}
 function hideSplash(){
   const el = document.getElementById('splashScreen');
-  if(!el || el.classList.contains('hide')) return;
-  const elapsed = Date.now() - splashStart;
-  const wait = Math.max(0, 500 - elapsed); // évite un flash trop bref
-  setTimeout(()=>{ el.classList.add('hide'); scheduleMapResize(); maybeShowPrefOverlay(); }, wait);
+  if(el && !el.classList.contains('hide')){
+    const elapsed = Date.now() - splashStart;
+    const wait = Math.max(0, 500 - elapsed); // évite un flash trop bref
+    setTimeout(()=>{ el.classList.add('hide'); runSplashPostActions(); }, wait);
+    return;
+  }
+  runSplashPostActions();
 }
 function continueBoot(){
   loadProfiles().then(subscribeToProfileChanges).finally(hideSplash);
@@ -2724,17 +2737,24 @@ document.getElementById('authPassword').addEventListener('keydown', e=>{ if(e.ke
 // Complète le profil (nom/âge/genre) et le relie au compte via user_id, si ce n'est pas déjà fait.
 async function proceedPastAuth(){
   document.getElementById('signOutBtn').style.display='block';
+  let settled = false;
+  // Filet de sécurité : si la vérification du profil traîne ou ne répond jamais
+  // (réseau lent, requête silencieuse), on laisse quand même entrer dans l'appli
+  // plutôt que de rester bloqué sur un écran vide.
+  const safety = setTimeout(()=>{ if(!settled){ settled = true; continueBoot(); } }, 6000);
   try{
     const { data:{ user } } = await supabaseClient.auth.getUser();
-    if(!user){ continueBoot(); return; }
+    if(!user){ if(!settled){ settled = true; clearTimeout(safety); continueBoot(); } return; }
     currentUserId = user.id;
     const { data, error } = await supabaseClient.from('profiles').select('id').eq('user_id', user.id).maybeSingle();
-    if(!error && data){ continueBoot(); return; }
+    if(settled) return; // le filet a déjà pris le relais entre-temps
+    if(!error && data){ settled = true; clearTimeout(safety); continueBoot(); return; }
+    settled = true; clearTimeout(safety);
     document.getElementById('completeProfileOverlay').dataset.userId = user.id;
     document.getElementById('completeProfileOverlay').classList.add('show');
   }catch(e){
     // Colonne user_id pas encore ajoutée côté base, ou réseau indisponible → on ne bloque pas l'accès.
-    continueBoot();
+    if(!settled){ settled = true; clearTimeout(safety); continueBoot(); }
   }
 }
 const cpChipWrap = document.getElementById('cpSexeChipWrap');
