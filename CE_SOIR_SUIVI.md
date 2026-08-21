@@ -66,11 +66,15 @@ vrais comptes) se reflète en direct dans l'app sans redéploiement.
 **2026-08-21** — Session de fixs CSS/JS + découverte architecture Supabase :
 - Fix barre de saisie chat cachée derrière la nav
 - Fix scroll Babillard (contenu coupé)
+- Fix scroll Découvrir (même bug que Babillard, jamais adressé avant)
 - Ajout oeil press-and-hold sur le mot de passe (login + signup)
 - Fix duplication du profil de l'utilisateur dans la liste "à proximité"
 - **Découverte + fix majeur** : mauvaise table Supabase lue pour les profils démo
   (`profiles` au lieu de `profils`) — corrigé, les deux tables sont maintenant lues et fusionnées
 - Fix toast invisible sur l'onglet NOW (élément scopé à la mauvaise vue)
+- Ajout colonne `actif` sur `profils` pour activer/désactiver les 14 profils démo manuellement dans Supabase
+- Fix carte : les 14 profils étaient éparpillés dans tout Montréal (mauvaises coordonnées GPS), recentrés en cluster près de l'utilisateur + bulles agrandies (50px→62px) + zoom ajusté
+- Ménage GitHub : suppression des branches `gablefebvre011-patch-1` et `index.html` créées par erreur (upload accidentel). `main` reste la seule branche active, à jour.
 - Désormais : Claude tient ce doc à jour automatiquement après chaque tâche, sans que Gabriel ait à le demander.
 
 **2026-08-20** — Fusion `index-v2-final.html` + `ce-soir-app-v8-photos.html` → `index.html`.
