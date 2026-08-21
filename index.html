@@ -190,7 +190,7 @@
   /* --- custom markers drawn inside leaflet divIcons --- */
   .lf-icon-wrap{ background:none !important; border:none !important; transform:translateZ(0); }
   .lf-bubble{
-    width:50px; height:50px; border-radius:50%; position:relative; cursor:pointer;
+    width:62px; height:62px; border-radius:50%; position:relative; cursor:pointer;
     box-shadow:0 3px 10px rgba(0,0,0,.55);
     transition:transform .32s cubic-bezier(.34,1.56,.64,1), box-shadow .32s ease;
   }
@@ -2668,7 +2668,7 @@ function refreshFallbackBubbles(){
 }
 function addMapMarkers(){
   if(!map) return;
-  PROFILES.forEach(p=>{const marker=L.marker([p.lat,p.lng],{icon:L.divIcon({html:`<div class="lf-bubble ${p.status}${p.hot?' hot':''}"><img src="${p.avatar}" alt="${p.name}">${p.hot?'<span class="hot-badge">🔥</span>':''}<span class="lf-dot"></span></div>`,className:'lf-icon-wrap',iconSize:[50,50],iconAnchor:[25,25]})}).addTo(map);marker.on('click',()=>selectBubble(p.id,marker));if(p.status==='online'&&p.distanceKm<0.5)marker.bindTooltip(Math.max(1,Math.round(p.distanceKm*15))+' min',{permanent:true,direction:'top',offset:[0,-22],className:'lf-eta-tag'});bubbleMarkers.set(p.id,marker);});
+  PROFILES.forEach(p=>{const marker=L.marker([p.lat,p.lng],{icon:L.divIcon({html:`<div class="lf-bubble ${p.status}${p.hot?' hot':''}"><img src="${p.avatar}" alt="${p.name}">${p.hot?'<span class="hot-badge">🔥</span>':''}<span class="lf-dot"></span></div>`,className:'lf-icon-wrap',iconSize:[62,62],iconAnchor:[31,31]})}).addTo(map);marker.on('click',()=>selectBubble(p.id,marker));if(p.status==='online'&&p.distanceKm<0.5)marker.bindTooltip(Math.max(1,Math.round(p.distanceKm*15))+' min',{permanent:true,direction:'top',offset:[0,-22],className:'lf-eta-tag'});bubbleMarkers.set(p.id,marker);});
 }
 function clearMapMarkers(){
   if(map) bubbleMarkers.forEach(m=>{ if(map.hasLayer(m)) map.removeLayer(m); });
@@ -2713,7 +2713,7 @@ function syncMapMarkers(){
 function initMap(){
   if(window.L){
     try{
-      map=L.map('leafletMap',{zoomControl:false,attributionControl:true,minZoom:14,maxZoom:18,fadeAnimation:false,zoomAnimation:false,markerZoomAnimation:false}).setView([USER_LOC.lat,USER_LOC.lng],15);
+      map=L.map('leafletMap',{zoomControl:false,attributionControl:true,minZoom:13,maxZoom:18,fadeAnimation:false,zoomAnimation:false,markerZoomAnimation:false}).setView([USER_LOC.lat,USER_LOC.lng],14);
       const tiles=L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd',maxZoom:19}).addTo(map);
       let tileErrors=0; tiles.on('tileerror',()=>{tileErrors++;if(tileErrors>=2&&!usingFallbackMap){map.remove();map=null;renderFallbackMap();showToast('🗺️ Carte locale activée.');}});
       ownMarker=L.marker([USER_LOC.lat,USER_LOC.lng],{icon:L.divIcon({html:`<div class="lf-me ${myHot?'hot':''} ${isPremium?'premium':''} ${(boostUntil&&Date.now()<boostUntil)?'boosted':''}"></div>`,className:'lf-icon-wrap',iconSize:[16,16],iconAnchor:[8,8]}),interactive:false}).addTo(map).bindTooltip('Toi',{permanent:true,direction:'bottom',offset:[0,10],className:'lf-me-tag'}).openTooltip();
@@ -2723,7 +2723,7 @@ function initMap(){
 }
 function passesFilters(p){const g=activeFilters.sexes,s=activeFilters.secteurs,i=activeFilters.intentions;if(g.size&&!g.has(p.sexe))return false;if(s.size&&!s.has(p.zone))return false;if(i.size&&!i.has(p.intention))return false;if(isPremium){const ageMaxEl=document.getElementById('ageMaxRange'),distMaxEl=document.getElementById('distMaxRange');if(ageMaxEl&&p.age>parseInt(ageMaxEl.value,10))return false;if(distMaxEl&&p.distanceKm>parseInt(distMaxEl.value,10))return false;}return true;}
 function renderBubbles(){if(usingFallbackMap){refreshFallbackBubbles();return;}PROFILES.forEach(p=>{const marker=bubbleMarkers.get(p.id);if(!marker||!map)return;if(passesFilters(p)){if(!map.hasLayer(marker))marker.addTo(map);}else{if(map.hasLayer(marker))map.removeLayer(marker);}});}
-document.getElementById('btn-recenter').addEventListener('click',()=>{if(map)map.setView([USER_LOC.lat,USER_LOC.lng],15);else{const me=document.getElementById('fallbackMe');if(me){me.classList.add('recenter');setTimeout(()=>me.classList.remove('recenter'),900);}}});
+document.getElementById('btn-recenter').addEventListener('click',()=>{if(map)map.setView([USER_LOC.lat,USER_LOC.lng],14);else{const me=document.getElementById('fallbackMe');if(me){me.classList.add('recenter');setTimeout(()=>me.classList.remove('recenter'),900);}}});
 initMap();
 // La barre d'adresse mobile qui apparaît/disparaît change la taille réelle du conteneur
 // (à cause de dvh) sans que Leaflet le sache automatiquement — on le lui redit à chaque
