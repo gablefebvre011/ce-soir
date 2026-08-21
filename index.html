@@ -831,6 +831,23 @@
     animation:photoSpin .7s linear infinite; z-index:1;
   }
   @keyframes photoSpin{ to{ transform:rotate(360deg); } }
+  .photo-tile:not(.empty){ cursor:grab; touch-action:none; -webkit-user-drag:none; -webkit-touch-callout:none; user-select:none; }
+  .photo-tile img{ -webkit-user-drag:none; -webkit-touch-callout:none; user-select:none; pointer-events:none; }
+  .photo-tile.dragging{ opacity:.35; }
+  .photo-tile.drag-over{ box-shadow:0 0 0 2.5px var(--magenta2) inset; }
+  .photo-drag-ghost{
+    position:fixed; z-index:9999; pointer-events:none; border-radius:14px; overflow:hidden;
+    box-shadow:0 12px 30px rgba(0,0,0,.5); width:96px; aspect-ratio:3/4;
+  }
+  .photo-drag-ghost img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .photo-save-row{ padding:10px 20px 0; display:flex; align-items:center; gap:10px; }
+  .photo-save-btn{
+    border:0; border-radius:14px; padding:11px 18px; font-size:13px; font-weight:800;
+    background:linear-gradient(135deg,var(--magenta),var(--violet2)); color:#fff; cursor:pointer;
+  }
+  .photo-save-btn:disabled{ opacity:.45; cursor:default; }
+  .photo-save-hint{ font-size:10.5px; color:var(--online); opacity:0; transition:opacity .25s ease; }
+  .photo-save-hint.show{ opacity:1; }
   .photo-hint{ padding:8px 20px 0; font-size:11px; color:var(--muted); }
   input[type="file"].photo-file-input{ display:none; }
 
@@ -1451,9 +1468,13 @@
     </div>
 
     <div class="section-title">Tes photos</div>
-    <p class="photo-hint">La première photo est celle qui apparaît sur ta bulle sur la carte et dans Découvrir. Ajoute jusqu'à 6 photos.</p>
+    <p class="photo-hint">La première photo est celle qui apparaît sur ta bulle sur la carte et dans Découvrir. Garde ton doigt sur une photo pour la glisser et changer l'ordre. Ajoute jusqu'à 6 photos.</p>
     <div class="photo-grid" id="photoGrid"></div>
     <input type="file" accept="image/*" class="photo-file-input" id="photoFileInput">
+    <div class="photo-save-row">
+      <button class="photo-save-btn" id="photoSaveBtn" disabled>Enregistrer</button>
+      <span class="photo-save-hint" id="photoSaveHint">✅ Enregistré</span>
+    </div>
 
     <div class="stat-row">
       <div class="stat-card"><b id="statMatches">7</b><span>Étincelles</span></div>
@@ -3104,7 +3125,7 @@ function renderPhotoGrid(){
     if(url){
       return `<div class="photo-tile${isUploading ? ' uploading' : ''}" data-idx="${i}">
         ${i===0 ? '<span class="primary-badge">Principale</span>' : ''}
-        <img src="${url}" alt="">
+        <img src="${url}" alt="" draggable="false">
         ${isUploading ? '' : `<div class="remove-btn" data-remove="${i}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </div>`}
@@ -3127,6 +3148,87 @@ function renderPhotoGrid(){
       const idx = parseInt(el.dataset.remove);
       removeMyPhoto(idx);
     });
+  });
+  grid.querySelectorAll('[data-idx]').forEach(el=>{
+    el.addEventListener('pointerdown', onPhotoDragStart);
+  });
+}
+
+/* ===== Glisser-déposer tactile pour réordonner les photos ===== */
+let dragState = null;
+function onPhotoDragStart(e){
+  const tile = e.currentTarget;
+  const idx = parseInt(tile.dataset.idx);
+  if(uploadingSlotIndex !== null) return; // pas de réordonnancement pendant un envoi
+  const pointerId = e.pointerId;
+  e.preventDefault();
+  try{ tile.setPointerCapture(pointerId); }catch(err){}
+  const img = tile.querySelector('img');
+  const ghost = document.createElement('div');
+  ghost.className = 'photo-drag-ghost';
+  ghost.innerHTML = `<img src="${img.src}" alt="" draggable="false">`;
+  document.body.appendChild(ghost);
+  const moveGhost = (x,y)=>{ ghost.style.left = (x - 48) + 'px'; ghost.style.top = (y - 64) + 'px'; };
+  moveGhost(e.clientX, e.clientY);
+  tile.classList.add('dragging');
+  let overTile = null;
+  dragState = { idx, ghost, tile };
+
+  function onMove(ev){
+    if(ev.pointerId !== pointerId) return;
+    ev.preventDefault();
+    moveGhost(ev.clientX, ev.clientY);
+    ghost.style.display = 'none';
+    const target = document.elementFromPoint(ev.clientX, ev.clientY);
+    ghost.style.display = '';
+    const newOverTile = target ? target.closest('.photo-tile[data-idx]') : null;
+    if(overTile && overTile !== newOverTile) overTile.classList.remove('drag-over');
+    if(newOverTile && newOverTile !== tile){ newOverTile.classList.add('drag-over'); overTile = newOverTile; }
+    else if(!newOverTile || newOverTile === tile){ overTile = null; }
+  }
+  function finish(ev){
+    if(ev && ev.pointerId !== pointerId) return;
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', finish);
+    document.removeEventListener('pointercancel', finish);
+    try{ tile.releasePointerCapture(pointerId); }catch(err){}
+    ghost.remove();
+    tile.classList.remove('dragging');
+    if(overTile){
+      overTile.classList.remove('drag-over');
+      const targetIdx = parseInt(overTile.dataset.idx);
+      if(targetIdx !== idx){
+        const tmp = myPhotos[idx];
+        myPhotos[idx] = myPhotos[targetIdx];
+        myPhotos[targetIdx] = tmp;
+        renderPhotoGrid();
+        updateHeroPhoto();
+        markPhotosDirty();
+      }
+    }
+    dragState = null;
+  }
+  document.addEventListener('pointermove', onMove, { passive:false });
+  document.addEventListener('pointerup', finish);
+  document.addEventListener('pointercancel', finish);
+}
+
+function markPhotosDirty(){
+  const btn = document.getElementById('photoSaveBtn');
+  if(btn) btn.disabled = false;
+  const hint = document.getElementById('photoSaveHint');
+  if(hint) hint.classList.remove('show');
+}
+const photoSaveBtn = document.getElementById('photoSaveBtn');
+if(photoSaveBtn){
+  photoSaveBtn.addEventListener('click', async ()=>{
+    photoSaveBtn.disabled = true;
+    const originalLabel = photoSaveBtn.textContent;
+    photoSaveBtn.textContent = 'Enregistrement…';
+    await persistMyPhotos();
+    photoSaveBtn.textContent = originalLabel;
+    const hint = document.getElementById('photoSaveHint');
+    if(hint){ hint.classList.add('show'); setTimeout(()=>hint.classList.remove('show'), 2200); }
   });
 }
 function updateHeroPhoto(){
@@ -3193,6 +3295,7 @@ function removeMyPhoto(idx){
   renderPhotoGrid();
   updateHeroPhoto();
   persistMyPhotos(); // met à jour Supabase en arrière-plan, silencieux en mode démo
+  const btn = document.getElementById('photoSaveBtn'); if(btn) btn.disabled = true;
 }
 
 let myVisibility = localStorage.getItem('ceSoirVisibility') || 'visible';
@@ -3250,6 +3353,7 @@ photoFileInput.addEventListener('change', (e)=>{
     uploadingSlotIndex = null;
     renderPhotoGrid();
     updateHeroPhoto();
+    const saveBtn = document.getElementById('photoSaveBtn'); if(saveBtn) saveBtn.disabled = true;
   };
   reader.readAsDataURL(file);
 });
