@@ -427,7 +427,7 @@
   .btn-apply{ width:100%; margin-top:6px; }
 
   /* ===== Découvrir view ===== */
-  #view-decouvrir{ background:var(--bg); padding-top:78px; }
+  #view-decouvrir{ background:var(--bg); padding-top:78px; padding-bottom:calc(90px + env(safe-area-inset-bottom)); overflow-y:auto; -webkit-overflow-scrolling:touch; }
   .discover-head{ padding:0 20px 12px; }
   .discover-head h2{ font-family:'Playfair Display'; font-size:20px; margin:0 0 2px; }
   .discover-head p{ color:var(--muted); font-size:12.5px; margin:0; }
@@ -479,7 +479,7 @@
   .discover-empty-global button:active{ transform:scale(.97); }
 
   /* ===== Babillard numérique ===== */
-  #view-babillard{ background:var(--bg); padding-top:78px; padding-bottom:20px; }
+  #view-babillard{ background:var(--bg); padding-top:78px; padding-bottom:calc(90px + env(safe-area-inset-bottom)); overflow-y:auto; -webkit-overflow-scrolling:touch; }
 
   /* ===== NOW (activité en cours) ===== */
   #view-now{ background:var(--bg); padding-top:78px; padding-bottom:24px; }
@@ -704,7 +704,7 @@
   .conv-unread{ background:var(--magenta); color:#fff; font-size:10.5px; font-weight:800; border-radius:10px; min-width:19px; height:19px; display:flex; align-items:center; justify-content:center; padding:0 4px; }
 
   /* Chat thread */
-  #view-chat{ background:var(--bg); }
+  #view-chat{ background:var(--bg); padding-bottom:calc(78px + env(safe-area-inset-bottom)); }
   .chat-head{
     display:flex; align-items:center; gap:12px; padding:16px 16px 14px;
     border-bottom:1px solid var(--line); background:var(--bg2);
@@ -999,6 +999,11 @@
   .auth-tab{flex:1;padding:9px 5px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:800;text-align:center;cursor:pointer;}
   .auth-tab.active{border-color:var(--flame);color:#fff;background:rgba(255,94,58,.13);}
   .auth-input{width:100%;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid var(--line);color:#fff;font-size:13px;margin-bottom:10px;box-sizing:border-box;}
+  .auth-pass-wrap{position:relative;margin-bottom:10px;}
+  .auth-pass-wrap .auth-input{margin-bottom:0;padding-right:44px;}
+  .auth-pass-eye{position:absolute;top:0;right:0;height:100%;width:44px;display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:manipulation;}
+  .auth-pass-eye svg{width:19px;height:19px;pointer-events:none;}
+  .auth-pass-eye:active{color:#fff;}
   .auth-input::placeholder{color:var(--muted2);}
   .auth-error{font-size:11.5px;line-height:1.4;margin:2px 0 12px;min-height:14px;}
   .auth-demo-link{display:block;text-align:center;margin-top:14px;font-size:11px;color:var(--muted2);text-decoration:underline;cursor:pointer;}
@@ -1175,7 +1180,6 @@
       Filtres <span class="filters-badge" id="filtersBadge" style="display:none;">0</span>
     </button>
     <div class="radar-ring"></div><div class="radar-ring r2"></div><div class="radar-ring r3"></div>
-    <div class="toast-lite" id="nearbyToast">👀 <span id="nearbyToastText">3 personnes cherchent quelqu’un dans ton secteur.</span></div>
 
     <!-- MUR FANTÔME / TICKER LIVE -->
     <div class="ghost-ticker" id="ghostTicker">
@@ -1545,7 +1549,12 @@
         <div class="auth-tab" id="authTabSignup">Créer un compte</div>
       </div>
       <input type="email" class="auth-input" id="authEmail" placeholder="Courriel" autocomplete="email">
-      <input type="password" class="auth-input" id="authPassword" placeholder="Mot de passe" autocomplete="current-password">
+      <div class="auth-pass-wrap">
+        <input type="password" class="auth-input" id="authPassword" placeholder="Mot de passe" autocomplete="current-password">
+        <span class="auth-pass-eye" id="authPassEye" aria-label="Maintenir pour voir le mot de passe">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </span>
+      </div>
       <div class="auth-error" id="authError"></div>
       <div class="consent-actions"><button class="btn-primary" id="authSubmitBtn" style="flex:1;">Se connecter</button></div>
       <div class="auth-demo-link" id="authDemoSkip">Continuer en mode démo (sans compte)</div>
@@ -1772,6 +1781,9 @@
       <div class="paywall-note">Démo — aucun paiement réel n'est effectué.</div>
     </div>
   </div>
+
+  <!-- Toast partagé — visible peu importe la vue active (Carte, NOW, Babillard, etc.) -->
+  <div class="toast-lite" id="nearbyToast">👀 <span id="nearbyToastText">3 personnes cherchent quelqu’un dans ton secteur.</span></div>
 
   <!-- ===== BOTTOM NAV ===== -->
   <div class="bottomnav">
@@ -2058,6 +2070,7 @@ let currentUserId = null;
 function mapRowToProfile(row){
   return {
     id: row.id,
+    userId: row.user_id ?? null,
     hot: !!row.hot,
     availabilityMin: row.availability_min ?? 120,
     name: row.name, age: row.age, sexe: row.sexe, avatar: row.avatar,
@@ -2073,6 +2086,26 @@ function mapRowToProfile(row){
   };
 }
 
+// Table `public.profils` (FR) : les 14 profils démo éditables directement dans Supabase,
+// comme n'importe quel vrai compte. Pas de user_id (pas liés à un compte auth), pas de
+// updated_at → le statut en ligne/récent/hors ligne vient directement de la colonne `status`.
+function mapProfilsRowToProfile(row){
+  return {
+    id: row.id,
+    userId: null,
+    hot: !!row.hot,
+    availabilityMin: row.availability_min ?? 120,
+    name: row.name, age: row.age, sexe: row.sexe, avatar: row.avatar,
+    status: row.status, zone: row.zone, address: row.address, intention: row.intention,
+    vibeEmoji: row.vibe_emoji, vibeText: row.vibe_text,
+    tags: Array.isArray(row.tags) ? row.tags : (row.tags ? JSON.parse(row.tags) : []),
+    height: row.height, langues: row.langues,
+    lastSeen: row.status==='online' ? 'En ligne' : (row.status==='recent' ? 'Récemment' : 'Hors ligne'),
+    bio: row.bio, lat: row.lat, lng: row.lng,
+    lastSeenAt: null,
+  };
+}
+
 // Recalcule tout ce qui dépend de PROFILES (carte, babillard, Découvrir) sans recharger la page.
 function refreshProfilesUI(){
   computeDistances();
@@ -2084,12 +2117,17 @@ function refreshProfilesUI(){
 async function loadProfiles(){
   if(!supabaseClient) return; // pas configuré → on reste sur DEMO_PROFILES, silencieux
   try{
-    const { data, error } = await supabaseClient.from('profiles').select('*');
-    if(error) throw error;
-    if(data && data.length){
-      PROFILES = data.map(mapRowToProfile);
-      refreshProfilesUI();
-    }
+    const [demoRes, liveRes] = await Promise.all([
+      supabaseClient.from('profils').select('*').eq('actif', true), // les faux profils actifs seulement (colonne "actif", éditable dans Supabase)
+      supabaseClient.from('profiles').select('*'),      // les vrais comptes inscrits
+    ]);
+    const demoRows = (!demoRes.error && demoRes.data)
+      ? demoRes.data.map(mapProfilsRowToProfile) : DEMO_PROFILES;
+    const liveOthers = (!liveRes.error && liveRes.data)
+      ? liveRes.data.map(mapRowToProfile).filter(p => !currentUserId || p.userId !== currentUserId)
+      : [];
+    PROFILES = demoRows.concat(liveOthers);
+    refreshProfilesUI();
   }catch(e){
     // Repli silencieux sur les profils de démo — pas de toast ni de warning visible pour l'utilisateur.
   }
@@ -2111,6 +2149,26 @@ function subscribeToProfileChanges(){
         PROFILES = PROFILES.filter(p=>p.id!==payload.old.id);
       } else {
         const updated = mapRowToProfile(payload.new);
+        if(currentUserId && updated.userId === currentUserId){
+          PROFILES = PROFILES.filter(p=>p.id!==updated.id); // pas notre propre profil dans la liste
+        } else {
+          const idx = PROFILES.findIndex(p=>p.id===updated.id);
+          if(idx>=0) PROFILES[idx]=updated; else PROFILES.push(updated);
+        }
+      }
+      scheduleRefresh();
+    })
+    .subscribe();
+  // Les profils démo (table `profils`) : reflète en direct les modifs faites dans Supabase,
+  // y compris quand Gabriel bascule la colonne `actif` pour montrer/cacher un profil.
+  supabaseClient
+    .channel('public:profils')
+    .on('postgres_changes', { event:'*', schema:'public', table:'profils' }, (payload)=>{
+      if(payload.eventType==='DELETE' || (payload.new && payload.new.actif===false)){
+        const deadId = payload.eventType==='DELETE' ? payload.old.id : payload.new.id;
+        PROFILES = PROFILES.filter(p=>p.id!==deadId);
+      } else {
+        const updated = mapProfilsRowToProfile(payload.new);
         const idx = PROFILES.findIndex(p=>p.id===updated.id);
         if(idx>=0) PROFILES[idx]=updated; else PROFILES.push(updated);
       }
@@ -2720,6 +2778,18 @@ function setAuthMode(mode){
 }
 document.getElementById('authTabSignin').addEventListener('click', ()=>setAuthMode('signin'));
 document.getElementById('authTabSignup').addEventListener('click', ()=>setAuthMode('signup'));
+(function(){
+  const eye = document.getElementById('authPassEye');
+  const passInput = document.getElementById('authPassword');
+  const reveal = ()=> passInput.type = 'text';
+  const hide = ()=> passInput.type = 'password';
+  eye.addEventListener('touchstart', (e)=>{ e.preventDefault(); reveal(); }, {passive:false});
+  eye.addEventListener('touchend', hide);
+  eye.addEventListener('touchcancel', hide);
+  eye.addEventListener('mousedown', reveal);
+  eye.addEventListener('mouseup', hide);
+  eye.addEventListener('mouseleave', hide);
+})();
 document.getElementById('authDemoSkip').addEventListener('click', ()=>{
   document.getElementById('authOverlay').classList.remove('show');
   continueBoot();
