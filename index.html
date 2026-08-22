@@ -533,12 +533,11 @@
   .bab-head h2{ font-family:'Playfair Display'; font-size:19px; margin:0; }
   .bab-head p{ color:var(--violet2); font-size:11px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; margin:1px 0 0; }
 
-  .bab-filters{ display:flex; gap:7px; overflow-x:auto; padding:0 20px 14px; scrollbar-width:none; }
-  .bab-filters::-webkit-scrollbar{ display:none; }
+  .bab-filters{ display:flex; flex-wrap:wrap; gap:7px; padding:0 20px 14px; transform:translateZ(0); will-change:transform; }
   .bab-chip{
     flex-shrink:0; padding:8px 15px; border-radius:20px; font-size:12.5px; font-weight:700;
     background:var(--panel2); border:1px solid var(--line); color:var(--muted); cursor:pointer;
-    transition:all .15s ease;
+    transition:all .15s ease; transform:translateZ(0);
   }
   .bab-chip.active{
     background:linear-gradient(135deg, var(--violet), var(--magenta)); color:#fff; border-color:transparent;
