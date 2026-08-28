@@ -150,6 +150,38 @@
   #leafletMap{ position:absolute; inset:0; background:#060a14; transform:translateZ(0); }
   .leaflet-container{ background:#060a14 !important; font-family:'Inter',sans-serif !important; }
   .map-vignette{ position:absolute; inset:0; background:radial-gradient(70% 55% at 50% 45%, transparent 55%, rgba(2,4,10,.4) 100%); pointer-events:none; z-index:450; }
+
+  /* ===== Bandeau défilant (feed d'activité live, façon babillard électronique) ===== */
+  .live-feed-ticker{
+    position:absolute; top:78px; left:14px; z-index:900;
+    max-width:calc(100% - 28px);
+    height:26px;
+    display:flex; align-items:center; gap:8px;
+    padding:0 12px 0 10px;
+    background:rgba(6,10,20,.85);
+    border:1px solid rgba(198,255,46,.28);
+    border-radius:7px;
+    box-shadow:0 4px 14px rgba(0,0,0,.4), inset 0 0 8px rgba(198,255,46,.05);
+    overflow:hidden;
+    transform:translateZ(0);
+  }
+  .lft-dot{
+    width:6px; height:6px; border-radius:50%; flex-shrink:0;
+    background:var(--online); box-shadow:0 0 7px var(--online);
+    animation:tickerBlink 1.6s ease-in-out infinite;
+  }
+  @keyframes tickerBlink{ 0%,100%{opacity:1;} 50%{opacity:.25;} }
+  .live-feed-ticker-viewport{ flex:1; min-width:0; overflow:hidden; -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); }
+  .live-feed-ticker-track{
+    display:inline-flex; white-space:nowrap;
+    font-family:'Courier New', monospace; font-size:10.5px; font-weight:700; letter-spacing:.3px;
+    color:var(--online); text-shadow:0 0 6px rgba(198,255,46,.45);
+    animation:liveTickerScroll linear infinite;
+    will-change:transform;
+  }
+  .live-feed-ticker-track .lft-item{ padding-right:36px; }
+  .live-feed-ticker-track .lft-item b{ color:#fff; font-weight:800; }
+  @keyframes liveTickerScroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
   .leaflet-control-attribution{
     background:rgba(6,9,18,.75) !important; color:var(--muted2) !important; font-size:8.5px !important;
     border-radius:6px !important; padding:1px 6px !important;
@@ -298,9 +330,23 @@
   }
   .lf-eta-tag.leaflet-tooltip::before{ display:none !important; }
 
+  .lf-lastseen-tag.leaflet-tooltip{
+    background:#0c1424 !important; border:1px solid var(--offline) !important; color:var(--offline) !important;
+    font-size:10px !important; font-weight:700 !important; padding:3px 9px !important;
+    border-radius:20px !important; box-shadow:none !important;
+  }
+  .lf-lastseen-tag.leaflet-tooltip::before{ display:none !important; }
+
+  .fallback-lastseen-tag{
+    position:absolute; left:50%; bottom:-19px; transform:translateX(-50%);
+    background:#0c1424; border:1px solid var(--offline); color:var(--offline);
+    font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:20px;
+    white-space:nowrap; pointer-events:none; z-index:11;
+  }
+
   /* map top controls */
   .map-controls{
-    position:absolute; top:78px; right:14px; z-index:900;
+    position:absolute; top:114px; right:14px; z-index:900;
     display:flex; flex-direction:column; gap:10px; align-items:flex-end;
     transform:translateZ(0);
   }
@@ -319,6 +365,7 @@
   }
   .legend div{ display:flex; align-items:center; gap:7px; margin:3px 0; }
   .legend span{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .legend-flame{ width:8px; height:8px; display:inline-flex; align-items:center; justify-content:center; font-size:11px; line-height:1; }
   .legend-divider{ height:1px; background:var(--line); margin:6px 0; }
   .legend-chip{
     display:flex; align-items:center; gap:7px; width:100%; margin:3px 0; padding:0;
@@ -762,45 +809,136 @@
   .match-overlay h2{ font-family:'Playfair Display'; font-size:26px; margin:0 0 8px; }
   .match-overlay p{ color:var(--muted); font-size:13px; margin:0 0 22px; }
 
-  /* ===== Messages view ===== */
-  #view-messages{ padding-top:78px; background:var(--bg); }
-  .msg-title{ padding:0 20px 14px; font-family:'Playfair Display'; font-size:22px; font-weight:800; }
-  .conv-list{ flex:1; overflow-y:auto; padding:0 12px; }
-  .conv-item{ display:flex; align-items:center; gap:12px; padding:11px 8px; border-radius:14px; cursor:pointer; }
-  .conv-item:active{ background:rgba(255,255,255,.05); }
-  .conv-avatar{ position:relative; flex-shrink:0; }
-  .conv-avatar img{ width:52px; height:52px; border-radius:50%; object-fit:cover; }
-  .conv-avatar .dot{ position:absolute; bottom:0; right:0; width:12px; height:12px; border-radius:50%; border:2px solid var(--bg); background:var(--offline); }
-  .conv-avatar.online .dot{ background:var(--online); }
-  .conv-mid{ flex:1; min-width:0; }
-  .conv-name-row{ display:flex; justify-content:space-between; align-items:baseline; }
-  .conv-name{ font-weight:700; font-size:14.5px; }
-  .conv-time{ font-size:10.5px; color:var(--muted2); }
-  .conv-preview{ color:var(--muted); font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }
-  .conv-unread{ background:var(--magenta); color:#fff; font-size:10.5px; font-weight:800; border-radius:10px; min-width:19px; height:19px; display:flex; align-items:center; justify-content:center; padding:0 4px; }
+  /* ===== View Messages (liste conversations) — thème mauve néon ===== */
+  #view-messages {
+    background:
+      radial-gradient(120% 45% at 50% 0%, rgba(154,31,240,.16) 0%, transparent 60%),
+      var(--bg);
+    padding-top: 78px;
+    padding-bottom: calc(90px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .chat-header-section { display:flex; align-items:center; justify-content:space-between; padding:0 20px 14px; gap:12px; flex-shrink:0; }
+  .msg-title { font-family:'Playfair Display'; font-size:22px; font-weight:800; margin:0; flex:1; background:linear-gradient(90deg,#fff,var(--magenta2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .btn-icon { width:38px; height:38px; border-radius:50%; background:rgba(154,31,240,.10); border:1px solid rgba(168,85,247,.28); display:flex; align-items:center; justify-content:center; color:var(--text); cursor:pointer; transition:all .18s ease; flex-shrink:0; padding:0; min-width:44px; min-height:44px; }
+  .btn-icon:active { background:rgba(154,31,240,.22); transform:scale(.96); box-shadow:0 0 14px rgba(154,31,240,.4); }
+  .btn-icon svg { width:18px; height:18px; }
+  .chat-search-bar { display:flex; align-items:center; gap:8px; margin:0 20px 12px; padding:9px 14px; border-radius:16px; background:rgba(17,26,46,.9); border:1px solid rgba(168,85,247,.3); box-shadow:0 0 16px rgba(154,31,240,.12) inset; flex-shrink:0; }
+  .chat-search-bar.hidden { display:none; }
+  .chat-search-bar input { flex:1; background:none; border:none; outline:none; color:var(--text); font-size:13px; font-family:inherit; }
+  .chat-search-bar input::placeholder { color:var(--muted2); }
+  .chat-search-bar .btn-clear { background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:4px; }
+  .chat-list-empty.hidden { display:none; }
+  .chat-list-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:60px 20px; text-align:center; color:var(--muted); flex:1; }
+  .empty-icon { font-size:48px; opacity:.6; line-height:1; filter:drop-shadow(0 0 14px rgba(154,31,240,.5)); }
+  .chat-list-empty h3 { font-size:15px; font-weight:600; color:var(--text); margin:0; }
+  .chat-list-empty p { font-size:12px; margin:0; opacity:.8; }
+  .conv-list { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:2px 12px 0; display:flex; flex-direction:column; gap:6px; }
+  .conv-item {
+    display:flex; align-items:center; gap:12px; padding:12px; border-radius:18px; cursor:pointer; position:relative;
+    background:rgba(17,26,46,.55); border:1px solid rgba(168,85,247,.14);
+    transition:background .18s ease, border-color .18s ease, transform .12s ease;
+  }
+  .conv-item:active { background:rgba(154,31,240,.12); transform:scale(.985); }
+  .conv-item.unread { background:linear-gradient(135deg, rgba(154,31,240,.14), rgba(17,26,46,.7)); border-color:rgba(194,85,255,.4); box-shadow:0 0 18px rgba(154,31,240,.16); }
+  .conv-item.unread::before { content:''; position:absolute; left:0; top:8px; bottom:8px; width:3px; border-radius:3px; background:linear-gradient(180deg,var(--magenta2),var(--violet)); box-shadow:0 0 8px rgba(194,85,255,.8); }
+  .conv-avatar { position:relative; flex-shrink:0; }
+  .conv-avatar img { width:52px; height:52px; border-radius:50%; object-fit:cover; display:block; border:2px solid rgba(168,85,247,.25); }
+  .conv-avatar.online img { border-color:var(--online); box-shadow:0 0 12px rgba(198,255,46,.35); }
+  .status-dot { position:absolute; bottom:0; right:0; width:12px; height:12px; border-radius:50%; border:2px solid var(--bg2); background:var(--offline); transition:background .2s ease; }
+  .conv-avatar.online .status-dot { background:var(--online); box-shadow:0 0 6px var(--online); }
+  .conv-avatar.recent .status-dot { background:var(--recent); box-shadow:0 0 6px var(--recent); }
+  .conv-avatar .dot { position:absolute; bottom:0; right:0; width:12px; height:12px; border-radius:50%; border:2px solid var(--bg2); background:var(--offline); }
+  .conv-avatar.online .dot { background:var(--online); box-shadow:0 0 6px var(--online); }
+  .conv-mid { flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
+  .conv-name-row { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+  .conv-name { font-weight:700; font-size:14.5px; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .conv-time { font-size:10.5px; color:var(--muted2); flex-shrink:0; }
+  .conv-preview { color:var(--muted); font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .conv-item.unread .conv-preview { color:#e7d6ff; }
+  .conv-unread { background:linear-gradient(135deg,var(--magenta2),var(--violet)); color:#fff; font-size:10.5px; font-weight:800; border-radius:10px; min-width:19px; height:19px; display:flex; align-items:center; justify-content:center; padding:0 4px; flex-shrink:0; box-shadow:0 0 10px rgba(194,85,255,.6); }
 
-  /* Chat thread */
-  #view-chat{ background:var(--bg); padding-bottom:calc(78px + env(safe-area-inset-bottom)); }
-  .chat-head{
-    display:flex; align-items:center; gap:12px; padding:16px 16px 14px;
-    border-bottom:1px solid var(--line); background:var(--bg2);
+  /* ===== View Chat (thread) — thème mauve néon ===== */
+  #view-chat {
+    background:
+      radial-gradient(120% 30% at 50% 0%, rgba(154,31,240,.14) 0%, transparent 55%),
+      radial-gradient(90% 40% at 50% 100%, rgba(112,20,232,.10) 0%, transparent 60%),
+      var(--bg);
+    padding-bottom:calc(78px + env(safe-area-inset-bottom));
   }
-  .chat-head img{ width:38px; height:38px; border-radius:50%; object-fit:cover; }
-  .chat-head .who b{ display:block; font-size:14.5px; }
-  .chat-head .who span{ font-size:11px; color:var(--online); }
-  .chat-body{ flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; }
-  .bubble-msg{ max-width:75%; padding:10px 13px; border-radius:16px; font-size:13.5px; line-height:1.45; }
-  .bubble-msg.them{ align-self:flex-start; background:var(--panel2); border-bottom-left-radius:4px; }
-  .bubble-msg.me{ align-self:flex-end; background:linear-gradient(135deg, var(--magenta), var(--magenta2)); color:#fff; border-bottom-right-radius:4px; }
-  .chat-input-row{ display:flex; gap:10px; padding:12px 14px calc(env(safe-area-inset-bottom) + 12px); border-top:1px solid var(--line); background:var(--bg2); }
-  .chat-input-row input{
-    flex:1; background:var(--panel2); border:1px solid var(--line); border-radius:22px; padding:11px 16px;
-    color:var(--text); font-size:13.5px; outline:none;
+  .chat-head {
+    display:flex; align-items:center; gap:12px; padding:14px 16px;
+    border-bottom:1px solid rgba(168,85,247,.2); background:rgba(10,15,30,.9);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    box-shadow:0 4px 18px rgba(0,0,0,.35); flex-shrink:0; position:relative; z-index:2;
   }
-  .chat-send{ width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg, var(--magenta), var(--violet)); border:none; color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; }
-  .chat-send svg{ width:18px; height:18px; }
-  .back-btn{ background:none; border:none; color:var(--text); cursor:pointer; display:flex; }
-  .back-btn svg{ width:20px; height:20px; }
+  .back-btn { background:rgba(154,31,240,.10); border:1px solid rgba(168,85,247,.22); color:var(--text); cursor:pointer; display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:50%; transition:background .15s ease; padding:0; min-width:44px; min-height:44px; }
+  .back-btn:active { background:rgba(154,31,240,.24); transform:scale(.96); }
+  .back-btn svg { width:20px; height:20px; }
+  .chat-head img, .chat-avatar { width:44px; height:44px; border-radius:50%; object-fit:cover; display:block; flex-shrink:0; border:2px solid var(--magenta2); box-shadow:0 0 14px rgba(194,85,255,.45); }
+  .chat-contact-info { display:flex; align-items:center; gap:12px; flex:1; min-width:0; }
+  .chat-contact-meta { display:flex; flex-direction:column; gap:1px; min-width:0; }
+  .chat-head .who b { display:block; font-size:14.5px; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .chat-head .who span { font-size:11px; color:var(--magenta2); font-weight:600; }
+  .chat-body { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:18px 16px; display:flex; flex-direction:column; gap:10px; position:relative; z-index:1; }
+  .chat-body-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:60px 20px; text-align:center; color:var(--muted); flex:1; }
+  .chat-body-empty .empty-icon { filter:drop-shadow(0 0 14px rgba(154,31,240,.5)); }
+  .chat-body-empty h3 { font-size:15px; font-weight:700; color:var(--text); margin:0; }
+  .chat-body-empty p { font-size:12px; margin:0; opacity:.8; }
+  .chat-message { display:flex; gap:6px; animation:messageSlideIn .25s ease-out; }
+  @keyframes messageSlideIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .chat-message.own { justify-content:flex-end; }
+  .chat-message.other { justify-content:flex-start; }
+  .chat-bubble, .bubble-msg {
+    max-width:75%; padding:10px 14px; border-radius:18px; font-size:13.5px; line-height:1.45;
+    word-break:break-word; position:relative; animation:messageSlideIn .25s ease-out;
+  }
+  .chat-message.other .chat-bubble, .bubble-msg.them {
+    align-self:flex-start; background:rgba(22,30,50,.92); border:1px solid rgba(168,85,247,.22);
+    border-bottom-left-radius:5px; color:var(--text);
+  }
+  .chat-message.own .chat-bubble, .bubble-msg.me {
+    align-self:flex-end; background:linear-gradient(135deg, var(--magenta), var(--violet));
+    color:#fff; border-bottom-right-radius:5px; box-shadow:0 4px 18px rgba(154,31,240,.4);
+  }
+  .chat-quick {
+    display:flex; gap:8px; padding:12px 14px; border-top:1px solid rgba(168,85,247,.18);
+    background:rgba(10,15,30,.9); overflow-x:auto; scroll-behavior:smooth; flex-shrink:0; -webkit-overflow-scrolling:touch;
+  }
+  .chat-quick button {
+    display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 12px; border-radius:14px;
+    background:rgba(154,31,240,.08); border:1px solid rgba(168,85,247,.28); color:var(--text); cursor:pointer;
+    white-space:nowrap; transition:all .15s ease; font-size:11px; flex-shrink:0; font-weight:500;
+  }
+  .chat-quick button:active { background:rgba(154,31,240,.24); transform:scale(.96); box-shadow:0 0 14px rgba(154,31,240,.35); }
+  .chat-input-row {
+    display:flex; align-items:flex-end; gap:10px; padding:12px 14px calc(env(safe-area-inset-bottom) + 12px);
+    border-top:1px solid rgba(168,85,247,.18); background:rgba(10,15,30,.94); flex-shrink:0;
+  }
+  .chat-input-row input {
+    flex:1; background:rgba(17,26,46,.9); border:1px solid rgba(168,85,247,.28); border-radius:22px;
+    padding:11px 16px; color:var(--text); font-size:13.5px; outline:none; font-family:inherit; transition:all .15s ease;
+  }
+  .chat-input-row input:focus { border-color:var(--magenta2); box-shadow:0 0 0 3px rgba(154,31,240,.2); }
+  .chat-send {
+    width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg, var(--magenta2), var(--violet));
+    border:none; color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+    transition:all .15s ease; padding:0; min-width:44px; min-height:44px; box-shadow:0 0 16px rgba(154,31,240,.55);
+  }
+  .chat-send:active { transform:scale(.92); }
+  .chat-send svg { width:18px; height:18px; }
+  .chat-meet-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border-top:1px solid var(--line); background:linear-gradient(135deg, rgba(255, 94, 58, 0.1), rgba(255, 176, 32, 0.05)); border-top-color:rgba(255, 94, 58, 0.2); flex-shrink:0; }
+  .chat-meet-bar.show { display:flex; }
+  .chat-meet-bar:not(.show) { display:none; }
+  .hidden { display:none !important; }
+  @media (max-width:380px) {
+    .msg-title { font-size:18px; }
+    .chat-bubble, .bubble-msg { max-width:85%; font-size:13px; }
+    .chat-quick button { padding:8px 10px; font-size:10px; }
+    .chat-head .who b { font-size:13.5px; }
+    .chat-head .who span { font-size:10px; }
+  }
 
   /* ===== Profil view ===== */
   #view-profil{ padding-top:78px; background:var(--bg); overflow-y:auto; }
@@ -939,6 +1077,36 @@
   .radar-overlay.show,.meet-overlay.show{opacity:1;pointer-events:auto}
   .radar-sheet,.meet-sheet{width:100%;background:linear-gradient(180deg,#10192c,#09101f);border:1px solid var(--line);border-bottom:0;border-radius:28px 28px 0 0;padding:20px 18px 26px;box-shadow:0 -20px 70px rgba(0,0,0,.45)}
   .radar-sheet h2,.meet-sheet h2{font-family:'Playfair Display';font-size:24px;margin:0 0 4px}.radar-sub{color:var(--muted);font-size:12px;margin-bottom:16px}
+  /* ===== Chat NOW (chat de groupe éphémère) — thème mauve néon ===== */
+  .chatnow-overlay{position:fixed;inset:0;z-index:1400;background:rgba(3,6,14,.75);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:.25s;}
+  .chatnow-overlay.show{opacity:1;pointer-events:auto;}
+  .chatnow-sheet{
+    width:min(100%,520px);height:min(82vh,82dvh);display:flex;flex-direction:column;
+    background:
+      radial-gradient(120% 40% at 50% 0%, rgba(154,31,240,.20) 0%, transparent 55%),
+      linear-gradient(180deg,#120a24,#070c17);
+    border:1px solid rgba(168,85,247,.32);border-bottom:0;border-radius:26px 26px 0 0;
+    box-shadow:0 -20px 60px rgba(0,0,0,.5), 0 0 40px rgba(154,31,240,.12);
+    transform:translateY(16px);transition:.25s;
+  }
+  .chatnow-overlay.show .chatnow-sheet{transform:translateY(0);}
+  .cn-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid rgba(168,85,247,.22);gap:10px;}
+  .cn-head-left{display:flex;align-items:center;gap:8px;font-weight:800;letter-spacing:.6px;background:linear-gradient(90deg,var(--flame),var(--magenta2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .cn-quota{font-size:11px;color:var(--muted2);font-weight:700;}
+  .cn-close{width:30px;height:30px;border-radius:50%;background:rgba(154,31,240,.12);border:1px solid rgba(168,85,247,.3);color:#fff;font-size:15px;display:flex;align-items:center;justify-content:center;}
+  .cn-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px;display:flex;flex-direction:column;gap:3px;}
+  .cn-msg{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.4;padding:7px 10px;border-radius:12px;transition:background .15s ease;}
+  .cn-msg.me{background:rgba(154,31,240,.10);border:1px solid rgba(168,85,247,.18);}
+  .cn-time{color:var(--muted2);font-size:10.5px;flex-shrink:0;padding-top:1px;font-variant-numeric:tabular-nums;}
+  .cn-pseudo{font-weight:800;flex-shrink:0;}
+  .cn-msg.me .cn-pseudo{color:var(--magenta2);text-shadow:0 0 8px rgba(194,85,255,.5);}
+  .cn-text{color:var(--text);word-break:break-word;}
+  .cn-footer{padding:10px 14px calc(env(safe-area-inset-bottom) + 12px);border-top:1px solid rgba(168,85,247,.22);display:flex;gap:8px;align-items:center;background:rgba(10,15,30,.5);}
+  .cn-input{flex:1;background:rgba(17,26,46,.9);border:1px solid rgba(168,85,247,.3);border-radius:20px;padding:10px 16px;color:#fff;font-size:13px;outline:none;transition:all .15s ease;}
+  .cn-input:focus{border-color:var(--magenta2);box-shadow:0 0 0 3px rgba(154,31,240,.2);}
+  .cn-send{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--magenta2),var(--violet));border:none;color:#fff;font-size:15px;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(154,31,240,.55);}
+  .cn-send:disabled{opacity:.4;box-shadow:none;}
+  .cn-limit-note{padding:10px 16px;text-align:center;font-size:11px;color:var(--muted2);}
   .heat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.heat-card{padding:12px;border-radius:15px;background:rgba(255,255,255,.045);border:1px solid var(--line)}.heat-card b{display:block;font-size:13px}.heat-card span{font-size:18px}.heat-card small{display:block;color:var(--muted);margin-top:4px}
   .radar-stat{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--line);font-size:13px}.radar-stat strong{font-size:18px}
   .mini-close{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#fff;float:right;cursor:pointer}
@@ -982,16 +1150,6 @@
   .intent-score{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;margin-top:8px;border-radius:999px;background:rgba(198,255,46,.09);border:1px solid rgba(198,255,46,.2);color:#dfff91;font-size:10px;font-weight:800}
   .privacy-note{margin:10px 0;padding:10px 11px;border-radius:13px;background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.16);color:#ecd9ff;font-size:10.5px;line-height:1.4}.privacy-note b{color:#fff}
   .consent-overlay{position:fixed;inset:0;z-index:4000;background:rgba(3,6,14,.95);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:.25s;transform:translateZ(0);-webkit-transform:translateZ(0);will-change:opacity}.consent-overlay.show{opacity:1;pointer-events:auto}.consent-sheet{width:min(100%,520px);max-height:min(88vh,88dvh);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:22px 20px calc(env(safe-area-inset-bottom) + 22px);background:linear-gradient(180deg,#11182a,#090f1b);border:1px solid rgba(168,85,247,.25);border-bottom:0;border-radius:28px 28px 0 0}.consent-sheet h2{font-family:'Playfair Display';font-size:24px;margin:4px 0 7px}.consent-sheet p{font-size:12px;line-height:1.5;color:var(--muted);margin:0 0 14px}.consent-actions{display:flex;gap:9px}.consent-actions button{flex:1}.consent-check{display:flex;gap:9px;align-items:flex-start;padding:11px 12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:11px;color:#dce2f0;margin-bottom:12px}.consent-check input{margin-top:2px;accent-color:var(--flame)}
-  /* ===== Porte d'activation NOW (avant d'ouvrir le chat NOW) ===== */
-  .now-gate-overlay{position:fixed;inset:0;z-index:4100;background:rgba(3,6,14,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;opacity:0;pointer-events:none;transition:.25s;}
-  .now-gate-overlay.show{opacity:1;pointer-events:auto;}
-  .now-gate-close{position:absolute;top:calc(env(safe-area-inset-top) + 16px);right:18px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;}
-  .now-gate-title{font-family:'Playfair Display';font-size:22px;margin:0;}
-  .now-gate-sub{font-size:12.5px;color:var(--muted);max-width:280px;margin:0 0 4px;line-height:1.5;}
-  .now-gate-btn{width:150px;height:150px;border-radius:50%;border:0;background:radial-gradient(circle at 35% 30%, var(--flame2), var(--flame) 60%, #c8341c 100%);color:#fff;font-family:'Playfair Display';font-weight:800;font-size:26px;letter-spacing:.5px;box-shadow:0 0 40px rgba(255,94,58,.55), 0 0 90px rgba(255,94,58,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;animation:nowGatePulse 1.8s ease-in-out infinite;}
-  .now-gate-btn:active{transform:scale(.96);}
-  @keyframes nowGatePulse{0%,100%{box-shadow:0 0 40px rgba(255,94,58,.55),0 0 90px rgba(255,94,58,.3);}50%{box-shadow:0 0 55px rgba(255,94,58,.8),0 0 120px rgba(255,94,58,.45);}}
-  .now-gate-duration{font-size:11px;color:var(--muted2);margin-top:2px;}
   .safety-card{margin:10px 18px 0;padding:13px;border-radius:17px;background:rgba(198,255,46,.05);border:1px solid rgba(198,255,46,.17)}.safety-card .row{display:flex;justify-content:space-between;align-items:center;gap:10px}.safety-card b{font-size:12px}.safety-card small{display:block;color:var(--muted);font-size:10.5px;margin-top:3px;line-height:1.35}.safety-btn{border:0;border-radius:999px;padding:8px 10px;background:rgba(198,255,46,.12);color:#e5ff9e;font-size:10px;font-weight:900;white-space:nowrap}.safety-btn.active{background:linear-gradient(135deg,var(--flame),var(--flame2));color:#fff}
   .plan-card{margin:10px 0;padding:11px 12px;border-radius:15px;background:rgba(255,94,58,.08);border:1px solid rgba(255,94,58,.22)}.plan-card b{display:block;font-size:11.5px}.plan-card span{display:block;color:var(--muted);font-size:10.5px;margin-top:3px}.plan-card .plan-actions{display:flex;gap:7px;margin-top:8px}.plan-card button{flex:1;border:1px solid var(--line);background:rgba(255,255,255,.05);color:#fff;border-radius:10px;padding:7px;font-size:10px;font-weight:800}
   .tonight-recap{margin:16px 20px 30px;padding:15px;border-radius:18px;background:linear-gradient(135deg,rgba(139,47,224,.09),rgba(255,94,58,.07));border:1px solid var(--line)}.tonight-recap h3{font-family:'Playfair Display';font-size:17px;margin:0 0 5px}.tonight-recap p{font-size:10.5px;color:var(--muted);line-height:1.45;margin:0}
@@ -1272,12 +1430,16 @@
   <!-- ===== CARTE (HOME) ===== -->
   <div class="view active" id="view-carte">
     <div class="map-wrap" id="mapWrap"><div class="now-live-chip" id="nowLiveChip">🔥 NOW actif</div>
+      <div class="live-feed-ticker" id="liveFeedTicker">
+        <span class="lft-dot"></span>
+        <div class="live-feed-ticker-viewport"><div class="live-feed-ticker-track" id="liveFeedTrack"></div></div>
+      </div>
       <div id="leafletMap"></div>
       <div class="map-vignette"></div>
     </div>
 
     <div class="map-controls">
-      <div class="live-pill"><span class="lv"></span> <b id="liveCount">1&nbsp;284</b>&nbsp;en ligne</div>
+      <div class="live-pill"><span class="lv"></span> <b id="liveCount">2&nbsp;568</b>&nbsp;en ligne</div>
       <button class="now-pill" id="btnNow">🔥 NOW</button>
       <button class="icon-btn" id="btn-recenter" aria-label="Recentrer sur moi">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
@@ -1286,8 +1448,8 @@
 
     <div class="legend">
       <div><span style="background:var(--online);"></span>En ligne maintenant</div>
-      <div><span style="background:var(--recent);"></span>En ligne récemment</div>
-      <div><span style="background:var(--offline);"></span>Hors ligne</div>
+      <div><span style="background:var(--offline);"></span>Hors ligne · temps depuis dernière connexion</div>
+      <div><span class="legend-flame">🔥</span>Disponible NOW</div>
       <div class="legend-divider"></div>
       <button class="legend-chip" id="layerToggle-decouvrir" onclick="toggleMapLayer('decouvrir')"><span style="background:#FFE000;"></span>Lieux <b id="legendCountDecouvrir"></b></button>
     </div>
@@ -1307,6 +1469,24 @@
         <div class="radar-stat"><span>Vibe alignée avec toi</span><strong id="alignCount">4</strong></div>
         <div class="heat-grid"><div class="heat-card"><span>🔥🔥🔥</span><b>Mile End</b><small>Très chaud</small></div><div class="heat-card"><span>🔥🔥</span><b>Plateau</b><small>Ça chauffe</small></div><div class="heat-card"><span>🌤️</span><b>Hochelaga</b><small>Actif</small></div></div>
         <button class="btn-primary" id="radarJoin">🔥 Je suis partant</button>
+        <button class="btn-primary" id="radarChatBtn" style="margin-top:8px;background:linear-gradient(135deg,var(--online),#8FE000);">💬 Chat NOW</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CHAT NOW (chat de groupe éphémère, remis à zéro chaque jour) ===== -->
+  <div class="chatnow-overlay" id="chatNowOverlay">
+    <div class="chatnow-sheet">
+      <div class="cn-head">
+        <div class="cn-head-left">🔥 CHAT NOW</div>
+        <div class="cn-quota" id="cnQuota">20/20 messages aujourd'hui</div>
+        <button class="cn-close" id="cnClose">×</button>
+      </div>
+      <div class="cn-body" id="cnBody"></div>
+      <div class="cn-limit-note" id="cnLimitNote" style="display:none;">Limite quotidienne atteinte — le chat se réinitialise demain.</div>
+      <div class="cn-footer" id="cnFooter">
+        <input class="cn-input" id="cnInput" placeholder="Écris un message…" maxlength="140" autocomplete="off">
+        <button class="cn-send" id="cnSend">➤</button>
       </div>
     </div>
   </div>
@@ -1456,7 +1636,18 @@
 
   <!-- ===== MESSAGES (list) ===== -->
   <div class="view" id="view-messages">
-    <div class="msg-title display">Messages</div>
+    <div class="chat-header-section">
+      <h1 class="msg-title display">Messages</h1>
+      <button class="btn-icon" id="btn-chat-search" title="Rechercher">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+      </button>
+    </div>
+    <div class="chat-search-bar hidden" id="chatSearchBar">
+      <input type="text" id="chatSearchInput" placeholder="Rechercher une conversation…" />
+      <button class="btn-clear" id="chatSearchClear">✕</button>
+    </div>
     <div class="wlm-card" id="wlmCard">
       <div class="wlm-avatars" id="wlmAvatars"></div>
       <div>
@@ -1465,32 +1656,37 @@
       </div>
       <span class="wlm-arrow">›</span>
     </div>
+    <div class="chat-list-empty hidden" id="chatListEmpty">
+      <div class="empty-icon">💬</div>
+      <h3>Aucune conversation</h3>
+      <p>Commence une conversation avec quelqu'un que tu as aimé</p>
+    </div>
     <div class="conv-list" id="convList"></div>
   </div>
 
   <!-- ===== CHAT THREAD ===== -->
   <div class="view" id="view-chat">
     <div class="chat-head">
-      <button class="back-btn" id="btn-chat-back">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      <button class="back-btn" id="btn-chat-back" aria-label="Retour">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
-      <img id="chatAvatar" src="" alt="">
-      <div class="who">
+      <img id="chatAvatar" class="chat-avatar" src="" alt="">
+      <div class="chat-contact-meta who">
         <b id="chatName"></b>
         <span id="chatStatus">En ligne</span>
       </div>
     </div>
     <div class="chat-body" id="chatBody"></div>
     <div class="chat-quick" id="chatQuick">
-      <button data-quick="🔥 Je suis partant">🔥 Je suis partant</button>
-      <button data-quick="📍 On trouve un point à mi-chemin?">📍 Mi-chemin</button>
-      <button data-quick="⏱️ Dans 30 min">⏱️ Dans 30 min</button>
-      <button data-quick="🍸 Un verre?">🍸 Un verre?</button>
+      <button data-quick="🔥 Je suis partant"><span style="font-size:16px;">🔥</span><span>Partant</span></button>
+      <button data-quick="📍 On trouve un point à mi-chemin?"><span style="font-size:16px;">📍</span><span>Mi-chemin</span></button>
+      <button data-quick="⏱️ Dans 30 min"><span style="font-size:16px;">⏱️</span><span>30 min</span></button>
+      <button data-quick="🍸 Un verre?"><span style="font-size:16px;">🍸</span><span>Verre</span></button>
     </div>
-    <div class="chat-meet-bar" id="chatMeetBar"><span id="chatMeetText">🔥 Rencontre en préparation</span><button id="chatMeetOpen">Organiser</button></div>
+    <div class="chat-meet-bar" id="chatMeetBar"><span id="chatMeetText">🔥 Rencontre en préparation</span><button id="chatMeetOpen" style="padding:7px 14px; border-radius:10px; background:var(--magenta); color:#fff; border:none; font-size:12px; font-weight:600; cursor:pointer;">Organiser</button></div>
     <div class="chat-input-row">
       <input type="text" id="chatInput" placeholder="Écris un message…">
-      <button class="chat-send" id="chatSend">
+      <button class="chat-send" id="chatSend" aria-label="Envoyer">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
       </button>
     </div>
@@ -1659,14 +1855,6 @@
       <label class="consent-check"><input type="checkbox" id="consentCheck"><span>Je comprends que l'emplacement précis est facultatif et peut être arrêté à tout moment.</span></label>
       <div class="consent-actions"><button class="btn-secondary" id="consentCancel">Pas maintenant</button><button class="btn-primary" id="consentConfirm">🔥 Activer NOW</button></div>
     </div>
-  </div>
-  <!-- ===== PORTE D'ACTIVATION NOW (avant le chat NOW, exclusif au mode NOW) ===== -->
-  <div class="now-gate-overlay" id="nowGateOverlay">
-    <button class="now-gate-close" id="nowGateClose" aria-label="Fermer">✕</button>
-    <h2 class="now-gate-title">Mode NOW</h2>
-    <p class="now-gate-sub">Le chat et l'activité NOW sont réservés à ceux qui sont en mode NOW. Active-le pour embarquer.</p>
-    <button class="now-gate-btn" id="nowGateActivate">NOW</button>
-    <p class="now-gate-duration" id="nowGateDurationLabel">Actif pendant 3h</p>
   </div>
 
   <!-- ===== CONNEXION / INSCRIPTION ===== -->
@@ -1907,7 +2095,7 @@
   </div>
 
   <!-- Toast partagé — visible peu importe la vue active (Carte, NOW, Babillard, etc.) -->
-  <div class="toast-lite" id="nearbyToast">👀 <span id="nearbyToastText">3 personnes cherchent quelqu’un dans ton secteur.</span></div>
+  <div class="toast-lite" id="nearbyToast">👀 <span id="nearbyToastText">6 personnes cherchent quelqu’un dans ton secteur.</span></div>
 
   <!-- ===== BOTTOM NAV ===== -->
   <div class="bottomnav">
@@ -2089,6 +2277,16 @@ const NOW_FEED_SEED = [
   {kind:'message', icon:'💬', text:"Nouveau message dans la discussion", time:"Il y a 5 min"},
   {kind:'arrival', avatar:"https://i.pravatar.cc/80?img=13", text:"Sam vient d'arriver", time:"Il y a 8 min"},
 ];
+const LFT_ICONS = { arrival:'📍', enroute:'🚶', message:'💬' };
+function renderLiveFeedTicker(){
+  const track = document.getElementById('liveFeedTrack');
+  if(!track) return;
+  const parts = NOW_FEED_SEED.map(f=>`<span class="lft-item">${LFT_ICONS[f.kind]||'🔥'} <b>${f.text}</b> · ${f.time}</span>`);
+  // Dupliqué une fois pour un défilement continu et sans coupure visible
+  track.innerHTML = parts.join('') + parts.join('');
+  const width = track.scrollWidth / 2;
+  track.style.animationDuration = Math.max(14, width / 32) + 's'; // vitesse ~32px/s, quelle que soit la longueur
+}
 function nowFeatureItem(){
   return BAB_ITEMS.find(x=>x.type==='hot') || BAB_ITEMS[0];
 }
@@ -2128,7 +2326,7 @@ function renderNow(){
       </div>
     </div>`).join('');
 }
-document.getElementById('nowMsgAll').addEventListener('click', ()=> showToast('💬 Message envoyé à tout le monde sur place'));
+document.getElementById('nowMsgAll').addEventListener('click', openChatNow);
 document.getElementById('nowInvite').addEventListener('click', ()=> showToast('👥 Invitation envoyée à tes amis'));
 document.getElementById('nowShare').addEventListener('click', ()=> showToast('📤 Activité partagée'));
 document.getElementById('babSheetClose').addEventListener('click', closeBabSheet);
@@ -2174,6 +2372,49 @@ function deriveStatus(p){
 function refreshStatuses(){
   PROFILES.forEach(p=>{ p.status = deriveStatus(p); });
 }
+/* ============ Budget d'affichage "hors ligne" (équilibre des couleurs sur la carte) ============
+   Objectif : que la carte ne soit jamais monochrome. Quand beaucoup de profils sont en ligne
+   (vert), on réduit le nombre de profils hors ligne/récents affichés pour laisser la priorité
+   visuelle aux gens en ligne. Quand peu de profils sont en ligne, on affiche davantage de
+   profils hors ligne/récents pour remplir les vides sur la carte plutôt que de la laisser clairsemée.
+   Ne change jamais le statut réel d'un profil (toujours dérivé de lastSeenAt) — seulement
+   lesquels, parmi les non-en-ligne, sont affichés sur la carte à un instant donné. */
+let offlineBudgetIds = new Set();
+function updateOfflineVisibilityBudget(){
+  const total = PROFILES.length;
+  if(!total){ offlineBudgetIds = new Set(); return; }
+  const online = PROFILES.filter(p=>p.status==='online');
+  const notOnline = PROFILES.filter(p=>p.status!=='online');
+  const onlineRatio = online.length / total;
+  // Beaucoup de monde en ligne -> peu de hors-ligne visibles (priorité au vert).
+  // Peu de monde en ligne -> presque tous les hors-ligne visibles (remplir les vides).
+  let showRatio;
+  if(onlineRatio >= 0.6) showRatio = 0.25;
+  else if(onlineRatio <= 0.3) showRatio = 1;
+  else showRatio = 0.6;
+  const budget = notOnline.length ? Math.max(1, Math.round(notOnline.length * showRatio)) : 0;
+  // Répartition équitable entre "récent" (turquoise) et "hors ligne" (rouge) dans le budget,
+  // pour qu'aucune des deux couleurs ne disparaisse complètement de la carte.
+  const recent = notOnline.filter(p=>p.status==='recent');
+  const offline = notOnline.filter(p=>p.status==='offline');
+  const recentBudget = recent.length ? Math.max(Math.min(1,recent.length), Math.round(budget * (recent.length/notOnline.length))) : 0;
+  const offlineBudget = Math.max(offline.length ? Math.min(1,offline.length) : 0, budget - recentBudget);
+  const chosen = [...recent.slice(0, recentBudget), ...offline.slice(0, offlineBudget)];
+  offlineBudgetIds = new Set(chosen.map(p=>p.id));
+}
+// Texte "temps depuis dernière connexion" recalculé en direct à partir de lastSeenAt
+// (au lieu du texte figé lastSeen), pour que le point rouge affiche un temps qui avance.
+function formatLastSeen(p){
+  if(p.lastSeenAt==null) return p.lastSeen || '';
+  const ageMs = Date.now() - p.lastSeenAt;
+  const min = Math.floor(ageMs/60000);
+  if(min < 1) return "À l'instant";
+  if(min < 60) return `Il y a ${min} min`;
+  const h = Math.floor(min/60);
+  if(h < 24) return `Il y a ${h} h`;
+  const j = Math.floor(h/24);
+  return `Il y a ${j} j`;
+}
 
 function haversineKm(lat1,lon1,lat2,lon2){
   const R=6371, toRad=d=>d*Math.PI/180;
@@ -2184,11 +2425,12 @@ function haversineKm(lat1,lon1,lat2,lon2){
 function computeDistances(){
   refreshStatuses();
   PROFILES.forEach(p=> { if(p.availabilityMin==null) p.availabilityMin=120; p.distanceKm = haversineKm(USER_LOC.lat, USER_LOC.lng, p.lat, p.lng); });
+  updateOfflineVisibilityBudget();
 }
 computeDistances();
 // Recalcule les statuts toutes les 60s (indépendamment du recentrage/filtrage carte)
 // pour que en ligne → récent → hors ligne se produise sans action de l'utilisateur.
-setInterval(()=>{ refreshStatuses(); updateMarkerIcons(); buildProfileTicker(); }, 60000);
+setInterval(()=>{ refreshStatuses(); updateOfflineVisibilityBudget(); updateMarkerIcons(); renderBubbles(); buildProfileTicker(); }, 60000);
 
 /* ================= SUPABASE (données live) =================
    1. Crée un projet sur https://supabase.com, puis lance schema.sql (fourni séparément)
@@ -2448,14 +2690,6 @@ let xp = parseInt(localStorage.getItem('ceSoirXP')||'0',10);
 let safetyActive = localStorage.getItem('ceSoirSafety')==='1';
 let exactLocationShared = localStorage.getItem('ceSoirExactLocation')==='1';
 let hotUntil = parseInt(localStorage.getItem('ceSoirHotUntil')||'0',10);
-const NOW_MODE_DURATION_MS = 3*60*60*1000; // Mode NOW : 3h pour tous, illimité pour Premium
-// Active le mode NOW de façon centralisée (utilisé par la porte NOW, le radar, et le toggle profil)
-function activateNowMode(){
-  myHot = true; localStorage.setItem('ceSoirMyHot','1');
-  if(isPremium){ hotUntil = 0; localStorage.removeItem('ceSoirHotUntil'); }
-  else { hotUntil = Date.now() + NOW_MODE_DURATION_MS; localStorage.setItem('ceSoirHotUntil', String(hotUntil)); }
-}
-function isNowActive(){ expireHotIfNeeded(); return myHot; }
 
 // Profils "Peut-être" (liste de suivi)
 let maybeProfiles = new Set(JSON.parse(localStorage.getItem('ceSoirMaybeProfiles') || '[]'));
@@ -2641,7 +2875,6 @@ document.getElementById('referralShareBtn').addEventListener('click', async ()=>
 })();
 
 function expireHotIfNeeded(){
-  if(isPremium){ return; } // Premium : mode NOW illimité, jamais expiré automatiquement
   if(hotUntil && Date.now()>hotUntil){ hotUntil=0; myHot=false; localStorage.removeItem('ceSoirHotUntil'); localStorage.setItem('ceSoirMyHot','0'); refreshMyHotUI(); refreshMyHotMap(); showToast('🌙 Ton mode NOW a expiré automatiquement.'); }
 }
 expireHotIfNeeded();
@@ -2998,7 +3231,7 @@ function fallbackPosition(p){
 }
 function fallbackBubbleHTML(p){
   const pos=fallbackPosition(p);
-  return `<button class="fallback-bubble ${p.status}${p.hot?' hot':''}" data-id="${p.id}" style="left:${pos.x}%;top:${pos.y}%" aria-label="Voir le profil de ${p.name}"><span class="fallback-bubble-ring"></span><img src="${p.avatar}" alt="${p.name}">${p.hot?'<span class="hot-badge">🔥</span>':''}<span class="lf-dot"></span></button>`;
+  return `<button class="fallback-bubble ${p.status}${p.hot?' hot':''}" data-id="${p.id}" style="left:${pos.x}%;top:${pos.y}%" aria-label="Voir le profil de ${p.name}"><span class="fallback-bubble-ring"></span><img src="${p.avatar}" alt="${p.name}"><span class="lf-dot"></span>${p.hot?'<span class="hot-badge">🔥</span>':''}${p.status==='offline'?`<span class="fallback-lastseen-tag">${formatLastSeen(p)}</span>`:''}</button>`;
 }
 function fallbackDiscoverPinHTML(place){
   const pos=fallbackPosition(place);
@@ -3040,12 +3273,25 @@ function renderFallbackMap(){
 }
 function refreshFallbackBubbles(){
   if(!usingFallbackMap)return;
-  PROFILES.forEach(p=>{const el=document.querySelector(`.fallback-bubble[data-id="${p.id}"]`);if(el)el.style.display=passesFilters(p)?'flex':'none';});
+  PROFILES.forEach(p=>{
+    const el=document.querySelector(`.fallback-bubble[data-id="${p.id}"]`);
+    if(!el) return;
+    el.style.display=passesFilters(p)?'flex':'none';
+    el.classList.remove('online','recent','offline');
+    el.classList.add(p.status);
+    let tag = el.querySelector('.fallback-lastseen-tag');
+    if(p.status==='offline'){
+      if(!tag){ tag=document.createElement('span'); tag.className='fallback-lastseen-tag'; el.appendChild(tag); }
+      tag.textContent = formatLastSeen(p);
+    } else if(tag){
+      tag.remove();
+    }
+  });
   const me=document.getElementById('fallbackMe'); if(me)me.classList.toggle('hot',myHot);
 }
 function addMapMarkers(){
   if(!map) return;
-  PROFILES.forEach(p=>{const marker=L.marker([p.lat,p.lng],{icon:L.divIcon({html:`<div class="lf-bubble ${p.status}${p.hot?' hot':''}"><img src="${p.avatar}" alt="${p.name}">${p.hot?'<span class="hot-badge">🔥</span>':''}<span class="lf-dot"></span></div>`,className:'lf-icon-wrap',iconSize:[62,62],iconAnchor:[31,31]})}).addTo(map);marker.on('click',()=>selectBubble(p.id,marker));if(p.status==='online'&&p.distanceKm<0.5)marker.bindTooltip(Math.max(1,Math.round(p.distanceKm*15))+' min',{permanent:true,direction:'top',offset:[0,-22],className:'lf-eta-tag'});bubbleMarkers.set(p.id,marker);});
+  PROFILES.forEach(p=>{const marker=L.marker([p.lat,p.lng],{icon:L.divIcon({html:`<div class="lf-bubble ${p.status}${p.hot?' hot':''}"><img src="${p.avatar}" alt="${p.name}"><span class="lf-dot"></span>${p.hot?'<span class="hot-badge">🔥</span>':''}</div>`,className:'lf-icon-wrap',iconSize:[62,62],iconAnchor:[31,31]})}).addTo(map);marker.on('click',()=>selectBubble(p.id,marker));if(p.status==='online'&&p.distanceKm<0.5)marker.bindTooltip(Math.max(1,Math.round(p.distanceKm*15))+' min',{permanent:true,direction:'top',offset:[0,-22],className:'lf-eta-tag'});else if(p.status==='offline')marker.bindTooltip(formatLastSeen(p),{permanent:true,direction:'top',offset:[0,-22],className:'lf-lastseen-tag'});bubbleMarkers.set(p.id,marker);});
 }
 function clearMapMarkers(){
   if(map) bubbleMarkers.forEach(m=>{ if(map.hasLayer(m)) map.removeLayer(m); });
@@ -3077,6 +3323,19 @@ function updateMarkerIcons(){
     } else if(!p.hot && badge){
       badge.remove();
     }
+    // Étiquette "hors ligne · temps depuis dernière connexion" : ajoutée/retirée/mise à jour
+    // en place selon le statut courant, sans reconstruire la bulle.
+    if(p.status==='offline'){
+      marker.unbindTooltip();
+      marker.bindTooltip(formatLastSeen(p),{permanent:true,direction:'top',offset:[0,-22],className:'lf-lastseen-tag'});
+      if(marker.isTooltipOpen && marker.isTooltipOpen()) {} else marker.openTooltip();
+    } else if(p.status==='online'&&p.distanceKm<0.5){
+      marker.unbindTooltip();
+      marker.bindTooltip(Math.max(1,Math.round(p.distanceKm*15))+' min',{permanent:true,direction:'top',offset:[0,-22],className:'lf-eta-tag'});
+      marker.openTooltip();
+    } else {
+      marker.unbindTooltip();
+    }
   });
 }
 // Reconstruit les bulles (carte Leaflet ou carte de secours) depuis PROFILES — appelable
@@ -3104,9 +3363,18 @@ function initMap(){
     }catch(e){console.warn('Leaflet unavailable, fallback map used',e);map=null;renderFallbackMap();}
   }else renderFallbackMap();
 }
-function passesFilters(p){const g=activeFilters.sexes,s=activeFilters.secteurs,i=activeFilters.intentions;if(g.size&&!g.has(p.sexe))return false;if(s.size&&!s.has(p.zone))return false;if(i.size&&!i.has(p.intention))return false;if(isPremium){const ageMaxEl=document.getElementById('ageMaxRange'),distMaxEl=document.getElementById('distMaxRange');if(ageMaxEl&&p.age>parseInt(ageMaxEl.value,10))return false;if(distMaxEl&&p.distanceKm>parseInt(distMaxEl.value,10))return false;}return true;}
+function passesFilters(p){const g=activeFilters.sexes,s=activeFilters.secteurs,i=activeFilters.intentions;if(g.size&&!g.has(p.sexe))return false;if(s.size&&!s.has(p.zone))return false;if(i.size&&!i.has(p.intention))return false;if(isPremium){const ageMaxEl=document.getElementById('ageMaxRange'),distMaxEl=document.getElementById('distMaxRange');if(ageMaxEl&&p.age>parseInt(ageMaxEl.value,10))return false;if(distMaxEl&&p.distanceKm>parseInt(distMaxEl.value,10))return false;}if(p.status!=='online'&&!offlineBudgetIds.has(p.id))return false;return true;}
 function renderBubbles(){if(usingFallbackMap){refreshFallbackBubbles();return;}PROFILES.forEach(p=>{const marker=bubbleMarkers.get(p.id);if(!marker||!map)return;if(passesFilters(p)){if(!map.hasLayer(marker))marker.addTo(map);}else{if(map.hasLayer(marker))map.removeLayer(marker);}});}
-document.getElementById('btn-recenter').addEventListener('click',()=>{if(map)map.setView([USER_LOC.lat,USER_LOC.lng],12);else{const me=document.getElementById('fallbackMe');if(me){me.classList.add('recenter');setTimeout(()=>me.classList.remove('recenter'),900);}}});
+document.getElementById('btn-recenter').addEventListener('click',()=>{
+  if(map){
+    map.setView([USER_LOC.lat,USER_LOC.lng],12);
+    map.invalidateSize();
+    showToast('📍 Recentré sur ta position');
+  }else{
+    const me=document.getElementById('fallbackMe');
+    if(me){me.classList.add('recenter');setTimeout(()=>me.classList.remove('recenter'),900);}
+  }
+});
 initMap();
 // La barre d'adresse mobile qui apparaît/disparaît change la taille réelle du conteneur
 // (à cause de dvh) sans que Leaflet le sache automatiquement — on le lui redit à chaque
@@ -3200,6 +3468,7 @@ document.getElementById('authSubmitBtn').addEventListener('click', async ()=>{
       btn.disabled = false; btn.textContent = 'Se connecter';
       return;
     }
+    if(document.activeElement) document.activeElement.blur(); // ferme le clavier virtuel avant d'afficher la map
     document.getElementById('authOverlay').classList.remove('show');
     proceedPastAuth();
     return;
@@ -3209,7 +3478,12 @@ document.getElementById('authSubmitBtn').addEventListener('click', async ()=>{
   btn.disabled = false; btn.textContent = originalLabel;
 });
 document.getElementById('authEmail').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('authPassword').focus(); });
-document.getElementById('authPassword').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('authSubmitBtn').click(); });
+document.getElementById('authPassword').addEventListener('keydown', e=>{
+  if(e.key==='Enter'){
+    e.target.blur(); // ferme le clavier virtuel avant de soumettre
+    document.getElementById('authSubmitBtn').click();
+  }
+});
 
 // Complète le profil (nom/âge/genre) et le relie au compte via user_id, si ce n'est pas déjà fait.
 async function proceedPastAuth(){
@@ -3285,8 +3559,20 @@ async function signOutUser(){
 
 // Gate d'accès : si Supabase est configuré, on vérifie s'il y a déjà une session
 // avant de continuer — sinon on affiche l'écran de connexion (avec option mode démo).
+// Filet de sécurité (ajouté 28 août 2026) : si getSession() ne répond jamais (réseau
+// bloqué/silencieux), on ne reste plus coincé sur le splash indéfiniment — on bascule
+// sur l'écran de connexion après 5s, comme si aucune session n'existait.
 if(supabaseClient){
+  let gateSettled = false;
+  const gateSafety = setTimeout(()=>{
+    if(gateSettled) return;
+    gateSettled = true;
+    document.getElementById('splashScreen').classList.add('hide');
+    document.getElementById('authOverlay').classList.add('show');
+  }, 5000);
   supabaseClient.auth.getSession().then(({data})=>{
+    if(gateSettled) return;
+    gateSettled = true; clearTimeout(gateSafety);
     if(data && data.session){
       proceedPastAuth();
     }
@@ -3294,7 +3580,11 @@ if(supabaseClient){
       document.getElementById('splashScreen').classList.add('hide');
       document.getElementById('authOverlay').classList.add('show');
     }
-  }).catch(()=>{ continueBoot(); }); // erreur réseau → on ne bloque pas l'accès en mode démo
+  }).catch(()=>{
+    if(gateSettled) return;
+    gateSettled = true; clearTimeout(gateSafety);
+    continueBoot();
+  }); // erreur réseau → on ne bloque pas l'accès en mode démo
 }else{
   continueBoot();
 }
@@ -3318,14 +3608,15 @@ document.getElementById('consentConfirm').addEventListener('click',()=>{
 document.getElementById('radarClose').addEventListener('click',closeRadar);
 document.getElementById('radarOverlay').addEventListener('click',e=>{if(e.target.id==='radarOverlay')closeRadar();});
 document.getElementById('radarJoin').addEventListener('click',()=>{
-  activateNowMode();
+  myHot=true; localStorage.setItem('ceSoirMyHot','1');
+  localStorage.setItem('ceSoirHotUntil',String(Date.now()+90*60*1000));
   refreshMyHotUI(); refreshMyHotMap(); closeRadar(); awardXP(15,'Mode NOW activé');
-  showToast(isPremium ? '🔥 Mode NOW activé — illimité (Premium).' : '🔥 Tu apparais dans le radar pendant 3h.');
+  showToast('🔥 Tu apparais dans le radar pendant 90 min.');
 });
 setRadar(false);
 
 /* live counter tick */
-let liveN = 1284;
+let liveN = 2568;
 setInterval(()=>{
   liveN += Math.floor(Math.random()*5)-2;
   document.getElementById('liveCount').textContent = liveN.toLocaleString('fr-CA');
@@ -3427,8 +3718,187 @@ function confirmEncounter(){
 
 function showToast(text){ const t=document.getElementById('nearbyToast'); if(!t)return; document.getElementById('nearbyToastText').textContent=text; t.classList.add('show'); clearTimeout(showToast._t); showToast._t=setTimeout(()=>t.classList.remove('show'),2600); }
 function setRadar(on){ radarActive=on; const wrap=document.getElementById('mapWrap'); if(wrap) wrap.classList.toggle('radar-mode',on); const rings=document.querySelectorAll('.radar-ring'); rings.forEach(r=>r.style.display=on?'block':'none'); const chip=document.getElementById('nowLiveChip'); if(chip) chip.classList.toggle('show',on); }
-function openRadar(){ document.getElementById('radarOverlay').classList.add('show'); setRadar(true); showToast('👀 3 personnes cherchent quelqu’un dans ton secteur.'); }
+function openRadar(){ document.getElementById('radarOverlay').classList.add('show'); setRadar(true); showToast('👀 6 personnes cherchent quelqu’un dans ton secteur.'); }
 function closeRadar(){ document.getElementById('radarOverlay').classList.remove('show'); setRadar(false); }
+
+/* ================= CHAT NOW (chat de groupe éphémère, quota quotidien) ================= */
+const CN_DAILY_LIMIT = 20;
+const CN_BOTS = [
+  {pseudo:'~RETRO_GAMER~', color:'#FFD23F'},
+  {pseudo:'*KITTY_CHAT*', color:'#5CFFB0'},
+  {pseudo:'{CAT_LOVER_84}', color:'#FF6FD8'},
+  {pseudo:'[PIXEL_PIONNIER]', color:'#5CC8FF'},
+  {pseudo:'~NUIT_BLANCHE~', color:'#C68CFF'},
+  {pseudo:'#MTL_VIBES#', color:'#FF9E5C'},
+  {pseudo:'<NEON_FOX>', color:'#7CFFDB'},
+  {pseudo:'~SOFT_STATIC~', color:'#FF7CA3'}
+];
+// Chaque catégorie a un pool large pour limiter les collisions avec l'anti-répétition.
+const CN_REPLIES = {
+  greeting: ["Salut tout le monde !","Hey, bonsoir 👋","Allô, ça jase fort à soir","Yo, présent(e) !","Coucou, j'arrive tout juste","Salut la gang !","Hey hey, ça brasse ici à soir","Bonsoir la compagnie, ça va bon train ici","Yo yo, prêt(e) à jaser un peu","Salut, je me joins à la conversation","Hey tout le monde, belle énergie ce soir","Allô allô, présent(e) et disponible"],
+  cafe: ["Moi j'suis game pour un café ☕","Il y a un bon café rue Bernard si ça tente quelqu'un","Perso je suis plus thé, mais je viens jaser quand même","Un espresso et je repars en forme pour la soirée","J'connais un café ouvert tard dans le coin, je peux donner l'adresse","Café ou pas, moi c'est surtout pour jaser que je suis là","Un café glacé ferait la job à soir","J'irais bien chercher un latte là tout de suite","Perso je carbure au café le soir aussi","Y'a un café sympa ouvert tard sur Saint-Denis","Café ou pas, l'important c'est la jasette"],
+  weather: ["Ouais il fait vraiment doux à soir 🌙","Parfait pour une marche dehors","J'ai vu ça, ça donne le goût de sortir","Enfin une soirée où on gèle pas dehors","Avec ce temps-là, ça serait dommage de rester enfermé","Moi je checke toujours la météo avant de sortir le soir","Le ciel est clair, parfait pour niaiser dehors","On dirait presque un soir d'été","Petite brise agréable, ça donne le goût de sortir","J'ai vérifié, pas de pluie prévue à soir","Belle soirée pour trainer sur une terrasse"],
+  howareyou: ["Ça va bien, tranquille à soir, et toi ?","Pas pire ! Toujours partant(e) pour jaser","Ça roule, on relaxe un peu","Semaine chargée mais ça va, content(e) d'être ici","Tranquille, je décompresse dans le chat","Ça va super, merci d'avoir demandé !","Tranquille pas vite, et toi de ton bord ?","Ça va relax, je savoure la soirée","En pleine forme, prêt(e) à jaser un peu","Ça va, journée correcte, et toi ?","Pas trop mal, je décompresse tranquillement"],
+  meetup: ["Ce serait cool un meetup un jour, sérieux","Je suis partant(e) pour un meetup éventuellement","Faudrait organiser ça pour vrai un moment donné","On devrait fixer une date au lieu juste d'en parler","Moi je suis toujours partant(e) pour rencontrer du monde en vrai","Un meetup à soir même, ça te tente ou plus tard cette semaine ?","On devrait se lancer pour un vrai meetup bientôt","Ça me tenterait de rencontrer du monde d'ici en vrai","Un rassemblement improvisé ça serait cool","Faudrait pas juste en parler, on devrait le faire","Qui est partant(e) pour un meetup cette semaine ?"],
+  food: ["J'ai justement faim là, quelqu'un a une bonne adresse ?","Une pizza ce soir ça me tenterait pas mal","Je suis toujours partant(e) pour découvrir un nouveau resto","Sushis ou poutine, difficile de choisir à soir","Moi je mange léger pis je sors après","Un petit snack de soir ça me tente","Je cherche une place à poutine ouverte tard","J'ai envie de tacos là tout de suite","Une bonne bouchée avant de sortir, toujours une bonne idée","Manger léger pis continuer à jaser, mon plan à soir"],
+  weekend: ["La fin de semaine s'en vient, j'ai déjà hâte","Vous faites quoi de bon ce weekend ?","Moi c'est tranquille cette fin de semaine, ouvert aux suggestions","Weekend chargé pour moi, mais je garde du temps pour sortir","J'ai hâte au weekend, je suis brûlé(e)","Des plans pour vendredi soir quelqu'un ?","Le weekend s'en vient, faut en profiter","Moi je garde mon dimanche pour relaxer","On devrait planifier une sortie pour la fin de semaine"],
+  quartier: ["Ah {q}, il paraît qu'il y a de l'action ce soir par là","{q} c'est toujours vivant en soirée","Je traîne pas loin de {q} des fois, on devrait se croiser","Belle place {q}, j'aime ce secteur","Ça bouge pas mal dans {q} ce genre de soir","Je connais bien {q}, plein de bonnes places","{q} a une bonne énergie le soir","On devrait organiser quelque chose vers {q}"],
+  music: ["J'ai une petite liste parfaite pour une soirée comme ça 🎧","Vous écoutez quoi comme genre en ce moment ?","Un peu de musique et l'ambiance change complètement","Moi c'est plus électro pour sortir, et vous ?","Un peu de lo-fi et la soirée part bien","Vous avez des recos de sons pour à soir ?","La musique c'est essentiel pour l'ambiance","J'ai une toune en tête là, ça donnerait le ton"],
+  compliment: ["Ça fait plaisir, merci ! On essaie de garder ça vivant ici","Ahah merci, on est content(e)s que ça plaise","Content(e) que t'aimes ça, reste dans le coin !","C'est encourageant de lire ça, merci beaucoup","Ça motive à continuer de jaser ici","Sympa comme retour, merci !"],
+  generic: ["Ambiance tranquille ce soir","J'adore cette appli haha","Toujours prêt à jaser !","Quelqu'un sort dans le Plateau ?","Content(e) d'être là ce soir","On est pas mal de monde à soir dites donc","Ça jase fort, j'aime ça","Ça jase pas mal fort à soir","J'aime l'énergie du groupe ce soir","On dirait que tout le monde est en forme à soir","Belle vibe dans le chat à soir","Le groupe est en feu à soir"]
+};
+const CN_QUARTIERS = ['plateau','mile end','verdun','rosemont','centre-ville','hochelaga','villeray','griffintown','ndg','outremont','petite-italie'];
+let cnMessages = [];
+
+function cnToday(){ return new Date().toISOString().slice(0,10); }
+function cnLoadState(){
+  const raw = localStorage.getItem('ceSoirChatNow');
+  let state = raw ? JSON.parse(raw) : null;
+  if(!state || state.day !== cnToday()){
+    state = { day: cnToday(), sentCount: 0, log: cnSeedConversation(), botQueue: [] };
+  }
+  if(!state.botQueue) state.botQueue = [];
+  return state;
+}
+function cnSaveState(state){ localStorage.setItem('ceSoirChatNow', JSON.stringify(state)); }
+function cnSeedConversation(){
+  const offsets = [9,7,5,3,1]; // minutes dans le passé, du plus vieux au plus récent
+  const mk = (min)=>{ const d = new Date(Date.now()-min*60000); return { ts: d.getTime(), time: d.toTimeString().slice(0,5) }; };
+  return [
+    {pseudo:CN_BOTS[1].pseudo,color:CN_BOTS[1].color,text:'Toujours prêt à jaser !',...mk(offsets[0])},
+    {pseudo:CN_BOTS[0].pseudo,color:CN_BOTS[0].color,text:'Salut tout le monde !',...mk(offsets[1])},
+    {pseudo:CN_BOTS[3].pseudo,color:CN_BOTS[3].color,text:"Ce serait cool un meetup un jour, sérieux",...mk(offsets[2])},
+    {pseudo:CN_BOTS[6].pseudo,color:CN_BOTS[6].color,text:'Content(e) d\'être là ce soir',...mk(offsets[3])},
+    {pseudo:CN_BOTS[4].pseudo,color:CN_BOTS[4].color,text:'On est pas mal de monde à soir dites donc',...mk(offsets[4])},
+  ];
+}
+function cnExtractQuartier(text){
+  const s = text.toLowerCase();
+  return CN_QUARTIERS.find(q=>s.includes(q));
+}
+function cnClassify(text){
+  const s = text.toLowerCase();
+  if(/caf[eé]|latte|expresso|th[eé]\b/.test(s)) return 'cafe';
+  if(/beau|soleil|météo|meteo|temps|doux|pluie|froid|chaud/.test(s)) return 'weather';
+  if(/ça va|ca va|comment.*(vas|va)|quoi de neuf|quoi de 9/.test(s)) return 'howareyou';
+  if(/meetup|se rencontrer|rencontre|se voir|activit[eé]/.test(s)) return 'meetup';
+  if(/manger|bouffe|resto|restaurant|faim|pizza|sushi|poutine/.test(s)) return 'food';
+  if(/weekend|fin de semaine|vendredi|samedi|dimanche/.test(s)) return 'weekend';
+  if(/musique|chanson|spotify|dj\b|concert|playlist/.test(s)) return 'music';
+  if(/j'?adore|cool cette app|top cette app|g[eé]niale?|excellente? app|bravo/.test(s)) return 'compliment';
+  if(CN_QUARTIERS.some(q=>s.includes(q))) return 'quartier';
+  if(/salut|allo|allô|bonsoir|hey|yo\b|coucou/.test(s)) return 'greeting';
+  return 'generic';
+}
+// Textes déjà utilisés dans la dernière heure (bots seulement) : jamais le même message 2x dans cette fenêtre.
+const CN_REPEAT_WINDOW_MS = 60*60*1000;
+function cnUsedTextsRecent(state){
+  const cutoff = Date.now() - CN_REPEAT_WINDOW_MS;
+  return new Set(state.log.filter(m=>!m.me && (m.ts||0) >= cutoff).map(m=>m.text));
+}
+// Dernière utilisation (timestamp) de chaque texte, tous bots confondus, pour départager si le bassin est épuisé.
+function cnLastUsedMap(state){
+  const map = new Map();
+  state.log.filter(m=>!m.me).forEach(m=>{
+    const prev = map.get(m.text) || 0;
+    if((m.ts||0) > prev) map.set(m.text, m.ts||0);
+  });
+  return map;
+}
+function cnPickReply(category, state, rawText){
+  let pool = CN_REPLIES[category] || CN_REPLIES.generic;
+  if(category==='quartier'){
+    const q = cnExtractQuartier(rawText||'') || 'ton secteur';
+    const qCap = q.charAt(0).toUpperCase()+q.slice(1);
+    pool = pool.map(t=>t.replace('{q}', qCap));
+  }
+  const used = cnUsedTextsRecent(state);
+  let choices = pool.filter(r=>!used.has(r));
+  if(choices.length===0){
+    // Bassin entièrement utilisé dans la dernière heure : on prend la phrase la moins récemment servie
+    // (jamais celle envoyée le plus récemment), pour repousser le plus possible toute répétition.
+    const lastUsed = cnLastUsedMap(state);
+    const sorted = [...pool].sort((a,b)=>(lastUsed.get(a)||0)-(lastUsed.get(b)||0));
+    return sorted[0];
+  }
+  return choices[Math.floor(Math.random()*choices.length)];
+}
+// Rotation des pseudos : chaque bot passe une fois avant qu'un pseudo revienne, pour varier les noms.
+function cnNextBots(state, count){
+  let queue = state.botQueue || [];
+  while(queue.length < count){
+    let fresh = CN_BOTS.map((_,i)=>i).sort(()=>Math.random()-0.5);
+    if(queue.length && fresh[0]===queue[queue.length-1]){
+      const swapAt = fresh.findIndex((v,idx)=>idx>0);
+      if(swapAt>0){ const tmp=fresh[0]; fresh[0]=fresh[swapAt]; fresh[swapAt]=tmp; }
+    }
+    queue = queue.concat(fresh);
+  }
+  const picked = queue.splice(0, count);
+  state.botQueue = queue;
+  return picked.map(i=>CN_BOTS[i]);
+}
+function cnRenderAll(){
+  const body = document.getElementById('cnBody');
+  body.innerHTML = cnMessages.map(m=>`
+    <div class="cn-msg${m.me?' me':''}">
+      <span class="cn-time">[${m.time}]</span>
+      <span class="cn-pseudo" style="color:${m.color}">${m.pseudo}</span>
+      <span class="cn-text">${m.text.replace(/</g,'&lt;')}</span>
+    </div>`).join('');
+  body.scrollTop = body.scrollHeight;
+}
+function cnRenderQuota(state){
+  const remaining = CN_DAILY_LIMIT - state.sentCount;
+  document.getElementById('cnQuota').textContent = `${remaining}/${CN_DAILY_LIMIT} messages aujourd'hui`;
+  const limitReached = remaining<=0;
+  document.getElementById('cnLimitNote').style.display = limitReached ? 'block' : 'none';
+  document.getElementById('cnFooter').style.display = limitReached ? 'none' : 'flex';
+}
+function openChatNow(){
+  const state = cnLoadState();
+  cnMessages = state.log.slice();
+  cnRenderAll();
+  cnRenderQuota(state);
+  document.getElementById('chatNowOverlay').classList.add('show');
+  setTimeout(()=>document.getElementById('cnInput').focus(),200);
+}
+function closeChatNow(){ document.getElementById('chatNowOverlay').classList.remove('show'); }
+function cnSendMessage(){
+  const input = document.getElementById('cnInput');
+  const text = input.value.trim();
+  if(!text) return;
+  const state = cnLoadState();
+  if(state.sentCount >= CN_DAILY_LIMIT) return;
+  const nowLabel = new Date().toTimeString().slice(0,5);
+  const myMsg = {pseudo:'Toi', color:'#C68CFF', text, time:nowLabel, ts:Date.now(), me:true};
+  state.log.push(myMsg);
+  state.sentCount += 1;
+  cnMessages.push(myMsg);
+  input.value = '';
+  cnRenderAll();
+  cnRenderQuota(state);
+  // Une ou deux réponses simulées, restant sur le sujet du message et avec des pseudos qui alternent
+  const category = cnClassify(text);
+  const replyCount = Math.random()<0.5 ? 1 : 2;
+  const repliers = cnNextBots(state, replyCount);
+  cnSaveState(state);
+  repliers.forEach((bot,i)=>{
+    setTimeout(()=>{
+      const fresh = cnLoadState();
+      const reply = {pseudo:bot.pseudo, color:bot.color, text:cnPickReply(category, fresh, text), time:new Date().toTimeString().slice(0,5), ts:Date.now()};
+      fresh.log.push(reply);
+      cnMessages.push(reply);
+      cnRenderAll();
+      cnSaveState(fresh);
+    }, 900 + i*1300 + Math.random()*600);
+  });
+}
+document.getElementById('radarChatBtn').addEventListener('click', ()=>{ closeRadar(); openChatNow(); });
+document.getElementById('cnClose').addEventListener('click', closeChatNow);
+document.getElementById('chatNowOverlay').addEventListener('click', e=>{ if(e.target.id==='chatNowOverlay') closeChatNow(); });
+document.getElementById('cnSend').addEventListener('click', cnSendMessage);
+document.getElementById('cnInput').addEventListener('keydown', e=>{ if(e.key==='Enter') cnSendMessage(); });
 
 function closeProfile(){
   profileSheet.classList.remove('open'); sheetBackdrop.classList.remove('show');
@@ -3724,9 +4194,9 @@ function refreshMyHotUI(){
 }
 function refreshMyHotMap(){ const el=document.querySelector('.lf-me'); if(el) el.classList.toggle('hot',myHot); if(usingFallbackMap){ refreshFallbackBubbles(); return; } if(ownMarker && map){ if(myVisibility==='hidden') ownMarker.remove(); else if(!map.hasLayer(ownMarker)) ownMarker.addTo(map); } }
 const myHotToggle=document.getElementById('myHotToggle');
-if(myHotToggle){ myHotToggle.checked=myHot; myHotToggle.addEventListener('change',()=>{
-  if(myHotToggle.checked){ activateNowMode(); awardXP(15,'Mode CE SOIR activé'); }
-  else{ myHot=false; localStorage.setItem('ceSoirMyHot','0'); hotUntil=0; localStorage.removeItem('ceSoirHotUntil'); }
+if(myHotToggle){ myHotToggle.checked=myHot; myHotToggle.addEventListener('change',()=>{ myHot=myHotToggle.checked; localStorage.setItem('ceSoirMyHot',myHot?'1':'0');
+  if(myHot){hotUntil=Date.now()+90*60*1000;localStorage.setItem('ceSoirHotUntil',String(hotUntil));awardXP(15,'Mode CE SOIR activé');}
+  else{hotUntil=0;localStorage.removeItem('ceSoirHotUntil');}
   refreshMyHotUI(); refreshMyHotMap(); }); }
 refreshMyHotUI();
 updateMission(0);
@@ -3776,24 +4246,9 @@ renderPhotoGrid();
 const views = { carte:'view-carte', decouvrir:'view-decouvrir', now:'view-now', babillard:'view-babillard', messages:'view-messages', profil:'view-profil' };
 document.querySelectorAll('.navbtn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
-    if(btn.dataset.tab==='now'){ openNowGateOrView(); return; }
+    if(btn.dataset.tab==='now'){ openChatNow(); return; } // NOW ouvre directement le chat de groupe, plus de page intermédiaire
     switchTab(btn.dataset.tab);
   });
-});
-// Le chat/flux NOW est exclusif au mode NOW : on montre d'abord la porte d'activation si nécessaire.
-function openNowGateOrView(){
-  if(isNowActive()){ switchTab('now'); return; }
-  const label = document.getElementById('nowGateDurationLabel');
-  if(label) label.textContent = isPremium ? 'Actif en illimité (Premium)' : 'Actif pendant 3h';
-  document.getElementById('nowGateOverlay').classList.add('show');
-}
-document.getElementById('nowGateClose').addEventListener('click', ()=> document.getElementById('nowGateOverlay').classList.remove('show'));
-document.getElementById('nowGateActivate').addEventListener('click', ()=>{
-  activateNowMode();
-  refreshMyHotUI(); refreshMyHotMap(); awardXP(15,'Mode NOW activé');
-  document.getElementById('nowGateOverlay').classList.remove('show');
-  showToast(isPremium ? '🔥 Mode NOW activé — illimité (Premium).' : '🔥 Mode NOW activé pendant 3h.');
-  switchTab('now');
 });
 function switchTab(tab){
   document.querySelectorAll('.navbtn').forEach(b=> b.classList.toggle('active', b.dataset.tab===tab));
@@ -3946,21 +4401,77 @@ document.getElementById('encounterOverlay').addEventListener('click',e=>{if(e.ta
 document.getElementById('encounterConfirm').addEventListener('click',confirmEncounter);
 
 /* ================= MESSAGES / CHAT ================= */
-function renderConvList(){
-  const list = document.getElementById('convList');
-  list.innerHTML = CONVERSATIONS.map(c=>`
-    <div class="conv-item" data-id="${c.id}">
-      <div class="conv-avatar ${c.online?'online':''}"><img src="${c.avatar}"><span class="dot"></span></div>
+function convItemHTML(c){
+  const unreadClass = c.unread>0 ? 'unread' : '';
+  return `
+    <div class="conv-item ${unreadClass}" data-id="${c.id}">
+      <div class="conv-avatar ${c.online?'online':''}">
+        <img src="${c.avatar}" alt="${c.name}">
+        <span class="status-dot"></span>
+      </div>
       <div class="conv-mid">
         <div class="conv-name-row"><span class="conv-name">${c.name}</span><span class="conv-time">${c.time}</span></div>
         <div class="conv-preview">${c.preview}</div>
       </div>
       ${c.unread>0?`<span class="conv-unread">${c.unread}</span>`:''}
-    </div>`).join('');
+    </div>`;
+}
+function bindConvItemClicks(list){
   list.querySelectorAll('.conv-item').forEach(el=>{
     el.addEventListener('click', ()=> openChat(parseInt(el.dataset.id)));
   });
 }
+function renderConvList(){
+  const list = document.getElementById('convList');
+  const empty = document.getElementById('chatListEmpty');
+  if(!CONVERSATIONS || CONVERSATIONS.length===0){
+    list.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+  list.innerHTML = CONVERSATIONS.map(convItemHTML).join('');
+  bindConvItemClicks(list);
+}
+// Bouton recherche — toggle barre
+document.getElementById('btn-chat-search')?.addEventListener('click', () => {
+  const searchBar = document.getElementById('chatSearchBar');
+  searchBar.classList.toggle('hidden');
+  if(!searchBar.classList.contains('hidden')){
+    document.getElementById('chatSearchInput').focus();
+  } else {
+    document.getElementById('chatSearchInput').value = '';
+    renderConvList();
+  }
+});
+// Clear recherche
+document.getElementById('chatSearchClear')?.addEventListener('click', () => {
+  document.getElementById('chatSearchInput').value = '';
+  document.getElementById('chatSearchBar').classList.add('hidden');
+  renderConvList();
+});
+// Recherche en temps réel (nom + aperçu du dernier message)
+document.getElementById('chatSearchInput')?.addEventListener('input', (e) => {
+  const query = e.target.value.toLowerCase().trim();
+  const list = document.getElementById('convList');
+  const empty = document.getElementById('chatListEmpty');
+  if(!query){ renderConvList(); return; }
+  const filtered = CONVERSATIONS.filter(c =>
+    c.name.toLowerCase().includes(query) || c.preview.toLowerCase().includes(query)
+  );
+  empty.classList.add('hidden');
+  if(filtered.length===0){
+    list.innerHTML = '<div style="padding:20px; text-align:center; color:var(--muted);">Aucun résultat</div>';
+  } else {
+    list.innerHTML = filtered.map(convItemHTML).join('');
+    bindConvItemClicks(list);
+  }
+});
+// Menu du chat (placeholder — options à venir)
+document.getElementById('btn-chat-menu')?.addEventListener('click', () => {
+  console.log('Menu chat — à implémenter');
+});
+
 function goToChatByProfile(profileId, name, avatar){
   let conv = CONVERSATIONS.find(c=>c.profileId===profileId);
   if(!conv) conv = CONVERSATIONS.find(c=>!c.profileId && c.name===name); // repli pour anciennes conv de démo sans lien
@@ -3990,8 +4501,20 @@ function openChat(id){
 }
 function renderChatBody(c){
   const body = document.getElementById('chatBody');
-  body.innerHTML = c.thread.map(m=>`<div class="bubble-msg ${m.from==='me'?'me':'them'}">${m.text}</div>`).join('');
-  body.scrollTop = body.scrollHeight;
+  if(!c.thread || c.thread.length===0){
+    body.innerHTML = `
+      <div class="chat-body-empty">
+        <div class="empty-icon">💬</div>
+        <h3>Commence une conversation</h3>
+        <p>Avec ${c.name}</p>
+      </div>`;
+    return;
+  }
+  body.innerHTML = c.thread.map(m=>{
+    const isOwn = m.from==='me';
+    return `<div class="chat-message ${isOwn?'own':'other'}"><div class="chat-bubble">${m.text}</div></div>`;
+  }).join('');
+  setTimeout(()=>{ body.scrollTop = body.scrollHeight; }, 0);
 }
 document.getElementById('btn-chat-back').addEventListener('click', ()=>{
   document.getElementById('view-chat').classList.remove('active');
@@ -4086,21 +4609,21 @@ syncMenuAvatar();
 
 /* ================= MUR FANTÔME / TICKER LIVE ================= */
 const GHOST_MESSAGES = [
-  { type:'hot',   text:'🔥 3 personnes viennent d’activer le mode NOW près du Plateau' },
-  { type:'live',  text:'12 nouveaux profils en ligne dans les 15 dernières minutes' },
+  { type:'hot',   text:'🔥 6 personnes viennent d’activer le mode NOW près du Plateau' },
+  { type:'live',  text:'24 nouveaux profils en ligne dans les 15 dernières minutes' },
   { type:'vibe',  text:'Le Mile End est très chaud ce soir 🔥🔥' },
   { type:'testi', text:'« Grâce à CE SOIR j’ai rencontré quelqu’un en 20 minutes »' },
   { type:'live',  text:'Quelqu’un cherche une terrasse dans le Plateau' },
-  { type:'hot',   text:'2 matchs confirmés dans ton secteur il y a quelques minutes' },
+  { type:'hot',   text:'4 matchs confirmés dans ton secteur il y a quelques minutes' },
   { type:'testi', text:'« On s’est vus le soir même, c’était parfait »' },
   { type:'vibe',  text:'Hochelaga commence à s’activer 🌤️' },
-  { type:'live',  text:'47 personnes en ligne dans un rayon de 2 km' },
+  { type:'live',  text:'94 personnes en ligne dans un rayon de 2 km' },
   { type:'hot',   text:'Plusieurs personnes ont dit « Je suis partant » dans la dernière heure' },
   { type:'testi', text:'« Premier match → premier date en 45 min »' },
   { type:'vibe',  text:'Centre-ville : ambiance terrasse ce soir' },
   { type:'live',  text:'Quelqu’un vient de passer en mode NOW à moins de 800 m' },
   { type:'testi', text:'« J’avais oublié à quel point c’est simple de rencontrer des gens »' },
-  { type:'hot',   text:'4 personnes cherchent un verre improvisé près de toi' },
+  { type:'hot',   text:'8 personnes cherchent un verre improvisé près de toi' },
   { type:'vibe',  text:'Petite-Italie : plusieurs vibes alignées 🍕' },
   { type:'live',  text:'Un nouveau profil “disponible maintenant” vient d’apparaître' },
   { type:'testi', text:'« CE SOIR a transformé mon mardi soir en quelque chose de réel »' },
@@ -4172,6 +4695,10 @@ function tickerClickProfile(profileId){
 
 // Construire le ticker au démarrage
 buildProfileTicker();
+
+// Construire et faire tourner le bandeau défilant du feed d'activité live
+renderLiveFeedTicker();
+setInterval(()=>{ NOW_FEED_SEED.push(NOW_FEED_SEED.shift()); renderLiveFeedTicker(); }, 25000);
 
 // Reconstruire le ticker occasionnellement (tous les ~60s pour une nouvelle rotation)
 setInterval(buildProfileTicker, 62000);
