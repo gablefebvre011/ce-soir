@@ -3559,8 +3559,20 @@ async function signOutUser(){
 
 // Gate d'accès : si Supabase est configuré, on vérifie s'il y a déjà une session
 // avant de continuer — sinon on affiche l'écran de connexion (avec option mode démo).
+// Filet de sécurité (ajouté 28 août 2026) : si getSession() ne répond jamais (réseau
+// bloqué/silencieux), on ne reste plus coincé sur le splash indéfiniment — on bascule
+// sur l'écran de connexion après 5s, comme si aucune session n'existait.
 if(supabaseClient){
+  let gateSettled = false;
+  const gateSafety = setTimeout(()=>{
+    if(gateSettled) return;
+    gateSettled = true;
+    document.getElementById('splashScreen').classList.add('hide');
+    document.getElementById('authOverlay').classList.add('show');
+  }, 5000);
   supabaseClient.auth.getSession().then(({data})=>{
+    if(gateSettled) return;
+    gateSettled = true; clearTimeout(gateSafety);
     if(data && data.session){
       proceedPastAuth();
     }
@@ -3568,7 +3580,11 @@ if(supabaseClient){
       document.getElementById('splashScreen').classList.add('hide');
       document.getElementById('authOverlay').classList.add('show');
     }
-  }).catch(()=>{ continueBoot(); }); // erreur réseau → on ne bloque pas l'accès en mode démo
+  }).catch(()=>{
+    if(gateSettled) return;
+    gateSettled = true; clearTimeout(gateSafety);
+    continueBoot();
+  }); // erreur réseau → on ne bloque pas l'accès en mode démo
 }else{
   continueBoot();
 }
