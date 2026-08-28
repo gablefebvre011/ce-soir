@@ -186,9 +186,35 @@
   .fallback-label{position:absolute;color:rgba(153,190,215,.34);font-size:9px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;pointer-events:none}.label-plateau{left:15%;top:28%}.label-mile{left:62%;top:21%}.label-rosemont{left:62%;top:67%}.label-hochelaga{left:12%;top:72%}.label-centre{left:43%;top:48%}
   #fallbackBubbles{position:absolute;inset:0;z-index:8}.fallback-bubble{position:absolute;transform:translate(-50%,-50%);width:54px;height:54px;border:0;padding:0;border-radius:50%;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;filter:drop-shadow(0 4px 12px rgba(0,0,0,.65))}.fallback-bubble img{width:50px;height:50px;border-radius:50%;object-fit:cover;border:2.5px solid var(--offline)}.fallback-bubble.online img{border-color:var(--online);box-shadow:0 0 20px rgba(198,255,46,.7)}.fallback-bubble.recent img{border-color:var(--recent);box-shadow:0 0 18px rgba(45,212,191,.5)}.fallback-bubble.hot img{border-color:var(--flame);box-shadow:0 0 12px rgba(255,94,58,.7)}.fallback-bubble.hot .fallback-bubble-ring{position:absolute;inset:-7px;border-radius:50%;border:3px solid transparent;border-top-color:var(--flame);border-right-color:var(--flame2);animation:hotSpin 2.2s linear infinite}.fallback-bubble .hot-badge{right:-3px;top:-7px}.fallback-bubble .lf-dot{z-index:4}
   .fallback-me{position:absolute;left:50%;top:50%;z-index:9;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;background:#8B2FE0;border:3px solid #fff;box-shadow:0 0 0 8px rgba(139,47,224,.14),0 0 28px rgba(139,47,224,.85)}.fallback-me span{position:absolute;inset:-12px;border:1px solid rgba(139,47,224,.4);border-radius:50%;animation:radarBig 2.8s ease-out infinite}.fallback-me b{position:absolute;left:50%;top:25px;transform:translateX(-50%);font-size:9px;color:#fff;background:rgba(4,8,18,.72);padding:3px 7px;border-radius:8px;white-space:nowrap}.fallback-me.hot{background:var(--flame);box-shadow:0 0 0 8px rgba(255,94,58,.14),0 0 28px rgba(255,94,58,.85)}.fallback-me.recenter{animation:recenterPulse .9s ease}.fallback-attribution{position:absolute;right:10px;bottom:12px;font-size:8px;color:rgba(255,255,255,.3);z-index:20}@keyframes recenterPulse{50%{transform:translate(-50%,-50%) scale(1.45)}}
+  .fallback-pin{ position:absolute; transform:translate(-50%,-50%); z-index:7; border:none; cursor:pointer; animation:pinPop .38s cubic-bezier(.34,1.56,.64,1) backwards; }
+  .fallback-pin.disc{ width:auto; height:auto; border:none; background:none; font-size:16px; line-height:1; color:#FFE000; filter:drop-shadow(0 0 5px rgba(255,224,0,.85)); animation:pinPop .38s cubic-bezier(.34,1.56,.64,1) backwards; }
+  .fallback-pin.bab{ width:14px; height:14px; border-radius:50%; background:#9A1FF0; border:2px solid var(--bg); box-shadow:0 0 8px rgba(154,31,240,.5); }
+  .fallback-pin.more{ padding:3px 9px; border-radius:20px; font-size:10px; font-weight:800; background:rgba(15,22,38,.92); border:1px solid var(--line); white-space:nowrap; }
+  .fallback-pin.more.decouvrir{ color:#FFB84D; border-color:rgba(255,184,77,.4); }
+  .fallback-pin.more.babillard{ color:#c98bf5; border-color:rgba(154,31,240,.4); }
 
   /* --- custom markers drawn inside leaflet divIcons --- */
   .lf-icon-wrap{ background:none !important; border:none !important; transform:translateZ(0); }
+  @keyframes pinPop{ from{ opacity:0; transform:scale(.4); } to{ opacity:1; transform:scale(1); } }
+  .disc-pin, .bab-pin{
+    width:16px; height:16px; border-radius:50%; border:2px solid var(--bg);
+    display:flex; align-items:center; justify-content:center; opacity:0.85;
+    animation:pinPop .38s cubic-bezier(.34,1.56,.64,1) backwards;
+  }
+  .disc-pin{
+    width:auto; height:auto; border:none; background:none; opacity:1;
+    font-size:18px; line-height:1; color:#FFE000; filter:drop-shadow(0 0 5px rgba(255,224,0,.85));
+    animation:pinPop .38s cubic-bezier(.34,1.56,.64,1) backwards;
+  }
+  .bab-pin{ background:#9A1FF0; box-shadow:0 0 8px rgba(154,31,240,.5); }
+  .more-pin{
+    display:flex; align-items:center; justify-content:center; padding:3px 9px; border-radius:20px;
+    font-size:10px; font-weight:800; color:var(--text); background:rgba(15,22,38,.92);
+    border:1px solid var(--line); white-space:nowrap;
+    animation:pinPop .38s cubic-bezier(.34,1.56,.64,1) backwards;
+  }
+  .more-pin.decouvrir{ color:#FFB84D; border-color:rgba(255,184,77,.4); }
+  .more-pin.babillard{ color:#c98bf5; border-color:rgba(154,31,240,.4); }
   .lf-bubble{
     width:62px; height:62px; border-radius:50%; position:relative; cursor:pointer;
     box-shadow:0 3px 10px rgba(0,0,0,.55);
@@ -207,7 +233,8 @@
   }
   .lf-bubble.online img{ border-color:var(--online); box-shadow:0 0 22px rgba(198,255,46,.75); }
   .lf-bubble.recent img{ border-color:var(--recent); box-shadow:0 0 18px rgba(45,212,191,.6); }
-  /* ===== Mode CE SOIR / profil chaud ===== */
+  .lf-bubble.hot{ z-index:600; }
+  .lf-bubble.hot.active{ transform:scale(1.75); }
   .lf-bubble.hot::before{ content:''; position:absolute; inset:-6px; z-index:0; border-radius:50%; border:3px solid var(--flame); box-shadow:0 0 10px rgba(255,94,58,.8); pointer-events:none; }
   .lf-bubble.hot img{ position:relative; z-index:1; border-color:var(--flame); box-shadow:0 0 10px rgba(255,94,58,.55),0 0 24px rgba(255,176,32,.45); }
   .lf-bubble.hot .lf-dot{ z-index:3; }
@@ -273,7 +300,7 @@
 
   /* map top controls */
   .map-controls{
-    position:absolute; top:236px; right:14px; z-index:900;
+    position:absolute; top:78px; right:14px; z-index:900;
     display:flex; flex-direction:column; gap:10px; align-items:flex-end;
     transform:translateZ(0);
   }
@@ -292,6 +319,16 @@
   }
   .legend div{ display:flex; align-items:center; gap:7px; margin:3px 0; }
   .legend span{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .legend-divider{ height:1px; background:var(--line); margin:6px 0; }
+  .legend-chip{
+    display:flex; align-items:center; gap:7px; width:100%; margin:3px 0; padding:0;
+    background:none; border:none; color:var(--muted); font-size:10.5px; font-family:inherit;
+    cursor:pointer; text-align:left; opacity:1; transition:opacity .2s ease;
+  }
+  .legend-chip span{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .legend-chip b{ margin-left:auto; font-weight:700; color:var(--text); }
+  .legend-chip.off{ opacity:.4; }
+  .legend-chip.off span{ background:transparent !important; border:1px solid var(--muted); }
 
   .filters-fab{
     position:absolute; right:14px; bottom:128px; z-index:900;
@@ -567,6 +604,29 @@
   .bab-card-sub{ font-size:11px; color:var(--muted); }
   .bab-card-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:3px; }
   .bab-card-avatars{ display:flex; }
+
+  /* ===== Babillard v2 — annonces classées créées par les utilisateurs ===== */
+  .b-card{ padding:13px 14px; border-radius:15px; background:var(--panel2); border:1px solid var(--line); cursor:pointer; margin-bottom:10px; }
+  .b-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .b-cat{ font-size:9px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:#c98bf5; }
+  .b-time{ font-size:9.5px; color:var(--muted); }
+  .b-title{ font-size:13px; font-weight:700; color:var(--text); margin:0 0 3px; }
+  .b-desc{ font-size:12px; line-height:1.5; color:var(--muted); margin:0 0 9px; }
+  .b-foot{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .b-avatar{ width:20px; height:20px; border-radius:50%; background:linear-gradient(135deg,var(--violet2),#9A1FF0); flex-shrink:0; }
+  .b-name{ font-size:10.5px; color:var(--muted); }
+  .b-zone{ font-size:9.5px; color:#5a5470; }
+  .b-react{ margin-left:auto; font-size:11px; background:rgba(154,31,240,.14); color:#c98bf5; padding:4px 9px; border-radius:20px; font-weight:700; }
+  .bab-fab{
+    position:absolute; right:18px; bottom:100px; width:52px; height:52px; border-radius:50%;
+    background:linear-gradient(135deg,var(--flame2),#ff8f6e); border:none; color:#0a0e1a;
+    font-size:24px; font-weight:800; box-shadow:0 8px 20px rgba(255,94,58,.4); cursor:pointer; z-index:30;
+  }
+  .bab-form-input{
+    width:100%; background:rgba(255,255,255,.04); border:1px solid var(--line); border-radius:12px;
+    padding:11px 13px; font-size:13px; color:var(--text); font-family:inherit; box-sizing:border-box;
+  }
+  .bab-form-input::placeholder{ color:var(--muted); }
   .bab-card-avatars img{
     width:18px; height:18px; border-radius:50%; border:1.5px solid var(--panel2);
     margin-left:-6px; object-fit:cover;
@@ -608,6 +668,23 @@
   .bab-empty p{ font-size:13px; color:var(--muted2); margin:0; max-width:260px; }
 
   .rec-row{ display:flex; gap:12px; overflow-x:auto; padding:0 20px 6px; scrollbar-width:none; }
+
+  /* ===== Lieux Découvrir / Partenaires ===== */
+  .place-row{ display:flex; gap:12px; overflow-x:auto; padding:0 20px 6px; scrollbar-width:none; }
+  .place-grid{ display:flex; flex-direction:column; gap:12px; padding:0 20px; }
+  .place-card{ flex:0 0 auto; width:220px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; }
+  .place-card.wide{ width:auto; display:flex; flex-direction:row; }
+  .place-card.wide .place-photo{ width:96px; height:auto; flex-shrink:0; }
+  .place-card.partner{ border-color:rgba(255,184,77,0.4); box-shadow:0 0 0 1px rgba(255,184,77,0.15); }
+  .place-photo{ height:110px; display:flex; align-items:center; justify-content:center; font-size:34px; background:linear-gradient(135deg,#7014E8,#9A1FF0); }
+  .place-photo img{ width:100%; height:100%; object-fit:cover; }
+  .place-info{ padding:12px 13px; }
+  .place-badge{ display:inline-block; font-size:9px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:#9089A6; background:rgba(255,255,255,0.06); padding:3px 8px; border-radius:8px; margin-bottom:6px; }
+  .place-badge.partner{ color:#FFB84D; background:rgba(255,184,77,0.14); }
+  .place-info h4{ font-size:13.5px; font-weight:700; margin:0 0 4px; color:#F4F1EC; }
+  .place-info p{ font-size:11.5px; color:#9089A6; line-height:1.5; margin:0; }
+  .place-offer{ margin-top:8px; font-size:11px; color:#FFB84D; font-weight:600; }
+  .place-zone{ margin-top:6px; font-size:10px; color:#5a5470; }
   .rec-row::-webkit-scrollbar{ display:none; }
   .rec-card{ flex:0 0 148px; border-radius:18px; overflow:hidden; position:relative; height:198px; background-size:cover; background-position:center; cursor:pointer; box-shadow:0 8px 20px rgba(0,0,0,.35); }
   .rec-card .grad{ position:absolute; inset:0; background:linear-gradient(to top, rgba(6,4,10,.95) 0%, rgba(6,4,10,.35) 45%, transparent 75%); }
@@ -896,7 +973,7 @@
   .encounter-actions{display:flex;gap:9px}.encounter-actions button{flex:1}.btn-secondary{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:14px;padding:12px;font-weight:800}
   .meeting-confirmed{display:none;margin-top:8px;padding:12px;border-radius:15px;background:rgba(255,94,58,.08);border:1px solid rgba(255,94,58,.25);font-size:11px;line-height:1.45}.meeting-confirmed.show{display:block}
   .chat-meet-bar{display:none;padding:9px 14px;background:linear-gradient(90deg,rgba(255,94,58,.12),rgba(255,176,32,.06));border-top:1px solid rgba(255,94,58,.18);font-size:10.5px}.chat-meet-bar.show{display:flex;align-items:center;justify-content:space-between;gap:8px}.chat-meet-bar button{border:0;background:var(--flame);color:#fff;border-radius:999px;padding:7px 10px;font-size:10px;font-weight:800}
-  .now-live-chip{display:none;position:absolute;top:112px;left:50%;transform:translateX(-50%);z-index:1000;padding:7px 12px;border-radius:999px;background:rgba(255,94,58,.92);color:#fff;font-size:10px;font-weight:900;box-shadow:0 0 20px rgba(255,94,58,.35)}.now-live-chip.show{display:block}
+  .now-live-chip{display:none;position:absolute;top:70px;left:50%;transform:translateX(-50%);z-index:1000;padding:7px 12px;border-radius:999px;background:rgba(255,94,58,.92);color:#fff;font-size:10px;font-weight:900;box-shadow:0 0 20px rgba(255,94,58,.35)}.now-live-chip.show{display:block}
 
   /* ===== V2.1 PREMIUM — LIVE INTENT / SAFETY / GAMIFICATION ===== */
   .v21-strip{margin:0 18px 12px;padding:13px 14px;border-radius:18px;background:linear-gradient(135deg,rgba(255,94,58,.12),rgba(139,47,224,.08));border:1px solid rgba(255,255,255,.09)}
@@ -905,6 +982,16 @@
   .intent-score{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;margin-top:8px;border-radius:999px;background:rgba(198,255,46,.09);border:1px solid rgba(198,255,46,.2);color:#dfff91;font-size:10px;font-weight:800}
   .privacy-note{margin:10px 0;padding:10px 11px;border-radius:13px;background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.16);color:#ecd9ff;font-size:10.5px;line-height:1.4}.privacy-note b{color:#fff}
   .consent-overlay{position:fixed;inset:0;z-index:4000;background:rgba(3,6,14,.95);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:.25s;transform:translateZ(0);-webkit-transform:translateZ(0);will-change:opacity}.consent-overlay.show{opacity:1;pointer-events:auto}.consent-sheet{width:min(100%,520px);max-height:min(88vh,88dvh);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:22px 20px calc(env(safe-area-inset-bottom) + 22px);background:linear-gradient(180deg,#11182a,#090f1b);border:1px solid rgba(168,85,247,.25);border-bottom:0;border-radius:28px 28px 0 0}.consent-sheet h2{font-family:'Playfair Display';font-size:24px;margin:4px 0 7px}.consent-sheet p{font-size:12px;line-height:1.5;color:var(--muted);margin:0 0 14px}.consent-actions{display:flex;gap:9px}.consent-actions button{flex:1}.consent-check{display:flex;gap:9px;align-items:flex-start;padding:11px 12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:11px;color:#dce2f0;margin-bottom:12px}.consent-check input{margin-top:2px;accent-color:var(--flame)}
+  /* ===== Porte d'activation NOW (avant d'ouvrir le chat NOW) ===== */
+  .now-gate-overlay{position:fixed;inset:0;z-index:4100;background:rgba(3,6,14,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;opacity:0;pointer-events:none;transition:.25s;}
+  .now-gate-overlay.show{opacity:1;pointer-events:auto;}
+  .now-gate-close{position:absolute;top:calc(env(safe-area-inset-top) + 16px);right:18px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;}
+  .now-gate-title{font-family:'Playfair Display';font-size:22px;margin:0;}
+  .now-gate-sub{font-size:12.5px;color:var(--muted);max-width:280px;margin:0 0 4px;line-height:1.5;}
+  .now-gate-btn{width:150px;height:150px;border-radius:50%;border:0;background:radial-gradient(circle at 35% 30%, var(--flame2), var(--flame) 60%, #c8341c 100%);color:#fff;font-family:'Playfair Display';font-weight:800;font-size:26px;letter-spacing:.5px;box-shadow:0 0 40px rgba(255,94,58,.55), 0 0 90px rgba(255,94,58,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;animation:nowGatePulse 1.8s ease-in-out infinite;}
+  .now-gate-btn:active{transform:scale(.96);}
+  @keyframes nowGatePulse{0%,100%{box-shadow:0 0 40px rgba(255,94,58,.55),0 0 90px rgba(255,94,58,.3);}50%{box-shadow:0 0 55px rgba(255,94,58,.8),0 0 120px rgba(255,94,58,.45);}}
+  .now-gate-duration{font-size:11px;color:var(--muted2);margin-top:2px;}
   .safety-card{margin:10px 18px 0;padding:13px;border-radius:17px;background:rgba(198,255,46,.05);border:1px solid rgba(198,255,46,.17)}.safety-card .row{display:flex;justify-content:space-between;align-items:center;gap:10px}.safety-card b{font-size:12px}.safety-card small{display:block;color:var(--muted);font-size:10.5px;margin-top:3px;line-height:1.35}.safety-btn{border:0;border-radius:999px;padding:8px 10px;background:rgba(198,255,46,.12);color:#e5ff9e;font-size:10px;font-weight:900;white-space:nowrap}.safety-btn.active{background:linear-gradient(135deg,var(--flame),var(--flame2));color:#fff}
   .plan-card{margin:10px 0;padding:11px 12px;border-radius:15px;background:rgba(255,94,58,.08);border:1px solid rgba(255,94,58,.22)}.plan-card b{display:block;font-size:11.5px}.plan-card span{display:block;color:var(--muted);font-size:10.5px;margin-top:3px}.plan-card .plan-actions{display:flex;gap:7px;margin-top:8px}.plan-card button{flex:1;border:1px solid var(--line);background:rgba(255,255,255,.05);color:#fff;border-radius:10px;padding:7px;font-size:10px;font-weight:800}
   .tonight-recap{margin:16px 20px 30px;padding:15px;border-radius:18px;background:linear-gradient(135deg,rgba(139,47,224,.09),rgba(255,94,58,.07));border:1px solid var(--line)}.tonight-recap h3{font-family:'Playfair Display';font-size:17px;margin:0 0 5px}.tonight-recap p{font-size:10.5px;color:var(--muted);line-height:1.45;margin:0}
@@ -1105,6 +1192,35 @@
   }
   .ghost-item-distance{ color:var(--muted2); font-size:8.5px; }
 
+  /* ===== Aperçu chat Premium (remplace le ticker de profils en haut de la carte) ===== */
+  .chat-teaser-card{
+    flex:0 0 168px; display:flex; align-items:center; gap:9px; padding:9px 11px; border-radius:14px;
+    background:linear-gradient(135deg, rgba(255,207,92,.14), rgba(255,176,32,.08));
+    border:1px solid rgba(255,207,92,.3); cursor:pointer; transition:all .24s cubic-bezier(.34,1.56,.64,1);
+    position:relative;
+  }
+  .chat-teaser-card:hover{ transform:scale(1.04); box-shadow:0 0 18px rgba(255,207,92,.3); }
+  .chat-teaser-avatar{ width:38px; height:38px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,207,92,.5); flex-shrink:0; }
+  .chat-teaser-avatar.locked{ filter:blur(4px) saturate(1.2); }
+  .chat-teaser-body{ min-width:0; flex:1; }
+  .chat-teaser-name{ font-size:11.5px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .chat-teaser-preview{ font-size:9.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
+  .chat-teaser-unread{ position:absolute; top:6px; right:8px; min-width:16px; height:16px; padding:0 4px; border-radius:8px; background:var(--flame); color:#fff; font-size:9px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+  .chat-teaser-lock{ position:absolute; top:6px; right:8px; font-size:12px; }
+  .chat-teaser-cta{
+    flex:0 0 168px; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:4px;
+    padding:10px 12px; border-radius:14px; cursor:pointer; border:none;
+    background:linear-gradient(135deg,var(--premium),var(--premium2)); color:#2a1a00;
+    transition:all .24s cubic-bezier(.34,1.56,.64,1);
+  }
+  .chat-teaser-cta:hover{ transform:scale(1.04); box-shadow:0 0 18px rgba(255,207,92,.5); }
+  .chat-teaser-cta b{ font-size:12px; font-weight:900; }
+  .chat-teaser-cta span{ font-size:9.5px; font-weight:600; opacity:.85; }
+  .chat-teaser-empty{
+    flex:0 0 220px; display:flex; align-items:center; gap:9px; padding:9px 12px; border-radius:14px;
+    background:rgba(255,255,255,.04); border:1px solid var(--line); color:var(--muted); font-size:11px;
+  }
+
   /* Sur les autres vues on le cache */
   .view:not(#view-carte) ~ .ghost-ticker,
   body:has(#view-decouvrir.active) .ghost-ticker,
@@ -1172,6 +1288,8 @@
       <div><span style="background:var(--online);"></span>En ligne maintenant</div>
       <div><span style="background:var(--recent);"></span>En ligne récemment</div>
       <div><span style="background:var(--offline);"></span>Hors ligne</div>
+      <div class="legend-divider"></div>
+      <button class="legend-chip" id="layerToggle-decouvrir" onclick="toggleMapLayer('decouvrir')"><span style="background:#FFE000;"></span>Lieux <b id="legendCountDecouvrir"></b></button>
     </div>
 
     <button class="filters-fab" id="btn-filters-fab">
@@ -1179,13 +1297,6 @@
       Filtres <span class="filters-badge" id="filtersBadge" style="display:none;">0</span>
     </button>
     <div class="radar-ring"></div><div class="radar-ring r2"></div><div class="radar-ring r3"></div>
-
-    <!-- MUR FANTÔME / TICKER LIVE -->
-    <div class="ghost-ticker" id="ghostTicker">
-      <div class="ghost-ticker-track" id="ghostTrack">
-        <!-- Cartes de profil injectées par JS (buildProfileTicker) -->
-      </div>
-    </div>
 
     <div class="radar-overlay" id="radarOverlay">
       <div class="radar-sheet">
@@ -1203,54 +1314,44 @@
   <!-- ===== DÉCOUVRIR ===== -->
   <div class="view" id="view-decouvrir">
     <div class="discover-head">
-      <h2>Disponibles ce soir</h2>
-      <p id="discoverSub">Glisse pour voir qui est autour de toi <span class="countdown" id="tonightCountdown">CE SOIR</span></p>
-      <p id="likesCounter" style="display:none;font-size:11px;color:var(--muted);margin-top:4px;"></p>
+      <h2>Découvrir Montréal</h2>
+      <p id="discoverSub">Lieux et activités gratuites, choisis pour la saison</p>
     </div>
 
     <div class="discover-search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" id="discoverSearchInput" placeholder="Rechercher un lieu, un événement, des gens…" autocomplete="off">
+      <input type="text" id="discoverSearchInput" placeholder="Rechercher un lieu, une activité…" autocomplete="off">
       <button id="discoverSearchClear" style="display:none;" aria-label="Effacer">✕</button>
     </div>
 
-    <div class="mission-card"><span class="ey">MISSION DE CE SOIR</span><b>🔥 Trouve quelqu’un ouvert à une rencontre</b><div class="mission-progress"><i id="missionBar"></i></div><small id="missionText">1/2 rencontre potentielle repérée</small></div>
-
     <div class="discover-filters">
+      <div class="chip-row-label">Saison</div>
+      <div class="chip-row" id="chipRowSaison"></div>
       <div class="chip-row-label">Catégorie</div>
       <div class="chip-row" id="chipRowCategorie"></div>
-      <div class="chip-row-label">Ambiance</div>
-      <div class="chip-row" id="chipRowAmbiance"></div>
-      <div class="chip-row-label">Budget</div>
-      <div class="chip-row" id="chipRowBudget"></div>
     </div>
 
     <div class="zone-map-card">
-      <div class="zone-map-title">🗺️ Carte de zone — température par secteur</div>
+      <div class="zone-map-title">🗺️ Filtrer par quartier</div>
       <div class="zone-chip-grid" id="zoneChipGrid"></div>
     </div>
 
     <div id="discoverSections">
-      <div class="discover-section" id="secRecommande">
-        <div class="discover-section-head"><h3>🔥 Recommandé pour toi</h3><span id="recCount"></span></div>
-        <div class="rec-row" id="recRow"></div>
+      <div class="discover-section" id="secPartenaires" style="display:none;">
+        <div class="discover-section-head"><h3>⭐ Partenaires CE SOIR</h3><span id="partnerCount"></span></div>
+        <div class="place-row" id="partnerRow"></div>
       </div>
 
-      <div class="discover-section" id="secPresDeToi">
-        <div class="discover-section-head"><h3>📍 Près de toi</h3><span id="presCount"></span></div>
-        <div class="activity-list" id="presList"></div>
-      </div>
-
-      <div class="discover-section" id="secNouveautes" style="padding-bottom:24px;">
-        <div class="discover-section-head"><h3>✨ Nouveautés</h3><span id="newCount"></span></div>
-        <div class="activity-list" id="newList"></div>
+      <div class="discover-section" id="secLieux" style="padding-bottom:24px;">
+        <div class="discover-section-head"><h3>🗺️ Lieux à découvrir</h3><span id="placeCount"></span></div>
+        <div class="place-grid" id="placeRow"></div>
       </div>
     </div>
 
     <div class="discover-empty-global" id="discoverEmptyGlobal" style="display:none;">
       <span class="de-icon">🔍</span>
-      <h3>Personne par ici pour l'instant</h3>
-      <p>Essaie d'élargir tes filtres ou reviens un peu plus tard, il y a du monde qui arrive.</p>
+      <h3>Rien par ici pour l'instant</h3>
+      <p>Essaie d'élargir tes filtres ou reviens un peu plus tard, on ajoute des lieux régulièrement.</p>
       <button id="btnResetDiscoverFilters">Réinitialiser les filtres</button>
     </div>
 
@@ -1307,6 +1408,29 @@
       <span class="de-icon">📭</span>
       <h3>Rien par ici pour l'instant</h3>
       <p>Reviens plus tard ou change de filtre.</p>
+    </div>
+
+    <button class="bab-fab" id="babFab" title="Publier une annonce">+</button>
+  </div>
+
+  <!-- ===== BABILLARD — CRÉER UNE ANNONCE ===== -->
+  <div class="bab-sheet-overlay" id="babCreateOverlay">
+    <div class="bab-sheet">
+      <button class="mini-close" id="babCreateClose">×</button>
+      <div class="bab-sheet-body">
+        <h3 style="margin-bottom:10px;">Publier une annonce</h3>
+        <p style="font-size:11.5px;color:var(--muted);margin-bottom:14px;">Ton annonce sera visible après approbation.</p>
+        <select id="babFormCategorie" class="bab-form-input" style="margin-bottom:8px;">
+          <option value="cherche_partenaire">Cherche partenaire</option>
+          <option value="evenement_membre">Événement membre</option>
+          <option value="covoiturage">Covoiturage</option>
+          <option value="discussion">Discussion</option>
+        </select>
+        <input id="babFormTitre" class="bab-form-input" placeholder="Titre de l'annonce" style="margin-bottom:8px;">
+        <textarea id="babFormTexte" class="bab-form-input" placeholder="Décris ton annonce..." rows="4" style="margin-bottom:8px;"></textarea>
+        <input id="babFormZone" class="bab-form-input" placeholder="Quartier (optionnel)" style="margin-bottom:14px;">
+        <button class="btn-primary" id="babFormSubmit" style="width:100%;">Envoyer pour approbation</button>
+      </div>
     </div>
   </div>
 
@@ -1536,6 +1660,14 @@
       <div class="consent-actions"><button class="btn-secondary" id="consentCancel">Pas maintenant</button><button class="btn-primary" id="consentConfirm">🔥 Activer NOW</button></div>
     </div>
   </div>
+  <!-- ===== PORTE D'ACTIVATION NOW (avant le chat NOW, exclusif au mode NOW) ===== -->
+  <div class="now-gate-overlay" id="nowGateOverlay">
+    <button class="now-gate-close" id="nowGateClose" aria-label="Fermer">✕</button>
+    <h2 class="now-gate-title">Mode NOW</h2>
+    <p class="now-gate-sub">Le chat et l'activité NOW sont réservés à ceux qui sont en mode NOW. Active-le pour embarquer.</p>
+    <button class="now-gate-btn" id="nowGateActivate">NOW</button>
+    <p class="now-gate-duration" id="nowGateDurationLabel">Actif pendant 3h</p>
+  </div>
 
   <!-- ===== CONNEXION / INSCRIPTION ===== -->
   <div class="consent-overlay" id="authOverlay" style="z-index:6000;">
@@ -1555,12 +1687,15 @@
         </span>
       </div>
       <div class="auth-error" id="authError"></div>
+      <label style="display:flex; align-items:center; gap:8px; margin:2px 0 14px; font-size:12.5px; color:var(--muted); cursor:pointer;">
+        <input type="checkbox" id="authRemember" checked style="width:15px;height:15px;accent-color:var(--flame);">
+        Se souvenir de moi
+      </label>
       <div class="consent-actions"><button class="btn-primary" id="authSubmitBtn" style="flex:1;">Se connecter</button></div>
       <div class="auth-demo-link" id="authDemoSkip">Continuer en mode démo (sans compte)</div>
     </div>
   </div>
 
-  <!-- ===== PRÉFÉRENCE (qui je veux voir) — demandée une seule fois à l'inscription ===== -->
   <!-- ===== COMPLÉTER SON PROFIL — après création de compte, avant d'entrer dans l'appli ===== -->
   <div class="consent-overlay" id="completeProfileOverlay" style="z-index:5500;">
     <div class="consent-sheet">
@@ -1573,16 +1708,6 @@
       <div class="chip-wrap" id="cpSexeChipWrap" style="margin:9px 0 14px;"></div>
       <div class="auth-error" id="cpError"></div>
       <div class="consent-actions"><button class="btn-primary" id="cpConfirm" style="flex:1;">Continuer</button></div>
-    </div>
-  </div>
-
-  <div class="consent-overlay" id="prefOverlay" style="z-index:4500;">
-    <div class="consent-sheet">
-      <div class="encounter-kicker">✨ AVANT DE COMMENCER</div>
-      <h2>Qui veux-tu voir sur CE SOIR&nbsp;?</h2>
-      <p>Choisis une ou plusieurs préférences. On ne te montrera que les profils qui correspondent — tu pourras changer ça en tout temps dans les filtres.</p>
-      <div class="chip-wrap" id="prefChipWrap" style="margin-bottom:14px;"></div>
-      <div class="consent-actions"><button class="btn-primary" id="prefConfirm" style="flex:1;">Confirmer</button></div>
     </div>
   </div>
 
@@ -1848,91 +1973,114 @@ const DEMO_PROFILES = [
 let PROFILES = DEMO_PROFILES;
 
 /* ================= BABILLARD NUMÉRIQUE ================= */
+/* ===== Anciennes cartes nightlife (BAB_ITEMS) : gardées uniquement pour la mise en avant côté Now, retirées du Babillard ===== */
 const BAB_ITEMS = [
   {id:'b1', type:'hot', kicker:'Hot', title:"5 à 7 au Bar le Central", sub:"À 3 min d'ici · 18h00–21h00",
    img:"https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=600&auto=format&fit=crop",
    avatars:["https://i.pravatar.cc/80?img=45","https://i.pravatar.cc/80?img=32","https://i.pravatar.cc/80?img=13","https://i.pravatar.cc/80?img=47"],
    attendeeCount:23, time:"1 min", desc:"Ambiance chill, bières à 5$ et playlist rétro. Viens tôt !"},
-  {id:'b2', type:'evenement', kicker:'Événement', title:"Soirée DJ au Rooftop MTL", sub:"À 7 min d'ici · 22h00",
-   img:"https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=600&auto=format&fit=crop",
-   avatars:["https://i.pravatar.cc/80?img=51","https://i.pravatar.cc/80?img=33","https://i.pravatar.cc/80?img=15"],
-   attendeeCount:32, time:"2 min", desc:"DJ set jusqu'à tard, vue sur la ville. Entrée avant 23h recommandée."},
-  {id:'b3', type:'groupe', kicker:'Groupe', title:"Marie et 3 amis cherchent du monde pour boire un verre", sub:"À 5 min d'ici",
-   img:"https://images.unsplash.com/photo-1543007630-9710e4a00a20?q=80&w=600&auto=format&fit=crop",
-   avatars:["https://i.pravatar.cc/80?img=44","https://i.pravatar.cc/80?img=48","https://i.pravatar.cc/80?img=41","https://i.pravatar.cc/80?img=25"],
-   attendeeCount:4, time:"3 min", desc:"Petit groupe décontracté, ouvert à ce que d'autres se joignent en cours de soirée."},
-  {id:'b4', type:'discussion', kicker:'Discussion', title:"Éric cherche du monde pour boire un verre au Vieux-Port", sub:"À 6 min d'ici",
-   img:"https://images.unsplash.com/photo-1572116469696-31de0f17cc34?q=80&w=600&auto=format&fit=crop",
-   avatars:["https://i.pravatar.cc/80?img=14","https://i.pravatar.cc/80?img=52","https://i.pravatar.cc/80?img=36"],
-   attendeeCount:2, time:"4 min", desc:"Discussion ouverte dans le babillard, réponds si t'es partant·e."},
-  {id:'b5', type:'nouveau', kicker:'Nouveau', title:"Le Club Pangea ouvert ce soir !", sub:"À 8 min d'ici",
-   img:"https://images.unsplash.com/photo-1566737236500-c8ac43014a67?q=80&w=600&auto=format&fit=crop",
-   avatars:[], attendeeCount:0, time:"6 min", desc:"Nouveau spot dans le secteur, premières soirées en cours de démarrage."},
 ];
-const BAB_FILTER_LABELS = { tout:'Tout', hot:'Hot', groupes:'Groupes', evenements:'Événements' };
-let babFilter = 'tout';
-let babSentIds = new Set();
 
-function babPassesFilter(item){
+/* ===== Babillard = petites annonces créées librement par les utilisateurs, modérées avant publication ===== */
+const BAB_CAT_LABELS = { tout:'Tout', cherche_partenaire:'Partenaire', evenement_membre:'Événement', covoiturage:'Covoiturage', discussion:'Discussion' };
+let babFilter = 'tout';
+let babReactedIds = new Set();
+let babSentIds = new Set(); // encore utilisé par la feature card de l'écran Now
+
+function babPassesFilter(annonce){
   if(babFilter==='tout') return true;
-  if(babFilter==='hot') return item.type==='hot';
-  if(babFilter==='groupes') return item.type==='groupe';
-  if(babFilter==='evenements') return item.type==='evenement';
-  return true;
+  return annonce.categorie === babFilter;
 }
-function babCardHTML(item){
+function babTimeAgo(iso){
+  const diffMin = Math.max(1, Math.round((Date.now()-new Date(iso).getTime())/60000));
+  if(diffMin<60) return `Il y a ${diffMin} min`;
+  const diffH = Math.round(diffMin/60);
+  if(diffH<24) return `Il y a ${diffH}h`;
+  return `Il y a ${Math.round(diffH/24)}j`;
+}
+function babCardHTML(a){
   return `
-    <div class="bab-card${item.type==='hot'?' hot':''}" data-id="${item.id}" onclick="openBabSheet('${item.id}')">
-      <img src="${item.img}" alt="">
-      <div class="bab-card-body">
-        <div class="bab-card-kicker ${item.type}">${item.type==='hot'?'🔥 ':''}${item.kicker}</div>
-        <div class="bab-card-title">${item.title}</div>
-        <div class="bab-card-sub">${item.sub}</div>
-        <div class="bab-card-foot">
-          <div class="bab-card-avatars">${item.avatars.slice(0,4).map(a=>`<img src="${a}" alt="">`).join('')}</div>
-          <span class="bab-card-time">${item.time}</span>
-        </div>
+    <div class="b-card" data-id="${a.id}" onclick="openBabSheet('${a.id}')">
+      <div class="b-top"><span class="b-cat">${BAB_CAT_LABELS[a.categorie]||'Discussion'}</span><span class="b-time">${babTimeAgo(a.created_at)}</span></div>
+      <p class="b-title">${a.titre}</p>
+      <p class="b-desc">${a.texte}</p>
+      <div class="b-foot">
+        <div class="b-avatar"></div>
+        <span class="b-name">${a.auteur_nom || 'Anonyme'}</span>
+        ${a.zone ? `<span class="b-zone">📍 ${a.zone}</span>` : ''}
+        <span class="b-react" onclick="event.stopPropagation(); babReact('${a.id}')">🙋 ${babReactedIds.has(a.id)?1:0}</span>
       </div>
     </div>`;
 }
+function babReact(id){
+  if(babReactedIds.has(id)) return;
+  babReactedIds.add(id);
+  renderBabillard();
+  showToast('🙋 Intérêt envoyé');
+}
 function renderBabillard(){
   const filtersEl = document.getElementById('babFilters');
-  filtersEl.innerHTML = Object.keys(BAB_FILTER_LABELS).map(k=>
-    `<div class="bab-chip${babFilter===k?' active':''}" onclick="setBabFilter('${k}')">${BAB_FILTER_LABELS[k]}</div>`
+  filtersEl.innerHTML = Object.keys(BAB_CAT_LABELS).map(k=>
+    `<div class="bab-chip${babFilter===k?' active':''}" onclick="setBabFilter('${k}')">${BAB_CAT_LABELS[k]}</div>`
   ).join('');
-  const items = BAB_ITEMS.filter(babPassesFilter);
+  const items = BABILLARD_ANNONCES.filter(a=>a.statut==='approuve').filter(babPassesFilter);
   document.getElementById('babList').style.display = items.length ? '' : 'none';
   document.getElementById('babEmpty').style.display = items.length ? 'none' : 'flex';
   document.getElementById('babList').innerHTML = items.map(babCardHTML).join('');
 }
 function setBabFilter(k){ babFilter = k; renderBabillard(); }
 function openBabSheet(id){
-  const item = BAB_ITEMS.find(x=>x.id===id);
+  const item = BABILLARD_ANNONCES.find(x=>x.id===id);
   if(!item) return;
-  document.getElementById('babSheetImg').src = item.img;
-  document.getElementById('babSheetBadge').textContent = `${item.type==='hot'?'🔥 ':''}${item.kicker}`;
-  document.getElementById('babSheetTitle').textContent = item.title;
-  document.getElementById('babSheetMeta').textContent = item.attendeeCount ? `${item.sub} · ${item.attendeeCount} personnes y vont` : item.sub;
-  document.getElementById('babSheetAvatars').innerHTML = item.avatars.slice(0,5).map(a=>`<img src="${a}" alt="">`).join('');
-  document.getElementById('babSheetDesc').textContent = item.desc;
+  document.getElementById('babSheetImg').style.display = 'none';
+  document.getElementById('babSheetBadge').textContent = BAB_CAT_LABELS[item.categorie]||'Discussion';
+  document.getElementById('babSheetTitle').textContent = item.titre;
+  document.getElementById('babSheetMeta').textContent = `${item.auteur_nom||'Anonyme'} · ${babTimeAgo(item.created_at)}${item.zone?' · '+item.zone:''}`;
+  document.getElementById('babSheetAvatars').innerHTML = '';
+  document.getElementById('babSheetDesc').textContent = item.texte;
   const goBtn = document.getElementById('babSheetGo');
-  goBtn.textContent = babSentIds.has(id) ? '✓ Tu y vas' : "🔥 J'y vais";
-  goBtn.onclick = ()=>{
-    if(!babSentIds.has(id)){
-      babSentIds.add(id);
-      goBtn.textContent = '✓ Tu y vas';
-      showToast(`🔥 Présence confirmée pour « ${item.title} »`);
-      awardXP(3,'Babillard');
-    }
-  };
-  document.getElementById('babSheetMaybe').onclick = ()=> showToast(`Noté — tu passeras peut-être à « ${item.title} »`);
+  goBtn.textContent = babReactedIds.has(id) ? '✓ Intérêt envoyé' : "🙋 Ça m'intéresse";
+  goBtn.onclick = ()=> babReact(id);
+  document.getElementById('babSheetMaybe').onclick = ()=> closeBabSheet();
   document.getElementById('babSheetMap').onclick = ()=>{
     closeBabSheet();
     switchTab('carte');
   };
   document.getElementById('babSheetOverlay').classList.add('show');
 }
-function closeBabSheet(){ document.getElementById('babSheetOverlay').classList.remove('show'); }
+function closeBabSheet(){
+  document.getElementById('babSheetOverlay').classList.remove('show');
+  document.getElementById('babSheetImg').style.display = '';
+}
+document.getElementById('babFab').addEventListener('click', ()=>{
+  document.getElementById('babCreateOverlay').classList.add('show');
+});
+document.getElementById('babCreateClose').addEventListener('click', ()=>{
+  document.getElementById('babCreateOverlay').classList.remove('show');
+});
+document.getElementById('babFormSubmit').addEventListener('click', async ()=>{
+  const titre = document.getElementById('babFormTitre').value.trim();
+  const texte = document.getElementById('babFormTexte').value.trim();
+  const categorie = document.getElementById('babFormCategorie').value;
+  const zone = document.getElementById('babFormZone').value.trim();
+  if(!titre || !texte){ showToast('Ajoute un titre et une description'); return; }
+  let authorName = 'Anonyme';
+  if(currentUserId && supabaseClient){
+    try{
+      const { data } = await supabaseClient.from('profiles').select('name').eq('user_id', currentUserId).maybeSingle();
+      if(data && data.name) authorName = data.name;
+    }catch(e){ /* repli sur Anonyme si la requête échoue */ }
+  }
+  const res = await submitBabillardAnnonce({ titre, texte, categorie, zone, auteurNom: authorName, lat: USER_LOC?.lat, lng: USER_LOC?.lng });
+  if(res.ok){
+    document.getElementById('babCreateOverlay').classList.remove('show');
+    document.getElementById('babFormTitre').value = '';
+    document.getElementById('babFormTexte').value = '';
+    document.getElementById('babFormZone').value = '';
+  }else{
+    showToast('Erreur lors de l\'envoi — réessaie');
+  }
+});
 
 /* ================= NOW (activité en cours) ================= */
 const NOW_FEED_SEED = [
@@ -2056,15 +2204,36 @@ const SUPABASE_URL = "https://xdqyciiydyrcihlawbew.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_16T1u36mEqGc2efn9rk7Nw_d_cQ6LnI";
 
 let supabaseClient = null;
+// Stockage d'authentification personnalisé : respecte la case "Se souvenir de moi" du formulaire
+// de connexion. Coché (par défaut) → session gardée dans localStorage, survit à la fermeture du
+// navigateur. Décoché → sessionStorage seulement, la session s'efface à la fermeture de l'onglet.
+// Le drapeau ceSoirRemember est écrit juste avant l'appel de connexion (voir authSubmitBtn plus bas).
+const authStorage = {
+  getItem: (key) => sessionStorage.getItem(key) ?? localStorage.getItem(key),
+  setItem: (key, value) => {
+    const remember = localStorage.getItem('ceSoirRemember') !== 'false';
+    if(remember){ localStorage.setItem(key, value); sessionStorage.removeItem(key); }
+    else{ sessionStorage.setItem(key, value); localStorage.removeItem(key); }
+  },
+  removeItem: (key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); },
+};
 if (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase) {
   supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storage: authStorage }
   });
 }
 // Id du compte connecté (auth.users.id) — rempli après connexion/inscription (voir proceedPastAuth
 // et cpConfirm plus bas). Sert à lier l'upload de photo au bon dossier de stockage et à savoir
 // quelle ligne `profiles` mettre à jour. Reste null en mode démo (pas de compte connecté).
 let currentUserId = null;
+
+// Normalise le statut venant de Supabase : insensible à la casse/espaces, repli sur 'offline'
+// si la valeur ne correspond à rien de connu — évite qu'une faute de frappe dans l'admin
+// (ex. "Online" au lieu de "online") fasse disparaître silencieusement un profil.
+function normalizeStatus(s){
+  const v = String(s||'').trim().toLowerCase();
+  return ['online','recent','offline'].includes(v) ? v : 'offline';
+}
 
 function mapRowToProfile(row){
   return {
@@ -2073,7 +2242,7 @@ function mapRowToProfile(row){
     hot: !!row.hot,
     availabilityMin: row.availability_min ?? 120,
     name: row.name, age: row.age, sexe: row.sexe, avatar: row.avatar,
-    status: row.status, zone: row.zone, address: row.address, intention: row.intention,
+    status: normalizeStatus(row.status), zone: (row.zone||'').trim(), address: row.address, intention: row.intention,
     vibeEmoji: row.vibe_emoji, vibeText: row.vibe_text,
     tags: Array.isArray(row.tags) ? row.tags : (row.tags ? JSON.parse(row.tags) : []),
     height: row.height, langues: row.langues, lastSeen: row.last_seen, bio: row.bio,
@@ -2089,17 +2258,18 @@ function mapRowToProfile(row){
 // comme n'importe quel vrai compte. Pas de user_id (pas liés à un compte auth), pas de
 // updated_at → le statut en ligne/récent/hors ligne vient directement de la colonne `status`.
 function mapProfilsRowToProfile(row){
+  const status = normalizeStatus(row.status);
   return {
     id: row.id,
     userId: null,
     hot: !!row.hot,
     availabilityMin: row.availability_min ?? 120,
     name: row.name, age: row.age, sexe: row.sexe, avatar: row.avatar,
-    status: row.status, zone: row.zone, address: row.address, intention: row.intention,
+    status, zone: (row.zone||'').trim(), address: row.address, intention: row.intention,
     vibeEmoji: row.vibe_emoji, vibeText: row.vibe_text,
     tags: Array.isArray(row.tags) ? row.tags : (row.tags ? JSON.parse(row.tags) : []),
     height: row.height, langues: row.langues,
-    lastSeen: row.status==='online' ? 'En ligne' : (row.status==='recent' ? 'Récemment' : 'Hors ligne'),
+    lastSeen: status==='online' ? 'En ligne' : (status==='recent' ? 'Récemment' : 'Hors ligne'),
     bio: row.bio, lat: row.lat, lng: row.lng,
     lastSeenAt: null,
   };
@@ -2111,6 +2281,53 @@ function refreshProfilesUI(){
   syncMapMarkers();
   buildProfileTicker();
   renderDiscoverFeed();
+}
+
+/* ================= LIEUX DÉCOUVRIR (Supabase) ================= */
+let DISCOVER_PLACES = [];
+async function loadDiscoverPlaces(){
+  if(!supabaseClient) return;
+  try{
+    const { data, error } = await supabaseClient.from('lieux_decouvrir').select('*').eq('actif', true);
+    if(!error && data){
+      DISCOVER_PLACES = data.map(row=>({
+        id: row.id, nom: row.nom, description: row.description,
+        categorie: row.categorie, saison: row.saison, zone: row.zone,
+        lat: row.lat, lng: row.lng, photo: row.photo, gratuit: row.gratuit,
+      }));
+      renderDiscoverFeed();
+      syncMapMarkers();
+    }
+  }catch(e){ /* repli silencieux — pas de pins Découvrir si offline */ }
+}
+
+/* ================= ANNONCES BABILLARD (Supabase, modérées) ================= */
+let BABILLARD_ANNONCES = [];
+async function loadBabillardAnnonces(){
+  if(!supabaseClient) return;
+  try{
+    const { data, error } = await supabaseClient.from('annonces_babillard').select('*').order('created_at', { ascending:false });
+    if(!error && data){
+      BABILLARD_ANNONCES = data;
+      renderBabillard();
+      syncMapMarkers();
+    }
+  }catch(e){ /* repli silencieux */ }
+}
+// Soumission d'une annonce par un utilisateur — reste "en_attente" jusqu'à approbation par Gabriel.
+async function submitBabillardAnnonce({ titre, texte, categorie, lat, lng, zone, auteurNom }){
+  if(!supabaseClient) return { ok:false, error:'not_configured' };
+  try{
+    const { error } = await supabaseClient.from('annonces_babillard').insert({
+      titre, texte, categorie: categorie || 'discussion',
+      lat: lat ?? null, lng: lng ?? null, zone: zone || null,
+      auteur_nom: auteurNom || 'Anonyme', auteur_id: currentUserId || null,
+      statut: 'en_attente',
+    });
+    if(error) return { ok:false, error };
+    showToast('📝 Annonce envoyée — en attente d\'approbation');
+    return { ok:true };
+  }catch(e){ return { ok:false, error:e }; }
 }
 
 async function loadProfiles(){
@@ -2217,7 +2434,6 @@ function categorieOf(p){
 }
 function budgetOf(p){ const b=["Gratuit","$","$$","$$$"]; return b[p.id % b.length]; }
 function affinityOf(p){ return p.hot ? (p.availabilityMin===0?97:89) : Math.max(55, 90 - Math.round(p.distanceKm*6)); }
-let discoverFilters = { categorie:null, ambiance:null, budget:null, zone:null, query:'' };
 let activeChatId = null;
 let myHot = localStorage.getItem('ceSoirMyHot') === '1';
 let myAvailabilityMin = parseInt(localStorage.getItem('ceSoirAvailability') || '0',10);
@@ -2232,6 +2448,14 @@ let xp = parseInt(localStorage.getItem('ceSoirXP')||'0',10);
 let safetyActive = localStorage.getItem('ceSoirSafety')==='1';
 let exactLocationShared = localStorage.getItem('ceSoirExactLocation')==='1';
 let hotUntil = parseInt(localStorage.getItem('ceSoirHotUntil')||'0',10);
+const NOW_MODE_DURATION_MS = 3*60*60*1000; // Mode NOW : 3h pour tous, illimité pour Premium
+// Active le mode NOW de façon centralisée (utilisé par la porte NOW, le radar, et le toggle profil)
+function activateNowMode(){
+  myHot = true; localStorage.setItem('ceSoirMyHot','1');
+  if(isPremium){ hotUntil = 0; localStorage.removeItem('ceSoirHotUntil'); }
+  else { hotUntil = Date.now() + NOW_MODE_DURATION_MS; localStorage.setItem('ceSoirHotUntil', String(hotUntil)); }
+}
+function isNowActive(){ expireHotIfNeeded(); return myHot; }
 
 // Profils "Peut-être" (liste de suivi)
 let maybeProfiles = new Set(JSON.parse(localStorage.getItem('ceSoirMaybeProfiles') || '[]'));
@@ -2417,6 +2641,7 @@ document.getElementById('referralShareBtn').addEventListener('click', async ()=>
 })();
 
 function expireHotIfNeeded(){
+  if(isPremium){ return; } // Premium : mode NOW illimité, jamais expiré automatiquement
   if(hotUntil && Date.now()>hotUntil){ hotUntil=0; myHot=false; localStorage.removeItem('ceSoirHotUntil'); localStorage.setItem('ceSoirMyHot','0'); refreshMyHotUI(); refreshMyHotMap(); showToast('🌙 Ton mode NOW a expiré automatiquement.'); }
 }
 expireHotIfNeeded();
@@ -2644,6 +2869,128 @@ distMaxRange.addEventListener('input', ()=>{ document.getElementById('distMaxVal
 let map = null;
 const bubbleMarkers = new Map();
 let usingFallbackMap = false;
+let discoverMarkers = new Map();
+let babillardMarkers = new Map();
+let discoverMoreMarker = null;
+let babillardMoreMarker = null;
+const mapLayers = { decouvrir:true, babillard:false }; // Babillard retiré de la carte (Gabriel) — seuls les Lieux y apparaissent
+const MAP_PIN_LIMIT = { decouvrir:4, babillard:3 }; // Limite de pins affichés d'un coup — le reste passe par le badge "+N autres"
+
+const CATEGORIE_ICON = { parc:'🌳', marche:'🧺', evenement:'🥁', culture:'🎭', plein_air:'⛸️', terrasse:'🍹' };
+function discoverIconHTML(){ return `<div class="disc-pin">✴</div>`; }
+function babillardIconHTML(){ return `<div class="bab-pin"><span></span></div>`; }
+function moreIconHTML(n, kind){ return `<div class="more-pin ${kind}"><span>+${n}</span></div>`; }
+
+// Formate une distance en km pour affichage sur les pins (ex. "450 m", "1,2 km")
+function fmtDist(km){
+  if(km==null || isNaN(km)) return '';
+  if(km < 1) return `${Math.round(km*1000)} m`;
+  return `${km.toFixed(1).replace('.',',')} km`;
+}
+// Trie une liste de lieux/annonces par distance au user et retourne {visible, reste}
+function splitByProximity(items, limit){
+  const withDist = items
+    .filter(it=>it.lat!=null && it.lng!=null)
+    .map(it=>({ ...it, __dist: haversineKm(USER_LOC.lat, USER_LOC.lng, it.lat, it.lng) }))
+    .sort((a,b)=> a.__dist - b.__dist);
+  return { visible: withDist.slice(0, limit), reste: withDist.slice(limit) };
+}
+// Position moyenne du "reste" pour placer le badge +N à un endroit sensé sur la carte
+function centroidOf(items){
+  if(!items.length) return null;
+  const lat = items.reduce((s,i)=>s+i.lat,0)/items.length;
+  const lng = items.reduce((s,i)=>s+i.lng,0)/items.length;
+  return {lat, lng};
+}
+
+function addDiscoverMarkers(){
+  const cEl = document.getElementById('legendCountDecouvrir'); if(cEl) cEl.textContent = DISCOVER_PLACES.length || '';
+  if(!map) return;
+  const { visible, reste } = splitByProximity(DISCOVER_PLACES, MAP_PIN_LIMIT.decouvrir);
+  visible.forEach(place=>{
+    const marker = L.marker([place.lat, place.lng], {
+      icon: L.divIcon({ html:discoverIconHTML(), className:'lf-icon-wrap', iconSize:[22,22], iconAnchor:[11,11] })
+    });
+    marker.on('click', ()=>{ switchTab('decouvrir'); });
+    marker.bindTooltip(`${place.nom} · ${fmtDist(place.__dist)}`, { direction:'top', offset:[0,-10], className:'lf-eta-tag' });
+    discoverMarkers.set(place.id, marker);
+    if(mapLayers.decouvrir) marker.addTo(map);
+  });
+  if(reste.length){
+    const c = centroidOf(reste);
+    discoverMoreMarker = L.marker([c.lat, c.lng], {
+      icon: L.divIcon({ html:moreIconHTML(reste.length,'decouvrir'), className:'lf-icon-wrap', iconSize:[46,22], iconAnchor:[23,11] })
+    });
+    discoverMoreMarker.on('click', ()=>{ switchTab('decouvrir'); });
+    discoverMoreMarker.bindTooltip(`+${reste.length} lieux à voir dans Découvrir`, { direction:'top', offset:[0,-10], className:'lf-eta-tag' });
+    if(mapLayers.decouvrir) discoverMoreMarker.addTo(map);
+  }
+}
+function addBabillardMarkers(){
+  const approved0 = BABILLARD_ANNONCES.filter(a=>a.statut==='approuve');
+  const cEl = document.getElementById('legendCountBabillard'); if(cEl) cEl.textContent = approved0.length || '';
+  if(!map) return;
+  const approved = approved0;
+  const { visible, reste } = splitByProximity(approved, MAP_PIN_LIMIT.babillard);
+  visible.forEach(a=>{
+    const marker = L.marker([a.lat, a.lng], {
+      icon: L.divIcon({ html:babillardIconHTML(), className:'lf-icon-wrap', iconSize:[22,22], iconAnchor:[11,11] })
+    });
+    marker.on('click', ()=>{ switchTab('babillard'); });
+    marker.bindTooltip(`${a.titre} · ${fmtDist(a.__dist)}`, { direction:'top', offset:[0,-10], className:'lf-eta-tag' });
+    babillardMarkers.set(a.id, marker);
+    if(mapLayers.babillard) marker.addTo(map);
+  });
+  if(reste.length){
+    const c = centroidOf(reste);
+    babillardMoreMarker = L.marker([c.lat, c.lng], {
+      icon: L.divIcon({ html:moreIconHTML(reste.length,'babillard'), className:'lf-icon-wrap', iconSize:[46,22], iconAnchor:[23,11] })
+    });
+    babillardMoreMarker.on('click', ()=>{ switchTab('babillard'); });
+    babillardMoreMarker.bindTooltip(`+${reste.length} annonces à voir dans Babillard`, { direction:'top', offset:[0,-10], className:'lf-eta-tag' });
+    if(mapLayers.babillard) babillardMoreMarker.addTo(map);
+  }
+}
+function clearDiscoverMarkers(){
+  if(map){
+    discoverMarkers.forEach(m=>{ if(map.hasLayer(m)) map.removeLayer(m); });
+    if(discoverMoreMarker && map.hasLayer(discoverMoreMarker)) map.removeLayer(discoverMoreMarker);
+  }
+  discoverMarkers.clear();
+  discoverMoreMarker = null;
+}
+function clearBabillardMarkers(){
+  if(map){
+    babillardMarkers.forEach(m=>{ if(map.hasLayer(m)) map.removeLayer(m); });
+    if(babillardMoreMarker && map.hasLayer(babillardMoreMarker)) map.removeLayer(babillardMoreMarker);
+  }
+  babillardMarkers.clear();
+  babillardMoreMarker = null;
+}
+function toggleMapLayer(layer){
+  if(layer!=='decouvrir' && layer!=='babillard') return;
+  mapLayers[layer] = !mapLayers[layer];
+  if(usingFallbackMap){
+    const host = document.getElementById(layer==='decouvrir' ? 'fallbackDiscoverPins' : 'fallbackBabillardPins');
+    if(host) host.style.display = mapLayers[layer] ? '' : 'none';
+    const btn = document.getElementById(`layerToggle-${layer}`);
+    if(btn) btn.classList.toggle('off', !mapLayers[layer]);
+    return;
+  }
+  const markers = layer==='decouvrir' ? discoverMarkers : babillardMarkers;
+  const moreMarker = layer==='decouvrir' ? discoverMoreMarker : babillardMoreMarker;
+  markers.forEach(m=>{
+    if(!map) return;
+    if(mapLayers[layer]){ if(!map.hasLayer(m)) m.addTo(map); }
+    else{ if(map.hasLayer(m)) map.removeLayer(m); }
+  });
+  if(map && moreMarker){
+    if(mapLayers[layer]){ if(!map.hasLayer(moreMarker)) moreMarker.addTo(map); }
+    else{ if(map.hasLayer(moreMarker)) map.removeLayer(moreMarker); }
+  }
+  const btn = document.getElementById(`layerToggle-${layer}`);
+  if(btn) btn.classList.toggle('off', !mapLayers[layer]);
+}
 
 function fallbackPosition(p){
   const dx=(p.lng-USER_LOC.lng)/0.023, dy=(p.lat-USER_LOC.lat)/0.025;
@@ -2653,11 +3000,42 @@ function fallbackBubbleHTML(p){
   const pos=fallbackPosition(p);
   return `<button class="fallback-bubble ${p.status}${p.hot?' hot':''}" data-id="${p.id}" style="left:${pos.x}%;top:${pos.y}%" aria-label="Voir le profil de ${p.name}"><span class="fallback-bubble-ring"></span><img src="${p.avatar}" alt="${p.name}">${p.hot?'<span class="hot-badge">🔥</span>':''}<span class="lf-dot"></span></button>`;
 }
+function fallbackDiscoverPinHTML(place){
+  const pos=fallbackPosition(place);
+  return `<button class="fallback-pin disc" data-kind="decouvrir" style="left:${pos.x}%;top:${pos.y}%" title="${place.nom} · ${fmtDist(place.__dist)}">✴</button>`;
+}
+function fallbackBabillardPinHTML(a){
+  const pos=fallbackPosition(a);
+  return `<button class="fallback-pin bab" data-kind="babillard" style="left:${pos.x}%;top:${pos.y}%" title="${a.titre} · ${fmtDist(a.__dist)}"></button>`;
+}
+function fallbackMorePinHTML(items, kind){
+  const c=centroidOf(items); if(!c) return '';
+  const pos=fallbackPosition(c);
+  return `<button class="fallback-pin more ${kind}" data-kind="${kind}" style="left:${pos.x}%;top:${pos.y}%">+${items.length}</button>`;
+}
+function renderFallbackDiscoverPins(){
+  const cEl = document.getElementById('legendCountDecouvrir'); if(cEl) cEl.textContent = DISCOVER_PLACES.length || '';
+  const host=document.getElementById('fallbackDiscoverPins'); if(!host) return;
+  const { visible, reste } = splitByProximity(DISCOVER_PLACES, MAP_PIN_LIMIT.decouvrir);
+  host.innerHTML = visible.map(fallbackDiscoverPinHTML).join('') + (reste.length?fallbackMorePinHTML(reste,'decouvrir'):'');
+  host.querySelectorAll('.fallback-pin').forEach(el=>el.addEventListener('click',()=>switchTab('decouvrir')));
+  host.style.display = mapLayers.decouvrir ? '' : 'none';
+}
+function renderFallbackBabillardPins(){
+  const approved = BABILLARD_ANNONCES.filter(a=>a.statut==='approuve');
+  const cEl = document.getElementById('legendCountBabillard'); if(cEl) cEl.textContent = approved.length || '';
+  const host=document.getElementById('fallbackBabillardPins'); if(!host) return;
+  const { visible, reste } = splitByProximity(approved, MAP_PIN_LIMIT.babillard);
+  host.innerHTML = visible.map(fallbackBabillardPinHTML).join('') + (reste.length?fallbackMorePinHTML(reste,'babillard'):'');
+  host.querySelectorAll('.fallback-pin').forEach(el=>el.addEventListener('click',()=>switchTab('babillard')));
+  host.style.display = mapLayers.babillard ? '' : 'none';
+}
 function renderFallbackMap(){
   usingFallbackMap=true;
   const host=document.getElementById('leafletMap'); if(!host)return;
-  host.innerHTML=`<div class="fallback-map" id="fallbackMap"><div class="fallback-glow"></div><svg class="fallback-roads" viewBox="0 0 430 1000" preserveAspectRatio="none" aria-hidden="true"><g class="road major"><path d="M35 0 L105 1000"/><path d="M210 0 L195 1000"/><path d="M395 0 L315 1000"/><path d="M0 180 L430 250"/><path d="M0 470 L430 405"/><path d="M0 735 L430 680"/><path d="M0 900 L430 825"/></g><g class="road minor"><path d="M85 0 L260 1000"/><path d="M285 0 L110 1000"/><path d="M0 325 L430 560"/><path d="M0 610 L430 330"/><path d="M0 810 L430 535"/><path d="M70 1000 L430 60"/></g><g class="blocks"><path d="M0 105H430M0 285H430M0 560H430M0 760H430M0 955H430"/></g></svg><div class="fallback-label label-plateau">LE PLATEAU</div><div class="fallback-label label-mile">MILE END</div><div class="fallback-label label-rosemont">ROSEMONT</div><div class="fallback-label label-hochelaga">HOCHELAGA</div><div class="fallback-label label-centre">CENTRE-VILLE</div><div class="fallback-me ${myHot?'hot':''}" id="fallbackMe"><span></span><b>Toi</b></div><div id="fallbackBubbles">${PROFILES.map(fallbackBubbleHTML).join('')}</div><div class="fallback-attribution">Montréal · carte live</div></div>`;
+  host.innerHTML=`<div class="fallback-map" id="fallbackMap"><div class="fallback-glow"></div><svg class="fallback-roads" viewBox="0 0 430 1000" preserveAspectRatio="none" aria-hidden="true"><g class="road major"><path d="M35 0 L105 1000"/><path d="M210 0 L195 1000"/><path d="M395 0 L315 1000"/><path d="M0 180 L430 250"/><path d="M0 470 L430 405"/><path d="M0 735 L430 680"/><path d="M0 900 L430 825"/></g><g class="road minor"><path d="M85 0 L260 1000"/><path d="M285 0 L110 1000"/><path d="M0 325 L430 560"/><path d="M0 610 L430 330"/><path d="M0 810 L430 535"/><path d="M70 1000 L430 60"/></g><g class="blocks"><path d="M0 105H430M0 285H430M0 560H430M0 760H430M0 955H430"/></g></svg><div class="fallback-label label-plateau">LE PLATEAU</div><div class="fallback-label label-mile">MILE END</div><div class="fallback-label label-rosemont">ROSEMONT</div><div class="fallback-label label-hochelaga">HOCHELAGA</div><div class="fallback-label label-centre">CENTRE-VILLE</div><div class="fallback-me ${myHot?'hot':''}" id="fallbackMe"><span></span><b>Toi</b></div><div id="fallbackDiscoverPins"></div><div id="fallbackBubbles">${PROFILES.map(fallbackBubbleHTML).join('')}</div><div class="fallback-attribution">Montréal · carte live</div></div>`;
   host.querySelectorAll('.fallback-bubble').forEach(el=>el.addEventListener('click',()=>selectBubble(Number(el.dataset.id),null)));
+  renderFallbackDiscoverPins();
   refreshFallbackBubbles();
 }
 function refreshFallbackBubbles(){
@@ -2707,22 +3085,28 @@ function syncMapMarkers(){
   if(usingFallbackMap){ renderFallbackMap(); return; }
   clearMapMarkers();
   addMapMarkers();
+  clearDiscoverMarkers();
+  addDiscoverMarkers();
+  clearBabillardMarkers();
+  addBabillardMarkers();
   renderBubbles();
 }
 function initMap(){
   if(window.L){
     try{
-      map=L.map('leafletMap',{zoomControl:false,attributionControl:true,minZoom:13,maxZoom:18,fadeAnimation:false,zoomAnimation:false,markerZoomAnimation:false}).setView([USER_LOC.lat,USER_LOC.lng],14);
+      map=L.map('leafletMap',{zoomControl:false,attributionControl:true,minZoom:9,maxZoom:18,fadeAnimation:false,zoomAnimation:false,markerZoomAnimation:false}).setView([USER_LOC.lat,USER_LOC.lng],12);
       const tiles=L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd',maxZoom:19}).addTo(map);
       let tileErrors=0; tiles.on('tileerror',()=>{tileErrors++;if(tileErrors>=2&&!usingFallbackMap){map.remove();map=null;renderFallbackMap();showToast('🗺️ Carte locale activée.');}});
       ownMarker=L.marker([USER_LOC.lat,USER_LOC.lng],{icon:L.divIcon({html:`<div class="lf-me ${myHot?'hot':''} ${isPremium?'premium':''} ${(boostUntil&&Date.now()<boostUntil)?'boosted':''}"></div>`,className:'lf-icon-wrap',iconSize:[16,16],iconAnchor:[8,8]}),interactive:false}).addTo(map).bindTooltip('Toi',{permanent:true,direction:'bottom',offset:[0,10],className:'lf-me-tag'}).openTooltip();
       addMapMarkers();
+      addDiscoverMarkers();
+      addBabillardMarkers();
     }catch(e){console.warn('Leaflet unavailable, fallback map used',e);map=null;renderFallbackMap();}
   }else renderFallbackMap();
 }
 function passesFilters(p){const g=activeFilters.sexes,s=activeFilters.secteurs,i=activeFilters.intentions;if(g.size&&!g.has(p.sexe))return false;if(s.size&&!s.has(p.zone))return false;if(i.size&&!i.has(p.intention))return false;if(isPremium){const ageMaxEl=document.getElementById('ageMaxRange'),distMaxEl=document.getElementById('distMaxRange');if(ageMaxEl&&p.age>parseInt(ageMaxEl.value,10))return false;if(distMaxEl&&p.distanceKm>parseInt(distMaxEl.value,10))return false;}return true;}
 function renderBubbles(){if(usingFallbackMap){refreshFallbackBubbles();return;}PROFILES.forEach(p=>{const marker=bubbleMarkers.get(p.id);if(!marker||!map)return;if(passesFilters(p)){if(!map.hasLayer(marker))marker.addTo(map);}else{if(map.hasLayer(marker))map.removeLayer(marker);}});}
-document.getElementById('btn-recenter').addEventListener('click',()=>{if(map)map.setView([USER_LOC.lat,USER_LOC.lng],14);else{const me=document.getElementById('fallbackMe');if(me){me.classList.add('recenter');setTimeout(()=>me.classList.remove('recenter'),900);}}});
+document.getElementById('btn-recenter').addEventListener('click',()=>{if(map)map.setView([USER_LOC.lat,USER_LOC.lng],12);else{const me=document.getElementById('fallbackMe');if(me){me.classList.add('recenter');setTimeout(()=>me.classList.remove('recenter'),900);}}});
 initMap();
 // La barre d'adresse mobile qui apparaît/disparaît change la taille réelle du conteneur
 // (à cause de dvh) sans que Leaflet le sache automatiquement — on le lui redit à chaque
@@ -2747,7 +3131,6 @@ function runSplashPostActions(){
   if(splashPostActionsRun) return;
   splashPostActionsRun = true;
   scheduleMapResize();
-  maybeShowPrefOverlay();
 }
 function hideSplash(){
   const el = document.getElementById('splashScreen');
@@ -2761,6 +3144,8 @@ function hideSplash(){
 }
 function continueBoot(){
   loadProfiles().then(subscribeToProfileChanges).finally(hideSplash);
+  loadDiscoverPlaces();
+  loadBabillardAnnonces();
   loadMyPhotos(); // récupère les vraies photos du compte connecté (silencieux en mode démo, voir plus bas)
   setTimeout(hideSplash, 4000); // filet de sécurité si le réseau traîne
 }
@@ -2800,6 +3185,7 @@ document.getElementById('authSubmitBtn').addEventListener('click', async ()=>{
   errEl.style.color = '#ff6b6b'; errEl.textContent = '';
   if(!email || !password){ errEl.textContent = 'Entre un courriel et un mot de passe.'; return; }
   if(password.length < 6){ errEl.textContent = 'Le mot de passe doit avoir au moins 6 caractères.'; return; }
+  localStorage.setItem('ceSoirRemember', document.getElementById('authRemember').checked ? 'true' : 'false');
   const btn = document.getElementById('authSubmitBtn');
   btn.disabled = true; const originalLabel = btn.textContent; btn.textContent = 'Un instant…';
   try{
@@ -2932,10 +3318,9 @@ document.getElementById('consentConfirm').addEventListener('click',()=>{
 document.getElementById('radarClose').addEventListener('click',closeRadar);
 document.getElementById('radarOverlay').addEventListener('click',e=>{if(e.target.id==='radarOverlay')closeRadar();});
 document.getElementById('radarJoin').addEventListener('click',()=>{
-  myHot=true; localStorage.setItem('ceSoirMyHot','1');
-  localStorage.setItem('ceSoirHotUntil',String(Date.now()+90*60*1000));
+  activateNowMode();
   refreshMyHotUI(); refreshMyHotMap(); closeRadar(); awardXP(15,'Mode NOW activé');
-  showToast('🔥 Tu apparais dans le radar pendant 90 min.');
+  showToast(isPremium ? '🔥 Mode NOW activé — illimité (Premium).' : '🔥 Tu apparais dans le radar pendant 3h.');
 });
 setRadar(false);
 
@@ -3073,46 +3458,6 @@ function toggleChip(el, set){
 }
 buildChips();
 
-/* ================= PRÉFÉRENCE INITIALE (qui je veux voir) ================= */
-const prefChipWrap = document.getElementById('prefChipWrap');
-const PREF_OPTIONS = [...SEXES, 'Tout le monde'];
-let tempPref = new Set();
-prefChipWrap.innerHTML = PREF_OPTIONS.map(s=>`<div class="chip" data-val="${s}">${s}</div>`).join('');
-prefChipWrap.querySelectorAll('.chip').forEach(c=>{
-  c.addEventListener('click', ()=>{
-    if(c.dataset.val === 'Tout le monde'){
-      tempPref.clear();
-      prefChipWrap.querySelectorAll('.chip').forEach(o=>o.classList.remove('active'));
-      c.classList.add('active');
-    } else {
-      prefChipWrap.querySelector('.chip[data-val="Tout le monde"]').classList.remove('active');
-      toggleChip(c, tempPref);
-    }
-  });
-});
-function applySeekingPref(list){
-  activeFilters.sexes = new Set(list);
-  document.getElementById('chipSexes').querySelectorAll('.chip').forEach(c=> c.classList.toggle('active', activeFilters.sexes.has(c.dataset.val)));
-  renderBubbles();
-  const total = activeFilters.sexes.size + activeFilters.secteurs.size + activeFilters.intentions.size;
-  const badge = document.getElementById('filtersBadge');
-  if(total>0){ badge.style.display='inline-block'; badge.textContent = total; }
-  else{ badge.style.display='none'; }
-}
-document.getElementById('prefConfirm').addEventListener('click', ()=>{
-  const list = Array.from(tempPref);
-  localStorage.setItem('ceSoirSeekingPref', JSON.stringify(list));
-  applySeekingPref(list);
-  document.getElementById('prefOverlay').classList.remove('show');
-});
-function maybeShowPrefOverlay(){
-  const saved = localStorage.getItem('ceSoirSeekingPref');
-  if(saved === null){
-    document.getElementById('prefOverlay').classList.add('show');
-  } else {
-    try{ applySeekingPref(JSON.parse(saved)); }catch(e){}
-  }
-}
 function openFilters(){ filtersSheet.classList.add('open'); filtersBackdrop.classList.add('show'); }
 function closeFilters(){ filtersSheet.classList.remove('open'); filtersBackdrop.classList.remove('show'); }
 document.getElementById('btn-filters-fab').addEventListener('click', openFilters);
@@ -3379,9 +3724,9 @@ function refreshMyHotUI(){
 }
 function refreshMyHotMap(){ const el=document.querySelector('.lf-me'); if(el) el.classList.toggle('hot',myHot); if(usingFallbackMap){ refreshFallbackBubbles(); return; } if(ownMarker && map){ if(myVisibility==='hidden') ownMarker.remove(); else if(!map.hasLayer(ownMarker)) ownMarker.addTo(map); } }
 const myHotToggle=document.getElementById('myHotToggle');
-if(myHotToggle){ myHotToggle.checked=myHot; myHotToggle.addEventListener('change',()=>{ myHot=myHotToggle.checked; localStorage.setItem('ceSoirMyHot',myHot?'1':'0');
-  if(myHot){hotUntil=Date.now()+90*60*1000;localStorage.setItem('ceSoirHotUntil',String(hotUntil));awardXP(15,'Mode CE SOIR activé');}
-  else{hotUntil=0;localStorage.removeItem('ceSoirHotUntil');}
+if(myHotToggle){ myHotToggle.checked=myHot; myHotToggle.addEventListener('change',()=>{
+  if(myHotToggle.checked){ activateNowMode(); awardXP(15,'Mode CE SOIR activé'); }
+  else{ myHot=false; localStorage.setItem('ceSoirMyHot','0'); hotUntil=0; localStorage.removeItem('ceSoirHotUntil'); }
   refreshMyHotUI(); refreshMyHotMap(); }); }
 refreshMyHotUI();
 updateMission(0);
@@ -3430,7 +3775,25 @@ renderPhotoGrid();
 
 const views = { carte:'view-carte', decouvrir:'view-decouvrir', now:'view-now', babillard:'view-babillard', messages:'view-messages', profil:'view-profil' };
 document.querySelectorAll('.navbtn').forEach(btn=>{
-  btn.addEventListener('click', ()=> switchTab(btn.dataset.tab));
+  btn.addEventListener('click', ()=>{
+    if(btn.dataset.tab==='now'){ openNowGateOrView(); return; }
+    switchTab(btn.dataset.tab);
+  });
+});
+// Le chat/flux NOW est exclusif au mode NOW : on montre d'abord la porte d'activation si nécessaire.
+function openNowGateOrView(){
+  if(isNowActive()){ switchTab('now'); return; }
+  const label = document.getElementById('nowGateDurationLabel');
+  if(label) label.textContent = isPremium ? 'Actif en illimité (Premium)' : 'Actif pendant 3h';
+  document.getElementById('nowGateOverlay').classList.add('show');
+}
+document.getElementById('nowGateClose').addEventListener('click', ()=> document.getElementById('nowGateOverlay').classList.remove('show'));
+document.getElementById('nowGateActivate').addEventListener('click', ()=>{
+  activateNowMode();
+  refreshMyHotUI(); refreshMyHotMap(); awardXP(15,'Mode NOW activé');
+  document.getElementById('nowGateOverlay').classList.remove('show');
+  showToast(isPremium ? '🔥 Mode NOW activé — illimité (Premium).' : '🔥 Mode NOW activé pendant 3h.');
+  switchTab('now');
 });
 function switchTab(tab){
   document.querySelectorAll('.navbtn').forEach(b=> b.classList.toggle('active', b.dataset.tab===tab));
@@ -3451,85 +3814,76 @@ function switchTab(tab){
   if(typeof setMenuBtnIcon === 'function') setMenuBtnIcon(tab);
 }
 
-/* ================= DÉCOUVRIR ================= */
-function passesDiscoverFilters(p){
-  if(discoverFilters.categorie && categorieOf(p)!==discoverFilters.categorie) return false;
-  if(discoverFilters.ambiance && p.intention!==discoverFilters.ambiance) return false;
-  if(discoverFilters.budget && budgetOf(p)!==discoverFilters.budget) return false;
-  if(discoverFilters.zone && p.zone!==discoverFilters.zone) return false;
-  if(discoverFilters.query){
-    const q = discoverFilters.query.trim().toLowerCase();
+/* ================= DÉCOUVRIR (lieux) ================= */
+function placeCardHTML(place, wide){
+  const icon = CATEGORIE_ICON[place.categorie] || '📍';
+  const badge = place.partenaire
+    ? `<div class="place-badge partner">⭐ Partenaire</div>`
+    : `<div class="place-badge">Gratuit</div>`;
+  const offer = place.partenaire && place.offre_partenaire ? `<div class="place-offer">🎁 ${place.offre_partenaire}</div>` : '';
+  return `<div class="place-card${place.partenaire?' partner':''}${wide?' wide':''}" data-place-id="${place.id}">
+      <div class="place-photo">${place.photo ? `<img src="${place.photo}" alt="">` : icon}</div>
+      <div class="place-info">
+        ${badge}
+        <h4>${place.nom}</h4>
+        <p>${place.description}</p>
+        ${offer}
+        ${place.zone ? `<div class="place-zone">📍 ${place.zone}</div>` : ''}
+      </div>
+    </div>`;
+}
+const SAISON_LABELS = { toute_annee:'Toute l\'année', ete:'Été', automne:'Automne', hiver:'Hiver', printemps:'Printemps' };
+let discoverPlaceFilters = { categorie:null, saison:null, zone:null, query:'' };
+function passesPlaceFilters(place){
+  if(discoverPlaceFilters.categorie && place.categorie!==discoverPlaceFilters.categorie) return false;
+  if(discoverPlaceFilters.saison && place.saison!==discoverPlaceFilters.saison && place.saison!=='toute_annee') return false;
+  if(discoverPlaceFilters.zone && place.zone!==discoverPlaceFilters.zone) return false;
+  if(discoverPlaceFilters.query){
+    const q = discoverPlaceFilters.query.trim().toLowerCase();
     if(q){
-      const hay = `${p.name} ${p.zone} ${p.vibeText||''} ${categorieOf(p)}`.toLowerCase();
+      const hay = `${place.nom} ${place.zone||''} ${place.description}`.toLowerCase();
       if(!hay.includes(q)) return false;
     }
   }
   return true;
 }
-function activityCardHTML(p){
-  return `
-    <div class="activity-card${p.hot?' hot':''}" data-id="${p.id}" onclick="if(!event.target.closest('.ac-btn')) openProfile(${p.id})">
-      <img src="${p.avatar}" alt="${p.name}">
-      <div class="ac-body">
-        <div class="ac-top">${p.hot?'<span class="ac-hotdot"></span>':''}<span class="ac-name">${p.name}, ${p.age}</span></div>
-        <div class="ac-vibe">${p.vibeEmoji} ${p.vibeText}</div>
-        <div class="ac-meta"><b>${categorieOf(p)}</b> · ${p.zone} · ${p.distanceKm.toFixed(1)} km · ${budgetOf(p)}</div>
-      </div>
-      <div class="ac-actions">
-        <button class="ac-btn go${sentActivityIds.has(p.id)?' active':''}" title="J'y vais" ${sentActivityIds.has(p.id)?'disabled':''} onclick="event.stopPropagation(); likeActivityCard(${p.id}, this)">🔥</button>
-        <button class="ac-btn maybe${maybeProfiles.has(p.id)?' active':''}" title="Peut-être" onclick="event.stopPropagation(); toggleProfileMaybe(${p.id}); this.classList.toggle('active')">😊</button>
-      </div>
-    </div>`;
-}
-function recCardHTML(p){
-  return `
-    <div class="rec-card" style="background-image:url('${p.avatar}')" data-id="${p.id}" onclick="openProfile(${p.id})">
-      <div class="grad"></div>
-      ${p.hot?'<span class="rec-hot">🔥 CE SOIR</span>':''}
-      <div class="rec-info">
-        <div class="rec-name">${p.name}, ${p.age}</div>
-        <div class="rec-meta">${p.zone} · ${p.distanceKm.toFixed(1)} km</div>
-        <div class="rec-affinity">⚡ ${affinityOf(p)}% d'affinité</div>
-      </div>
-    </div>`;
-}
 function renderZoneChips(){
   const grid = document.getElementById('zoneChipGrid');
-  const heat = { "Plateau":"🔥🔥🔥","Mile End":"🔥🔥","Hochelaga":"🌤️" };
-  const zones = [...new Set(PROFILES.map(p=>p.zone))];
-  grid.innerHTML = zones.map(z=>`<div class="zone-pill${discoverFilters.zone===z?' active':''}" data-zone="${z}" onclick="toggleDiscoverFilter('zone','${z}')">${heat[z]||'✨'} <b>${z}</b></div>`).join('');
+  const zones = [...new Set(DISCOVER_PLACES.map(p=>p.zone).filter(Boolean))];
+  grid.innerHTML = zones.map(z=>`<div class="zone-pill${discoverPlaceFilters.zone===z?' active':''}" data-zone="${z}" onclick="toggleDiscoverFilter('zone','${z}')">✨ <b>${z}</b></div>`).join('');
 }
 function renderDiscoverFeed(){
   const catRow = document.getElementById('chipRowCategorie');
-  catRow.innerHTML = CATEGORIES.map(c=>`<div class="dchip${discoverFilters.categorie===c?' active':''}" onclick="toggleDiscoverFilter('categorie','${c}')">${c}</div>`).join('');
-  const ambRow = document.getElementById('chipRowAmbiance');
-  ambRow.innerHTML = INTENTIONS.map(a=>`<div class="dchip${discoverFilters.ambiance===a?' active':''}" onclick="toggleDiscoverFilter('ambiance','${a}')">${a}</div>`).join('');
-  const budRow = document.getElementById('chipRowBudget');
-  budRow.innerHTML = ["Gratuit","$","$$","$$$"].map(b=>`<div class="dchip${discoverFilters.budget===b?' active':''}" onclick="toggleDiscoverFilter('budget','${b}')">${b}</div>`).join('');
+  const categories = [...new Set(DISCOVER_PLACES.map(p=>p.categorie))];
+  catRow.innerHTML = categories.map(c=>`<div class="dchip${discoverPlaceFilters.categorie===c?' active':''}" onclick="toggleDiscoverFilter('categorie','${c}')">${CATEGORIE_ICON[c]||'📍'} ${c}</div>`).join('');
+  const saisonRow = document.getElementById('chipRowSaison');
+  const saisons = [...new Set(DISCOVER_PLACES.map(p=>p.saison).filter(s=>s && s!=='toute_annee'))];
+  saisonRow.innerHTML = saisons.map(s=>`<div class="dchip${discoverPlaceFilters.saison===s?' active':''}" onclick="toggleDiscoverFilter('saison','${s}')">${SAISON_LABELS[s]||s}</div>`).join('');
   renderZoneChips();
 
-  const filtered = PROFILES.filter(passesDiscoverFilters);
+  const filtered = DISCOVER_PLACES.filter(passesPlaceFilters);
+  const partners = filtered.filter(p=>p.partenaire);
+  const freePlaces = filtered.filter(p=>!p.partenaire);
 
-  const rec = [...filtered].sort((a,b)=>affinityOf(b)-affinityOf(a)).slice(0,8);
-  document.getElementById('recCount').textContent = rec.length ? `${rec.length} profils` : '';
-  document.getElementById('recRow').innerHTML = rec.length ? rec.map(recCardHTML).join('') : `<div class="discover-empty"><span class="de-icon">🔥</span>Personne ne correspond à ces filtres pour l'instant.</div>`;
+  const secPart = document.getElementById('secPartenaires');
+  if(partners.length){
+    secPart.style.display = '';
+    document.getElementById('partnerCount').textContent = `${partners.length} offre${partners.length>1?'s':''}`;
+    document.getElementById('partnerRow').innerHTML = partners.map(p=>placeCardHTML(p,false)).join('');
+  }else{
+    secPart.style.display = 'none'; // Réservé pour les futurs partenariats payants — masqué tant qu'il n'y en a pas
+  }
 
-  const pres = [...filtered].sort((a,b)=>a.distanceKm-b.distanceKm).slice(0,10);
-  document.getElementById('presCount').textContent = pres.length ? `${pres.length} profils` : '';
-  document.getElementById('presList').innerHTML = pres.length ? pres.map(activityCardHTML).join('') : `<div class="discover-empty"><span class="de-icon">📍</span>Élargis tes filtres pour voir plus de monde.</div>`;
+  const secLieux = document.getElementById('secLieux');
+  document.getElementById('placeCount').textContent = freePlaces.length ? `${freePlaces.length} lieu${freePlaces.length>1?'x':''}` : '';
+  document.getElementById('placeRow').innerHTML = freePlaces.length ? freePlaces.map(p=>placeCardHTML(p,true)).join('') : '';
 
-  const rank = { online:0, recent:1, offline:2 };
-  const nouv = [...filtered].sort((a,b)=> (rank[a.status]-rank[b.status]) || (a.lastSeen<b.lastSeen?-1:1)).slice(0,10);
-  document.getElementById('newCount').textContent = nouv.length ? `${nouv.length} profils` : '';
-  document.getElementById('newList').innerHTML = nouv.length ? nouv.map(activityCardHTML).join('') : `<div class="discover-empty"><span class="de-icon">✨</span>Rien de nouveau pour l'instant.</div>`;
-
-  // État vide global : les 3 sections sont vides en même temps (filtres trop restrictifs)
   const allEmpty = filtered.length === 0;
   document.getElementById('discoverSections').style.display = allEmpty ? 'none' : '';
   document.getElementById('discoverEmptyGlobal').style.display = allEmpty ? 'flex' : 'none';
 }
 function resetDiscoverFilters(){
-  discoverFilters = { categorie:null, ambiance:null, budget:null, zone:null, query:'' };
+  discoverPlaceFilters = { categorie:null, saison:null, zone:null, query:'' };
   const si = document.getElementById('discoverSearchInput'); if(si) si.value='';
   renderDiscoverFeed();
 }
@@ -3538,34 +3892,21 @@ const discoverSearchInput = document.getElementById('discoverSearchInput');
 const discoverSearchClear = document.getElementById('discoverSearchClear');
 if(discoverSearchInput){
   discoverSearchInput.addEventListener('input', (e)=>{
-    discoverFilters.query = e.target.value;
+    discoverPlaceFilters.query = e.target.value;
     discoverSearchClear.style.display = e.target.value ? 'block' : 'none';
     renderDiscoverFeed();
   });
   discoverSearchClear.addEventListener('click', ()=>{
     discoverSearchInput.value = '';
-    discoverFilters.query = '';
+    discoverPlaceFilters.query = '';
     discoverSearchClear.style.display = 'none';
     renderDiscoverFeed();
     discoverSearchInput.focus();
   });
 }
 function toggleDiscoverFilter(key,val){
-  discoverFilters[key] = discoverFilters[key]===val ? null : val;
+  discoverPlaceFilters[key] = discoverPlaceFilters[key]===val ? null : val;
   renderDiscoverFeed();
-}
-const sentActivityIds = new Set(); // QA-03/QA-07 : mémorise les cartes déjà "envoyées" (état visuel + anti double-tap)
-function likeActivityCard(id, btnEl){
-  const p = PROFILES.find(x=>x.id===id);
-  if(!p) return;
-  if(sentActivityIds.has(id)) return; // déjà envoyé, on ignore un second tap
-  if(!useOneLike()) return;
-  sentActivityIds.add(id);
-  if(btnEl){ btnEl.classList.add('active'); btnEl.disabled = true; }
-  awardXP(3,'Découverte');
-  updateMission(1); // QA-03 : le compteur de mission progresse aussi depuis Découvrir
-  const isMatch = p.hot ? Math.random() < 0.82 : Math.random() < 0.55;
-  if(isMatch){ showMatch(p); } else { showToast(`🔥 Intention envoyée à ${p.name}`); }
 }
 
 function updateMission(step=1){
@@ -3765,36 +4106,50 @@ const GHOST_MESSAGES = [
   { type:'testi', text:'« CE SOIR a transformé mon mardi soir en quelque chose de réel »' },
 ];
 
+// Aperçu chat Premium en haut de la carte (remplace l'ancien ticker de profils à proximité) :
+// - Abonné Premium : vraies cartes de conversation, cliquables, tri par non-lus puis récence.
+// - Sans Premium : aperçus floutés (juste pour donner envie) + une carte d'appel à l'action claire.
 function buildProfileTicker(){
   const track = document.getElementById('ghostTrack');
   if(!track) return;
-  
-  // Générer la liste des profils pour le ticker : priorité aux HOT, puis online, puis recent
-  const sortedProfiles = [...PROFILES].sort((a,b)=>{
-    if(a.hot && !b.hot) return -1;
-    if(!a.hot && b.hot) return 1;
-    const statusOrder = {online:0, recent:1, offline:2};
-    const aStatus = statusOrder[a.status] ?? 2;
-    const bStatus = statusOrder[b.status] ?? 2;
-    return aStatus - bStatus;
-  }).slice(0, 12); // Limiter à 12 profils
-  
-  // Dupliquer pour scroll infini fluide
-  const items = [...sortedProfiles, ...sortedProfiles];
-  track.innerHTML = items.map(p=>{
-    const dist = p.distanceKm < 0.1 ? '< 0,1 km' : p.distanceKm.toFixed(1) + ' km';
-    const statusClass = p.hot ? 'hot' : p.status;
-    return `
-      <div class="ghost-item ${statusClass}" data-profile-id="${p.id}" onclick="event.stopPropagation(); tickerClickProfile(${p.id})">
-        <img class="ghost-item-avatar" src="${p.avatar}" alt="${p.name}">
-        <div class="ghost-item-name">${p.name}, ${p.age}</div>
-        <div class="ghost-item-meta">
-          <span>${p.zone}</span>
+
+  if(isPremium){
+    if(!CONVERSATIONS.length){
+      track.innerHTML = `<div class="chat-teaser-empty">💬 Aucun message pour l'instant — explore la carte pour lancer une conversation.</div>`;
+      return;
+    }
+    const sorted = [...CONVERSATIONS].sort((a,b)=> (b.unread||0) - (a.unread||0));
+    track.innerHTML = sorted.slice(0,8).map(c=>`
+      <div class="chat-teaser-card" onclick="event.stopPropagation(); openChat(${c.id})">
+        ${c.unread>0 ? `<span class="chat-teaser-unread">${c.unread}</span>` : ''}
+        <img class="chat-teaser-avatar" src="${c.avatar}" alt="${c.name}">
+        <div class="chat-teaser-body">
+          <div class="chat-teaser-name">${c.name}</div>
+          <div class="chat-teaser-preview">${c.preview||''}</div>
         </div>
-        <div class="ghost-item-distance">${dist}</div>
       </div>
-    `;
-  }).join('');
+    `).join('');
+    return;
+  }
+
+  // Pas Premium : on floute les vraies conversations (si il y en a) pour donner envie de débloquer,
+  // suivi d'une carte claire pour passer Premium.
+  const teased = CONVERSATIONS.slice(0,3).map(c=>`
+    <div class="chat-teaser-card" onclick="event.stopPropagation(); openPaywall();">
+      <span class="chat-teaser-lock">🔒</span>
+      <img class="chat-teaser-avatar locked" src="${c.avatar}" alt="">
+      <div class="chat-teaser-body">
+        <div class="chat-teaser-name">Quelqu'un t'a écrit</div>
+        <div class="chat-teaser-preview">Débloque pour lire</div>
+      </div>
+    </div>
+  `).join('');
+  track.innerHTML = teased + `
+    <div class="chat-teaser-cta" onclick="event.stopPropagation(); openPaywall();">
+      <b>👑 Chat illimité</b>
+      <span>Passe Premium pour discuter sans limite</span>
+    </div>
+  `;
 }
 
 // Recentre la carte sur un profil donné, bascule vers l'onglet Carte si besoin, et sélectionne sa bulle (QA-02).
