@@ -747,6 +747,15 @@
   }
   .bab-sheet-avatars img:first-child{ margin-left:0; }
   .bab-sheet-desc{ font-size:13px; color:var(--muted); line-height:1.5; margin:0 0 16px; }
+  .bab-status-pill{ flex:1; text-align:center; padding:11px 8px; border-radius:14px; font-size:12.5px; font-weight:700; cursor:pointer; border:1px solid var(--line); background:rgba(255,255,255,.04); color:var(--text); transition:.15s; }
+  .bab-status-pill .n{ display:block; font-size:10px; font-weight:600; color:var(--muted); margin-top:2px; }
+  .bab-status-pill.go.active{ background:linear-gradient(135deg,var(--flame),var(--flame2)); border-color:transparent; color:#fff; }
+  .bab-status-pill.go.active .n{ color:rgba(255,255,255,.85); }
+  .bab-status-pill.maybe.active{ background:rgba(233,92,255,.18); border-color:#E85CFF; color:#f0c6ff; }
+  .bab-who-btn{ display:flex; align-items:center; gap:8px; margin-top:12px; padding:10px 12px; border-radius:14px; background:rgba(255,255,255,.04); border:1px solid var(--line); cursor:pointer; font-size:12px; color:var(--muted); }
+  .bab-who-btn .bab-who-emoji{ font-size:16px; }
+  .bab-resp-section h4{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin:16px 0 6px; }
+  .bab-resp-section:first-child h4{ margin-top:0; }
   .bab-empty{
     padding:48px 24px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:10px;
   }
@@ -2035,10 +2044,26 @@
         <div class="bab-sheet-avatars" id="babSheetAvatars"></div>
         <p class="bab-sheet-desc" id="babSheetDesc"></p>
         <div class="cta-row">
-          <button class="btn-primary" id="babSheetGo">🔥 J'y vais</button>
-          <button class="btn-secondary" id="babSheetMaybe">Peut-être</button>
+          <button class="bab-status-pill go" id="babSheetGo">🔥 J'y vais</button>
+          <button class="bab-status-pill maybe" id="babSheetMaybe">🤔 Peut-être</button>
+        </div>
+        <div class="bab-who-btn" id="babSheetWho" style="display:none;">
+          <span class="bab-who-emoji">👥</span>
+          <span>Voir qui a répondu</span>
+          <span class="bab-who-count" id="babSheetWhoCount" style="margin-left:auto;color:var(--text);font-weight:700;"></span>
         </div>
         <button class="btn-secondary" style="width:100%; margin-top:9px;" id="babSheetMap">Voir sur la carte</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== BABILLARD — QUI A RÉPONDU (visible par l'auteur de l'annonce) ===== -->
+  <div class="bab-sheet-overlay" id="babRespOverlay">
+    <div class="bab-sheet">
+      <button class="mini-close" id="babRespClose">×</button>
+      <div class="bab-sheet-body">
+        <h3 style="margin-bottom:14px;">Qui a répondu</h3>
+        <div id="babRespBody"></div>
       </div>
     </div>
   </div>
@@ -2633,8 +2658,53 @@ const BAB_ITEMS = [
 /* ===== Babillard = petites annonces créées librement par les utilisateurs, modérées avant publication ===== */
 const BAB_CAT_LABELS = { tout:'Tout', cherche_partenaire:'Partenaire', evenement_membre:'Événement', covoiturage:'Covoiturage', discussion:'Discussion' };
 let babFilter = 'tout';
-let babReactedIds = new Set();
 let babSentIds = new Set(); // encore utilisé par la feature card de l'écran Now
+// Réponses "Partant" / "Peut-être" à une annonce Babillard, stockées dans Supabase (table annonces_reponses)
+let BAB_REPONSES = new Map(); // annonce_id -> { partant:Set(user_id), peut_etre:Set(user_id) }
+function babCounts(annonceId){
+  const r = BAB_REPONSES.get(annonceId);
+  return { partant: r ? r.partant.size : 0, peutEtre: r ? r.peut_etre.size : 0 };
+}
+function myBabStatus(annonceId){
+  const r = BAB_REPONSES.get(annonceId);
+  if(!r || !currentUserId) return null;
+  if(r.partant.has(currentUserId)) return 'partant';
+  if(r.peut_etre.has(currentUserId)) return 'peut_etre';
+  return null;
+}
+async function loadBabReponses(){
+  BAB_REPONSES = new Map();
+  if(!supabaseClient) return;
+  try{
+    const { data, error } = await supabaseClient.from('annonces_reponses').select('annonce_id,user_id,statut');
+    if(!error && data){
+      data.forEach(r=>{
+        if(!BAB_REPONSES.has(r.annonce_id)) BAB_REPONSES.set(r.annonce_id, { partant:new Set(), peut_etre:new Set() });
+        BAB_REPONSES.get(r.annonce_id)[r.statut]?.add(r.user_id);
+      });
+    }
+  }catch(e){ /* repli silencieux — pas de compteurs si offline */ }
+}
+async function setBabReponse(annonceId, statut){
+  if(!supabaseClient || !currentUserId){ showToast('Connecte-toi pour répondre'); return; }
+  const current = myBabStatus(annonceId);
+  try{
+    if(current === statut){
+      const { error } = await supabaseClient.from('annonces_reponses').delete().eq('annonce_id', annonceId).eq('user_id', currentUserId);
+      if(error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('annonces_reponses').upsert(
+        { annonce_id: annonceId, user_id: currentUserId, statut },
+        { onConflict: 'annonce_id,user_id' }
+      );
+      if(error) throw error;
+    }
+  }catch(e){ showToast('Erreur — réessaie'); return; }
+  await loadBabReponses();
+  renderBabillard();
+  const item = BABILLARD_ANNONCES.find(x=>x.id===annonceId);
+  if(item && document.getElementById('babSheetOverlay').classList.contains('show')) updateBabSheetButtons(item);
+}
 
 function babPassesFilter(annonce){
   if(babFilter==='tout') return true;
@@ -2657,15 +2727,9 @@ function babCardHTML(a){
         <div class="b-avatar"></div>
         <span class="b-name">${a.auteur_nom || 'Anonyme'}</span>
         ${a.zone ? `<span class="b-zone">📍 ${a.zone}</span>` : ''}
-        <span class="b-react" onclick="event.stopPropagation(); babReact('${a.id}')">🙋 ${babReactedIds.has(a.id)?1:0}</span>
+        <span class="b-react">🔥 ${babCounts(a.id).partant} · 🤔 ${babCounts(a.id).peutEtre}</span>
       </div>
     </div>`;
-}
-function babReact(id){
-  if(babReactedIds.has(id)) return;
-  babReactedIds.add(id);
-  renderBabillard();
-  showToast('🙋 Intérêt envoyé');
 }
 function renderBabillard(){
   const filtersEl = document.getElementById('babFilters');
@@ -2687,16 +2751,61 @@ function openBabSheet(id){
   document.getElementById('babSheetMeta').textContent = `${item.auteur_nom||'Anonyme'} · ${babTimeAgo(item.created_at)}${item.zone?' · '+item.zone:''}`;
   document.getElementById('babSheetAvatars').innerHTML = '';
   document.getElementById('babSheetDesc').textContent = item.texte;
-  const goBtn = document.getElementById('babSheetGo');
-  goBtn.textContent = babReactedIds.has(id) ? '✓ Intérêt envoyé' : "🙋 Ça m'intéresse";
-  goBtn.onclick = ()=> babReact(id);
-  document.getElementById('babSheetMaybe').onclick = ()=> closeBabSheet();
+  updateBabSheetButtons(item);
   document.getElementById('babSheetMap').onclick = ()=>{
     closeBabSheet();
     switchTab('carte');
   };
   document.getElementById('babSheetOverlay').classList.add('show');
 }
+function updateBabSheetButtons(item){
+  const counts = babCounts(item.id);
+  const status = myBabStatus(item.id);
+  const goBtn = document.getElementById('babSheetGo');
+  const maybeBtn = document.getElementById('babSheetMaybe');
+  goBtn.classList.toggle('active', status==='partant');
+  goBtn.innerHTML = `🔥 J'y vais<span class="n">${counts.partant} partant${counts.partant>1?'s':''}</span>`;
+  goBtn.onclick = ()=> setBabReponse(item.id, 'partant');
+  maybeBtn.classList.toggle('active', status==='peut_etre');
+  maybeBtn.innerHTML = `🤔 Peut-être<span class="n">${counts.peutEtre}</span>`;
+  maybeBtn.onclick = ()=> setBabReponse(item.id, 'peut_etre');
+  const whoBtn = document.getElementById('babSheetWho');
+  const isAuthor = !!item.auteur_id && item.auteur_id === currentUserId;
+  whoBtn.style.display = isAuthor ? 'flex' : 'none';
+  if(isAuthor){
+    const total = counts.partant + counts.peutEtre;
+    document.getElementById('babSheetWhoCount').textContent = `${total} réponse${total>1?'s':''}`;
+    whoBtn.onclick = ()=> openBabResponders(item);
+  }
+}
+async function loadBabRespondersProfiles(ids){
+  if(!ids.length || !supabaseClient) return new Map();
+  try{
+    const { data } = await supabaseClient.from('profiles').select('user_id,name,avatar').in('user_id', ids);
+    return new Map((data||[]).map(p=>[p.user_id,p]));
+  }catch(e){ return new Map(); }
+}
+async function openBabResponders(item){
+  const body = document.getElementById('babRespBody');
+  body.innerHTML = '<p class="empty-hint">Chargement…</p>';
+  document.getElementById('babRespOverlay').classList.add('show');
+  const r = BAB_REPONSES.get(item.id) || { partant:new Set(), peut_etre:new Set() };
+  const ids = [...r.partant, ...r.peut_etre];
+  const profs = await loadBabRespondersProfiles(ids);
+  const rowHTML = (uid)=>{
+    const p = profs.get(uid);
+    const name = p?.name || 'Profil';
+    const avatar = p?.avatar || 'https://ui-avatars.com/api/?name=%3F&background=333&color=fff';
+    return `<div class="blocked-row"><img src="${avatar}" alt=""><span class="blocked-name">${name}</span></div>`;
+  };
+  const partantHTML = [...r.partant].map(rowHTML).join('') || '<p class="empty-hint">Personne pour l\u2019instant.</p>';
+  const maybeHTML = [...r.peut_etre].map(rowHTML).join('') || '<p class="empty-hint">Personne pour l\u2019instant.</p>';
+  body.innerHTML = `
+    <div class="bab-resp-section"><h4>🔥 Partants (${r.partant.size})</h4>${partantHTML}</div>
+    <div class="bab-resp-section"><h4>🤔 Peut-être (${r.peut_etre.size})</h4>${maybeHTML}</div>`;
+}
+document.getElementById('babRespClose').addEventListener('click', ()=> document.getElementById('babRespOverlay').classList.remove('show'));
+document.getElementById('babRespOverlay').addEventListener('click', e=>{ if(e.target.id==='babRespOverlay') document.getElementById('babRespOverlay').classList.remove('show'); });
 function closeBabSheet(){
   document.getElementById('babSheetOverlay').classList.remove('show');
   document.getElementById('babSheetImg').style.display = '';
@@ -3057,6 +3166,7 @@ async function loadBabillardAnnonces(){
     const { data, error } = await supabaseClient.from('annonces_babillard').select('*').order('created_at', { ascending:false });
     if(!error && data){
       BABILLARD_ANNONCES = data;
+      await loadBabReponses();
       renderBabillard();
       syncMapMarkers();
     }
