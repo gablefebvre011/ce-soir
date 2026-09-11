@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
-<title>Envie — Carte live</title>
+<title>La Vibe — Carte live</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;0,900;1,600;1,700&family=Inter:wght@400;500;600;700&family=Pinyon+Script&family=Great+Vibes&family=Alex+Brush&family=Mrs+Saint+Delafield&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
@@ -1856,8 +1856,18 @@
   .cc-registry-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:10px;border:1px solid rgba(255,255,255,.06);border-radius:12px;background:rgba(14,18,30,.9);margin-bottom:6px}.cc-registry-meta{font-size:10px;color:var(--muted);margin-top:2px}.cc-status{font-size:9px;padding:4px 7px;border-radius:999px;background:rgba(255,255,255,.07)}.cc-status.bad{color:#ff7a82;background:rgba(255,89,100,.1)}.cc-status.ok{color:#b9ffcf;background:rgba(78,220,130,.08)}
   .cc-modal{position:fixed;inset:0;z-index:10050;background:rgba(2,4,9,.8);backdrop-filter:blur(8px);display:none;align-items:flex-end}.cc-modal.show{display:flex}.cc-panel{width:100%;max-height:90vh;overflow:auto;background:#0d101d;border:1px solid rgba(194,85,255,.25);border-radius:22px 22px 0 0;padding:16px}.cc-field{display:grid;gap:5px;margin:8px 0}.cc-field label{font-size:10px;color:var(--muted)}.cc-field input,.cc-field select,.cc-field textarea{width:100%;box-sizing:border-box;background:#141a2a;border:1px solid rgba(168,85,247,.2);border-radius:10px;padding:9px;color:var(--text);font:inherit;font-size:11px}.cc-close{float:right;border:0;background:none;color:var(--text);font-size:24px;cursor:pointer}.cc-warning{padding:11px;border-radius:12px;background:rgba(255,176,32,.08);border:1px solid rgba(255,176,32,.2);font-size:10px;line-height:1.45;color:#f5e8c7}
   .cc-badge{display:none;position:absolute;right:8px;top:4px;background:#ff5964;color:white;font-size:8px;line-height:14px;min-width:14px;height:14px;border-radius:99px;text-align:center;font-weight:900}.navbtn-control{position:relative}
+  /* ===== ONGLETS CENTRE CONTROLE ===== */
+  .cc-tabs{display:flex;gap:8px;margin:0 4px 14px;border-bottom:1px solid rgba(255,255,255,.07);overflow-x:auto;padding-bottom:0}
+  .cc-tab-btn{padding:10px 14px;background:none;border:none;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s}
+  .cc-tab-btn.active{color:var(--magenta2);border-bottom-color:var(--magenta2)}
+  .cc-tab-content{display:none}.cc-tab-content.active{display:block}
   @media(min-width:600px){.cc-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.cc-card.wide{grid-column:1/-1}}
 
+  /* ===== ONGLETS CENTRE CONTROL ===== */
+  .cc-tabs{display:flex;gap:8px;margin:0 4px 14px;border-bottom:1px solid rgba(255,255,255,.07);overflow-x:auto;padding-bottom:0}
+  .cc-tab-btn{padding:10px 14px;background:none;border:none;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s}
+  .cc-tab-btn.active{color:var(--magenta2);border-bottom-color:var(--magenta2)}
+  .cc-tab-content{display:none}.cc-tab-content.active{display:block}
 </style>
 
 <style id="mobile-final-lower-only">
@@ -1953,7 +1963,7 @@ window.dbg = function(){};
 
   <!-- ===== SPLASH / CHARGEMENT ===== -->
   <div class="splash-screen" id="splashScreen">
-    <div class="splash-brand">L'Envie<span class="heart">♥</span></div>
+    <div class="splash-brand">La Vibe<span class="heart">♥</span></div>
     <div class="splash-spinner" aria-hidden="true"></div>
     <div class="splash-sub">On repère qui est autour de toi…</div>
   </div>
@@ -1965,7 +1975,7 @@ window.dbg = function(){};
       <img id="btnMenuAvatar" src="" alt="Mon profil" class="topbar-avatar-img">
       <svg id="btnMenuBackIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
     </button>
-    <div class="brand">L'Envie<span class="heart">♥</span></div>
+    <div class="brand">La Vibe<span class="heart">♥</span></div>
     <button class="icon-btn" id="btn-filters-top" aria-label="Filtres">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="16" cy="12" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="10" cy="18" r="2" fill="currentColor" stroke="none"/></svg>
     </button>
@@ -2131,7 +2141,7 @@ window.dbg = function(){};
 
     <div id="discoverSections">
       <div class="discover-section" id="secPartenaires" style="display:none;">
-        <div class="discover-section-head"><h3>⭐ Partenaires Envie</h3><span id="partnerCount"></span></div>
+        <div class="discover-section-head"><h3>⭐ Partenaires La Vibe</h3><span id="partnerCount"></span></div>
         <div class="place-row" id="partnerRow"></div>
       </div>
 
@@ -2280,7 +2290,7 @@ window.dbg = function(){};
         <div class="settings-divider"></div>
         <div class="section-title" style="margin:0 0 8px;">Assistance</div>
         <button class="btn-secondary settings-row" id="settingsHelp"><span class="settings-row-label">❓ Aide et support</span><span class="settings-row-arrow">›</span></button>
-        <button class="btn-secondary settings-row" id="settingsAbout"><span class="settings-row-label">ℹ️ À propos d'Envie</span><span class="settings-row-arrow">›</span></button>
+        <button class="btn-secondary settings-row" id="settingsAbout"><span class="settings-row-label">ℹ️ À propos de La Vibe</span><span class="settings-row-arrow">›</span></button>
 
         <div class="settings-divider"></div>
         <button class="btn-secondary" id="settingsSignOut" style="width:100%;color:#ff6b6b;">Déconnexion</button>
@@ -2363,15 +2373,38 @@ window.dbg = function(){};
   <div class="view" id="view-controle">
     <div class="cc-shell">
       <div class="cc-head"><div><div class="cc-kicker">LA VIBE · OPERATOR CONSOLE</div><div class="cc-title">Centre de contrôle</div><p class="cc-sub">Santé des données, anomalies et modération — sans bloquer le public.</p></div><div class="cc-sync" id="ccSyncState">⏳ Initialisation…</div></div>
-      <div class="cc-grid" id="ccStats"></div>
-      <div class="cc-card wide"><div class="cc-section-head"><h3>🧬 Intégrité du flux</h3><div class="cc-actions"><button class="cc-btn primary" id="ccScanBtn">SCAN MANUEL</button></div></div><div class="cc-health"><div class="cc-health-ring" id="ccHealthRing"><b id="ccHealthScore">—</b></div><div class="cc-health-bars" id="ccHealthBars"></div></div></div>
-      <div class="cc-section"><div class="cc-section-head"><h3>🚨 File d’anomalies</h3><div class="cc-actions"><button class="cc-btn" id="ccFilterAll">TOUTES</button><button class="cc-btn" id="ccFilterCritical">CRITIQUES</button></div></div><div id="ccAlerts"></div></div>
-      <div class="cc-section"><div class="cc-section-head"><h3>📚 Registre des événements</h3><span class="cc-sub" id="ccRegistryCount">0 résultat</span></div><div class="cc-actions" style="margin:7px 0"><button class="cc-btn" id="ccSelectAll">☑️ TOUT SÉLECTIONNER</button><button class="cc-btn" id="ccBulkCorrect">✎ CORRIGER EN SÉRIE</button><button class="cc-btn" id="ccBulkArchive">🗄️ ARCHIVER EXPIRÉS</button><button class="cc-btn" id="ccClearSelection">🧹 EFFACER</button><span class="cc-sub" id="ccSelectedCount">0 sélectionné</span></div><input class="cc-search" id="ccRegistrySearch" placeholder="Rechercher titre, lieu, adresse ou catégorie…"><div class="cc-actions" style="margin:7px 0"><button class="cc-btn" data-ccfilter="all">Tous</button><button class="cc-btn" data-ccfilter="anomaly">Anomalies</button><button class="cc-btn" data-ccfilter="clean">Propres</button><button class="cc-btn" data-ccfilter="expired">Expirés</button></div><div id="ccRegistry"></div></div>
-      <div class="cc-section"><div class="cc-section-head"><h3>📍 Registre des lieux</h3><span class="cc-sub" id="ccVenuesCount">0 résultat</span></div><div class="cc-actions" style="margin:7px 0"><button class="cc-btn primary" id="ccAddVenueBtn">➕ AJOUTER UN LIEU</button></div><input class="cc-search" id="ccVenuesSearch" placeholder="Rechercher nom, quartier ou catégorie…"><div class="cc-actions" style="margin:7px 0"><button class="cc-btn" data-ccvfilter="all">Tous</button><button class="cc-btn" data-ccvfilter="actif">Actifs</button><button class="cc-btn" data-ccvfilter="inactif">Désactivés</button></div><div id="ccVenues"></div></div>
-      <div class="cc-section"><div class="cc-section-head"><h3>📋 Surveillance du Babillard</h3><span class="cc-sub" id="ccBabCount">—</span></div><div id="ccBabillard"></div></div>
-      <div class="cc-section"><div class="cc-section-head"><h3>👤 Profils</h3><span class="cc-sub" id="ccProfilesCount">0 résultat</span></div><div class="cc-actions" style="margin:7px 0"><button class="cc-btn primary" id="ccAddProfilBtn">➕ AJOUTER UN PROFIL DÉMO</button></div><input class="cc-search" id="ccProfilesSearch" placeholder="Rechercher un nom ou un quartier…"><div class="cc-actions" style="margin:7px 0"><button class="cc-btn" data-ccpfilter="all">Tous</button><button class="cc-btn" data-ccpfilter="demo">Démo</button><button class="cc-btn" data-ccpfilter="reel">Comptes réels</button><button class="cc-btn" data-ccpfilter="suspendu">Suspendus / bannis</button></div><div id="ccProfiles"></div></div>
-      <div class="cc-section"><div class="cc-section-head"><h3>🚩 Signalements</h3><span class="cc-sub" id="ccReportsCount">0 résultat</span></div><div class="cc-actions" style="margin:7px 0"><button class="cc-btn" data-ccrfilter="nouveau">Nouveaux</button><button class="cc-btn" data-ccrfilter="tous">Tous</button><button class="cc-btn" data-ccrfilter="traite">Traités</button></div><div id="ccReports"></div></div>
-      <div class="cc-section"><div class="cc-section-head"><h3>🧾 Journal des actions</h3></div><div id="ccAudit" class="cc-card" style="padding:10px">Aucune intervention chargée.</div></div>
+      
+      <div class="cc-tabs">
+        <button class="cc-tab-btn active" data-cc-tab="surveillance">📊 Surveillance</button>
+        <button class="cc-tab-btn" data-cc-tab="lieux">📍 Lieux</button>
+        <button class="cc-tab-btn" data-cc-tab="profils">👤 Profils</button>
+        <button class="cc-tab-btn" data-cc-tab="signalements">🚩 Signalements</button>
+        <button class="cc-tab-btn" data-cc-tab="audit">🧾 Audit</button>
+      </div>
+      
+      <div class="cc-tab-content active" data-cc-tab-content="surveillance">
+        <div class="cc-grid" id="ccStats"></div>
+        <div class="cc-card wide"><div class="cc-section-head"><h3>🧬 Intégrité du flux</h3><div class="cc-actions"><button class="cc-btn primary" id="ccScanBtn">SCAN MANUEL</button></div></div><div class="cc-health"><div class="cc-health-ring" id="ccHealthRing"><b id="ccHealthScore">—</b></div><div class="cc-health-bars" id="ccHealthBars"></div></div></div>
+        <div class="cc-section"><div class="cc-section-head"><h3>🚨 File d'anomalies</h3><div class="cc-actions"><button class="cc-btn" id="ccFilterAll">TOUTES</button><button class="cc-btn" id="ccFilterCritical">CRITIQUES</button></div></div><div id="ccAlerts"></div></div>
+        <div class="cc-section"><div class="cc-section-head"><h3>📚 Registre des événements</h3><span class="cc-sub" id="ccRegistryCount">0 résultat</span></div><div class="cc-actions" style="margin:7px 0"><button class="cc-btn" id="ccSelectAll">☑️ TOUT SÉLECTIONNER</button><button class="cc-btn" id="ccBulkCorrect">✎ CORRIGER EN SÉRIE</button><button class="cc-btn" id="ccBulkArchive">🗄️ ARCHIVER EXPIRÉS</button><button class="cc-btn" id="ccClearSelection">🧹 EFFACER</button><span class="cc-sub" id="ccSelectedCount">0 sélectionné</span></div><input class="cc-search" id="ccRegistrySearch" placeholder="Rechercher titre, lieu, adresse ou catégorie…"><div class="cc-actions" style="margin:7px 0"><button class="cc-btn" data-ccfilter="all">Tous</button><button class="cc-btn" data-ccfilter="anomaly">Anomalies</button><button class="cc-btn" data-ccfilter="clean">Propres</button><button class="cc-btn" data-ccfilter="expired">Expirés</button></div><div id="ccRegistry"></div></div>
+        <div class="cc-section"><div class="cc-section-head"><h3>📋 Surveillance du Babillard</h3><span class="cc-sub" id="ccBabCount">—</span></div><div id="ccBabillard"></div></div>
+      </div>
+      
+      <div class="cc-tab-content" data-cc-tab-content="lieux">
+        <div class="cc-section"><div class="cc-section-head"><h3>📍 Registre des lieux</h3><span class="cc-sub" id="ccVenuesCount">0 résultat</span></div><div class="cc-actions" style="margin:7px 0"><button class="cc-btn primary" id="ccAddVenueBtn">➕ AJOUTER UN LIEU</button></div><input class="cc-search" id="ccVenuesSearch" placeholder="Rechercher nom, quartier ou catégorie…"><div class="cc-actions" style="margin:7px 0"><button class="cc-btn" data-ccvfilter="all">Tous</button><button class="cc-btn" data-ccvfilter="actif">Actifs</button><button class="cc-btn" data-ccvfilter="inactif">Désactivés</button></div><div id="ccVenues"></div></div>
+      </div>
+      
+      <div class="cc-tab-content" data-cc-tab-content="profils">
+        <div class="cc-section"><div class="cc-section-head"><h3>👤 Profils</h3><span class="cc-sub" id="ccProfilesCount">0 résultat</span></div><div class="cc-actions" style="margin:7px 0"><button class="cc-btn primary" id="ccAddProfilBtn">➕ AJOUTER UN PROFIL DÉMO</button></div><input class="cc-search" id="ccProfilesSearch" placeholder="Rechercher un nom ou un quartier…"><div class="cc-actions" style="margin:7px 0"><button class="cc-btn" data-ccpfilter="all">Tous</button><button class="cc-btn" data-ccpfilter="demo">Démo</button><button class="cc-btn" data-ccpfilter="reel">Comptes réels</button><button class="cc-btn" data-ccpfilter="suspendu">Suspendus / bannis</button></div><div id="ccProfiles"></div></div>
+      </div>
+      
+      <div class="cc-tab-content" data-cc-tab-content="signalements">
+        <div class="cc-section"><div class="cc-section-head"><h3>🚩 Signalements</h3><span class="cc-sub" id="ccReportsCount">0 résultat</span></div><div class="cc-actions" style="margin:7px 0"><button class="cc-btn" data-ccrfilter="nouveau">Nouveaux</button><button class="cc-btn" data-ccrfilter="tous">Tous</button><button class="cc-btn" data-ccrfilter="traite">Traités</button></div><div id="ccReports"></div></div>
+      </div>
+      
+      <div class="cc-tab-content" data-cc-tab-content="audit">
+        <div class="cc-section"><div class="cc-section-head"><h3>🧾 Journal des actions</h3></div><div id="ccAudit" class="cc-card" style="padding:10px">Aucune intervention chargée.</div></div>
+      </div>
     </div>
   </div>
 
@@ -2492,7 +2525,7 @@ window.dbg = function(){};
       <div class="status-options" id="myAvailability"><button class="status-option active" data-min="0">🔥 Maintenant</button><button class="status-option" data-min="30">30 min</button><button class="status-option" data-min="60">1 h</button><button class="status-option" data-min="120">Plus tard</button></div>
     </div>
 
-    <div class="section-title">Envie Premium</div>
+    <div class="section-title">La Vibe Premium</div>
     <div class="premium-card" id="premiumCard">
       <div class="row">
         <div>
@@ -2532,7 +2565,7 @@ window.dbg = function(){};
       <small id="referralCountText" style="display:block; margin-top:8px; color:var(--muted2);"></small>
     </div>
 
-    <div class="section-title">Ton score Envie</div>
+    <div class="section-title">Ton score La Vibe</div>
     <div class="v21-strip">
       <div class="row"><div><b id="v21Level">Niveau 1 · Étincelle</b><small id="v21XpText">0 XP · Active ton statut et crée ton premier plan.</small></div><span class="xp-pill" id="v21XpPill">0 XP</span></div>
       <div class="v21-progress"><i id="v21XpBar"></i></div>
@@ -2644,7 +2677,7 @@ window.dbg = function(){};
                   fill="url(#flameInner7)" opacity=".65" filter="url(#flameGlow7)"/>
           </svg>
         </div>
-        <div class="auth-hero-flame">L'Envie</div>
+        <div class="auth-hero-flame">La Vibe</div>
         <div class="auth-hero-live"><span class="dot"></span>EN DIRECT</div>
         <p class="auth-hero-tagline">l'énergie de <b>Montréal</b></p>
       </div>
@@ -2652,7 +2685,7 @@ window.dbg = function(){};
         <div class="auth-tab active" id="authTabSignin">Se connecter</div>
         <div class="auth-tab" id="authTabSignup">Créer un compte</div>
       </div>
-      <h2 id="authTitle" class="auth-hero-subtitle" style="display:none;">Bienvenue sur Envie</h2>
+      <h2 id="authTitle" class="auth-hero-subtitle" style="display:none;">Bienvenue sur La Vibe</h2>
       <p class="auth-hero-desc" style="display:none;">Connecte-toi pour garder ton profil, tes matchs et tes messages — même en changeant d'appareil.</p>
       <div class="auth-field-label">Email</div>
       <div class="auth-field">
@@ -2699,7 +2732,7 @@ window.dbg = function(){};
   <div class="consent-overlay" id="launchOverlay" style="z-index:5000;">
     <div class="consent-sheet" style="text-align:center;">
       <div class="encounter-kicker">🔥 ÇA COMMENCE BIENTÔT</div>
-      <h2>Envie ouvre dans</h2>
+      <h2>La Vibe ouvre dans</h2>
       <div id="launchCountdown" style="font-size:34px;font-weight:900;letter-spacing:1px;margin:14px 0 6px;color:var(--flame);"></div>
       <p>Reviens à l'heure H — ou invite déjà tes ami·e·s pour que la carte explose dès l'ouverture.</p>
       <div class="referral-code" id="launchReferralCode" style="margin:12px auto 10px;max-width:200px;"></div>
@@ -2809,7 +2842,7 @@ window.dbg = function(){};
   <div class="paywall-overlay" id="paywallOverlay">
     <div class="paywall-sheet">
       <button class="mini-close" id="paywallClose" style="float:right;">×</button>
-      <div class="paywall-kicker">👑 Envie PREMIUM</div>
+      <div class="paywall-kicker">👑 La Vibe PREMIUM</div>
       <h2 class="display">Sors du lot maintenant.</h2>
       <p class="sub">Débloque tout ce qu'il te faut pour transformer une vibe en vraie rencontre.</p>
       <div class="paywall-perks">
@@ -4005,7 +4038,7 @@ document.getElementById('paywallActivate').addEventListener('click', ()=>{
   } else {
     subStatus = 'active';
     subPeriodEnd = now + PLAN_PRICES[subPlan].days*24*60*60*1000;
-    showToast('👑 Premium activé — profite de tout Envie !');
+    showToast('👑 Premium activé — profite de tout La Vibe !');
   }
   saveSub(); recomputeSub();
   closePaywall();
@@ -4605,7 +4638,7 @@ function setAuthMode(mode){
   document.getElementById('authTabSignin').classList.toggle('active', mode==='signin');
   document.getElementById('authTabSignup').classList.toggle('active', mode==='signup');
   document.getElementById('authSubmitBtn').textContent = mode==='signup' ? 'Créer mon compte' : 'Se connecter';
-  document.getElementById('authTitle').textContent = mode==='signup' ? 'Crée ton compte' : 'Bienvenue sur Envie';
+  document.getElementById('authTitle').textContent = mode==='signup' ? 'Crée ton compte' : 'Bienvenue sur La Vibe';
   document.getElementById('authSwitchText').textContent = mode==='signup' ? 'Déjà membre ?' : 'Pas encore membre ?';
   document.getElementById('authSwitchLink').textContent = mode==='signup' ? 'Se connecter' : "S'inscrire";
   document.getElementById('authForgotLink').style.display = mode==='signup' ? 'none' : 'block';
@@ -4738,7 +4771,7 @@ document.getElementById('cpConfirm').addEventListener('click', async ()=>{
   const errEl = document.getElementById('cpError');
   errEl.textContent = '';
   if(!name){ errEl.textContent = 'Entre ton prénom.'; return; }
-  if(!age || age < 18){ errEl.textContent = 'Tu dois avoir 18 ans ou plus pour utiliser Envie.'; return; }
+  if(!age || age < 18){ errEl.textContent = 'Tu dois avoir 18 ans ou plus pour utiliser La Vibe.'; return; }
   if(!cpSexe){ errEl.textContent = 'Choisis une option dans "Tu es".'; return; }
   const overlay = document.getElementById('completeProfileOverlay');
   const userId = overlay.dataset.userId;
@@ -5378,7 +5411,7 @@ document.getElementById('settingsOverlay').addEventListener('click', e=>{ if(e.t
 document.getElementById('settingsMyProfile').addEventListener('click', ()=>{ closeSettings(); switchTab('profil'); });
 document.getElementById('settingsPrivacyDocs').addEventListener('click', ()=> showToast('Bientôt disponible'));
 document.getElementById('settingsHelp').addEventListener('click', ()=> showToast('Bientôt disponible'));
-document.getElementById('settingsAbout').addEventListener('click', ()=> showToast('Envie — Be there. Now.'));
+document.getElementById('settingsAbout').addEventListener('click', ()=> showToast('La Vibe — Be there. Now.'));
 document.getElementById('settingsSignOut').addEventListener('click', ()=>{ closeSettings(); signOutUser(); });
 
 // Préférences locales simples (visuelles) — persistées sur cet appareil.
@@ -7027,6 +7060,29 @@ if(document.readyState === 'loading'){
 } else {
   setTimeout(initVenues, 500);
 }
+
+/* ===== GESTION ONGLETS CENTRE CONTRÔLE ===== */
+document.querySelectorAll('.cc-tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tabName = btn.getAttribute('data-cc-tab');
+    document.querySelectorAll('.cc-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.cc-tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelector(`[data-cc-tab-content="${tabName}"]`).classList.add('active');
+  });
+});
+
+
+/* ===== GESTION DES ONGLETS CENTRE CONTROLE ===== */
+document.querySelectorAll('.cc-tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tabName = btn.getAttribute('data-cc-tab');
+    document.querySelectorAll('.cc-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.cc-tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelector(`[data-cc-tab-content="${tabName}"]`).classList.add('active');
+  });
+});
 </script>
 </body>
 </html>
