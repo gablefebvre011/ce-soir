@@ -1851,7 +1851,7 @@
   .cc-card{background:linear-gradient(145deg,rgba(20,25,42,.95),rgba(13,16,29,.96));border:1px solid rgba(168,85,247,.18);border-radius:17px;padding:13px;box-shadow:0 8px 28px rgba(0,0,0,.18)}
   .cc-card.wide{grid-column:1/-1}.cc-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}.cc-num{font-size:25px;font-weight:900;margin-top:3px}.cc-mini{font-size:10px;color:var(--muted);margin-top:2px}
   .cc-health{display:flex;align-items:center;gap:12px}.cc-health-ring{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--magenta2) var(--health,0%),rgba(255,255,255,.08) 0);position:relative;flex:none}.cc-health-ring:after{content:'';position:absolute;inset:7px;background:#0d101d;border-radius:50%}.cc-health-ring b{position:relative;z-index:1;font-size:14px}.cc-health-bars{flex:1}.cc-bar{display:flex;justify-content:space-between;font-size:10px;margin:4px 0}.cc-progress{height:5px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden}.cc-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--magenta),var(--magenta2));border-radius:99px}
-  .cc-section{margin-top:11px}.cc-section-head{display:flex;justify-content:space-between;align-items:center;margin:0 4px 7px}.cc-section-head h3{font-size:13px;margin:0}.cc-actions{display:flex;gap:6px;flex-wrap:wrap}.cc-btn{border:1px solid rgba(194,85,255,.25);background:rgba(154,31,240,.1);color:var(--text);border-radius:11px;padding:8px 10px;font-size:10px;font-weight:800;cursor:pointer}.cc-btn.primary{background:linear-gradient(135deg,var(--magenta),var(--violet));border-color:transparent}.cc-search{width:100%;box-sizing:border-box;background:rgba(17,22,38,.95);border:1px solid rgba(168,85,247,.2);color:var(--text);border-radius:12px;padding:10px;font:inherit;font-size:11px;outline:none}
+  .cc-section{margin-top:11px}.cc-section-head{display:flex;justify-content:space-between;align-items:center;margin:0 4px 7px}.cc-section-head h3{font-size:13px;margin:0}.cc-actions{display:flex;gap:6px;flex-wrap:wrap}.cc-btn{border:1px solid rgba(194,85,255,.25);background:rgba(154,31,240,.1);color:var(--text);border-radius:11px;padding:8px 10px;font-size:10px;font-weight:800;cursor:pointer}.cc-btn.primary{background:linear-gradient(135deg,var(--magenta),var(--violet));border-color:transparent}.cc-btn.active{background:rgba(194,85,255,.35);border-color:var(--magenta2,#c255ff);color:#fff}.cc-search{width:100%;box-sizing:border-box;background:rgba(17,22,38,.95);border:1px solid rgba(168,85,247,.2);color:var(--text);border-radius:12px;padding:10px;font:inherit;font-size:11px;outline:none}
   .cc-alert{display:flex;gap:9px;align-items:flex-start;background:rgba(16,20,34,.96);border:1px solid rgba(255,255,255,.07);border-left:3px solid var(--magenta2);border-radius:13px;padding:10px;margin-bottom:7px}.cc-alert.critical{border-left-color:#ff5964}.cc-alert.warn{border-left-color:#ffb020}.cc-alert.info{border-left-color:#5fb8ff}.cc-alert-main{min-width:0;flex:1}.cc-alert-title{font-size:11px;font-weight:800}.cc-alert-detail{font-size:10px;color:var(--muted);margin-top:2px}.cc-alert button{flex:none}
   .cc-registry-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:10px;border:1px solid rgba(255,255,255,.06);border-radius:12px;background:rgba(14,18,30,.9);margin-bottom:6px}.cc-registry-meta{font-size:10px;color:var(--muted);margin-top:2px}.cc-status{font-size:9px;padding:4px 7px;border-radius:999px;background:rgba(255,255,255,.07)}.cc-status.bad{color:#ff7a82;background:rgba(255,89,100,.1)}.cc-status.ok{color:#b9ffcf;background:rgba(78,220,130,.08)}
   .cc-modal{position:fixed;inset:0;z-index:10050;background:rgba(2,4,9,.8);backdrop-filter:blur(8px);display:none;align-items:flex-end}.cc-modal.show{display:flex}.cc-panel{width:100%;max-height:90vh;overflow:auto;background:#0d101d;border:1px solid rgba(194,85,255,.25);border-radius:22px 22px 0 0;padding:16px}.cc-field{display:grid;gap:5px;margin:8px 0}.cc-field label{font-size:10px;color:var(--muted)}.cc-field input,.cc-field select,.cc-field textarea{width:100%;box-sizing:border-box;background:#141a2a;border:1px solid rgba(168,85,247,.2);border-radius:10px;padding:9px;color:var(--text);font:inherit;font-size:11px}.cc-close{float:right;border:0;background:none;color:var(--text);font-size:24px;cursor:pointer}.cc-warning{padding:11px;border-radius:12px;background:rgba(255,176,32,.08);border:1px solid rgba(255,176,32,.2);font-size:10px;line-height:1.45;color:#f5e8c7}
@@ -1862,12 +1862,6 @@
   .cc-tab-btn.active{color:var(--magenta2);border-bottom-color:var(--magenta2)}
   .cc-tab-content{display:none}.cc-tab-content.active{display:block}
   @media(min-width:600px){.cc-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.cc-card.wide{grid-column:1/-1}}
-
-  /* ===== ONGLETS CENTRE CONTROL ===== */
-  .cc-tabs{display:flex;gap:8px;margin:0 4px 14px;border-bottom:1px solid rgba(255,255,255,.07);overflow-x:auto;padding-bottom:0}
-  .cc-tab-btn{padding:10px 14px;background:none;border:none;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s}
-  .cc-tab-btn.active{color:var(--magenta2);border-bottom-color:var(--magenta2)}
-  .cc-tab-content{display:none}.cc-tab-content.active{display:block}
 </style>
 
 <style id="mobile-final-lower-only">
@@ -2386,7 +2380,7 @@ window.dbg = function(){};
         <div class="cc-grid" id="ccStats"></div>
         <div class="cc-card wide"><div class="cc-section-head"><h3>🧬 Intégrité du flux</h3><div class="cc-actions"><button class="cc-btn primary" id="ccScanBtn">SCAN MANUEL</button></div></div><div class="cc-health"><div class="cc-health-ring" id="ccHealthRing"><b id="ccHealthScore">—</b></div><div class="cc-health-bars" id="ccHealthBars"></div></div></div>
         <div class="cc-section"><div class="cc-section-head"><h3>🚨 File d'anomalies</h3><div class="cc-actions"><button class="cc-btn" id="ccFilterAll">TOUTES</button><button class="cc-btn" id="ccFilterCritical">CRITIQUES</button></div></div><div id="ccAlerts"></div></div>
-        <div class="cc-section"><div class="cc-section-head"><h3>📚 Registre des événements</h3><span class="cc-sub" id="ccRegistryCount">0 résultat</span></div><div class="cc-actions" style="margin:7px 0"><button class="cc-btn" id="ccSelectAll">☑️ TOUT SÉLECTIONNER</button><button class="cc-btn" id="ccBulkCorrect">✎ CORRIGER EN SÉRIE</button><button class="cc-btn" id="ccBulkArchive">🗄️ ARCHIVER EXPIRÉS</button><button class="cc-btn" id="ccClearSelection">🧹 EFFACER</button><span class="cc-sub" id="ccSelectedCount">0 sélectionné</span></div><input class="cc-search" id="ccRegistrySearch" placeholder="Rechercher titre, lieu, adresse ou catégorie…"><div class="cc-actions" style="margin:7px 0"><button class="cc-btn" data-ccfilter="all">Tous</button><button class="cc-btn" data-ccfilter="anomaly">Anomalies</button><button class="cc-btn" data-ccfilter="clean">Propres</button><button class="cc-btn" data-ccfilter="expired">Expirés</button></div><div id="ccRegistry"></div></div>
+        <div class="cc-section"><div class="cc-section-head"><h3>📚 Registre des événements</h3><span class="cc-sub" id="ccRegistryCount">0 résultat</span></div><div class="cc-actions" style="margin:7px 0"><button class="cc-btn" id="ccSelectAll">☑️ TOUT SÉLECTIONNER</button><button class="cc-btn" id="ccBulkCorrect">✎ CORRIGER EN SÉRIE</button><button class="cc-btn" id="ccBulkArchive">🗄️ ARCHIVER EXPIRÉS</button><button class="cc-btn" id="ccClearSelection">🧹 EFFACER</button><span class="cc-sub" id="ccSelectedCount">0 sélectionné</span></div><input class="cc-search" id="ccRegistrySearch" placeholder="Rechercher titre, lieu, adresse ou catégorie…"><div class="cc-actions" id="ccRegistryFilters" style="margin:7px 0"><button class="cc-btn active" data-ccfilter="all">Tous</button><button class="cc-btn" data-ccfilter="anomaly">Anomalies</button><button class="cc-btn" data-ccfilter="clean">Propres</button><button class="cc-btn" data-ccfilter="expired">Expirés</button></div><div id="ccRegistry"></div></div>
         <div class="cc-section"><div class="cc-section-head"><h3>📋 Surveillance du Babillard</h3><span class="cc-sub" id="ccBabCount">—</span></div><div id="ccBabillard"></div></div>
       </div>
       
@@ -6051,7 +6045,7 @@ async function ccOpen(){
   ccRender();
 }
 
-document.getElementById('ccScanBtn')?.addEventListener('click',ccScan);document.getElementById('ccRegistrySearch')?.addEventListener('input',ccRenderRegistry);document.getElementById('ccFilterAll')?.addEventListener('click',()=>{CC_CRITICAL_ONLY=false;ccRenderAlerts()});document.getElementById('ccFilterCritical')?.addEventListener('click',()=>{CC_CRITICAL_ONLY=true;ccRenderAlerts()});document.querySelectorAll('[data-ccfilter]').forEach(b=>b.addEventListener('click',()=>{CC_FILTER=b.dataset.ccfilter;ccRenderRegistry()}));
+document.getElementById('ccScanBtn')?.addEventListener('click',ccScan);document.getElementById('ccRegistrySearch')?.addEventListener('input',ccRenderRegistry);document.getElementById('ccFilterAll')?.addEventListener('click',()=>{CC_CRITICAL_ONLY=false;ccRenderAlerts()});document.getElementById('ccFilterCritical')?.addEventListener('click',()=>{CC_CRITICAL_ONLY=true;ccRenderAlerts()});document.getElementById('ccRegistryFilters')?.addEventListener('click',(e)=>{const b=e.target.closest('[data-ccfilter]');if(!b)return;CC_FILTER=b.dataset.ccfilter;document.querySelectorAll('#ccRegistryFilters [data-ccfilter]').forEach(x=>x.classList.toggle('active',x===b));ccRenderRegistry();});
 document.getElementById('navControlBtn')?.addEventListener('click',()=>{ closeSettings(); ccOpen(); });
 
 /* ---- LIEUX (admin CRUD) ---- */
@@ -7062,18 +7056,6 @@ if(document.readyState === 'loading'){
 }
 
 /* ===== GESTION ONGLETS CENTRE CONTRÔLE ===== */
-document.querySelectorAll('.cc-tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const tabName = btn.getAttribute('data-cc-tab');
-    document.querySelectorAll('.cc-tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.cc-tab-content').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelector(`[data-cc-tab-content="${tabName}"]`).classList.add('active');
-  });
-});
-
-
-/* ===== GESTION DES ONGLETS CENTRE CONTROLE ===== */
 document.querySelectorAll('.cc-tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const tabName = btn.getAttribute('data-cc-tab');
