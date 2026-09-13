@@ -191,7 +191,7 @@
   .map-wrap{ position:relative; flex:1; overflow:hidden; }
   #leafletMap{ position:absolute; inset:0; background:#060a14; transform:translateZ(0); }
   /* Carte dédiée du Radar : lieux, événements et activités uniquement. */
-  .radar-map-card{margin:14px 14px 24px;border:1px solid var(--line);border-radius:24px;overflow:hidden;background:#060a14;box-shadow:0 16px 40px rgba(0,0,0,.22);flex-shrink:0;}
+  .radar-map-card{margin:0 0 20px;border:0;border-radius:0;overflow:hidden;background:#060a14;flex-shrink:0;}
   .radar-map-head{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;background:linear-gradient(180deg,#10192c,#0b1221);border-bottom:1px solid var(--line);}
   .radar-map-head strong{font-size:14px}.radar-map-head span{font-size:11px;color:var(--muted);}
   #radarLeafletMap{height:420px;background:#060a14;position:relative;}
@@ -201,35 +201,101 @@
      La taille est fixée par un ratio (aspect-ratio), plus par un calcul JS basé sur le
      défilement : c'est ce calcul qui provoquait l'agrandissement anormal du cadre. */
   .radar-hint{padding:2px 18px 10px;text-align:center;font-size:12.5px;line-height:1.4;color:var(--muted2);}
-  .radar-scope{position:relative;width:100%;aspect-ratio:1/1;max-height:58vh;min-height:280px;background:#000;overflow:hidden;}
+  .radar-scope{position:relative;width:100%;aspect-ratio:1/1;max-height:74vh;min-height:280px;background:#000;overflow:hidden;}
+  /* Échelle de distance en kilomètres, alignée sur le rayon sud (6h) du cadran, un repère par anneau */
+  .radar-scale{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none;z-index:4;}
+  .radar-scale-tick{position:absolute;left:0;transform:translate(-50%,-50%);font-size:9.5px;font-weight:700;color:rgba(0,224,255,.85);background:rgba(2,10,14,.65);padding:1px 5px;border-radius:6px;letter-spacing:.2px;white-space:nowrap;}
   .radar-scope::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 50%, rgba(0,224,255,.06) 0%, rgba(0,0,0,0) 62%);pointer-events:none;}
-  .radar-dial{position:absolute;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle at 50% 50%, rgba(0,50,65,.5) 0%, rgba(2,10,14,.9) 70%, #000 100%);box-shadow:inset 0 0 40px rgba(0,0,0,.9), 0 0 24px rgba(0,224,255,.1);}
+  .radar-dial{position:absolute;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle at 50% 50%, rgba(0,60,80,.6) 0%, rgba(2,15,20,.92) 65%, #000 100%);box-shadow:inset 0 0 50px rgba(0,0,0,.95), 0 0 30px rgba(0,224,255,.15), inset 0 0 30px rgba(0,224,255,.05);}
   .radar-ticks{position:absolute;inset:0;border-radius:50%;pointer-events:none;
     background:repeating-conic-gradient(from 0deg, rgba(0,224,255,.7) 0deg .6deg, transparent .6deg 15deg);
     -webkit-mask-image:radial-gradient(circle, transparent 0 90%, black 91% 100%);
     mask-image:radial-gradient(circle, transparent 0 90%, black 91% 100%);}
+  /* Repères de cap (degrés 000-350) autour du cadran, façon boussole */
+  .radar-bearing{position:absolute;inset:0;pointer-events:none;z-index:3;}
+  .radar-bearing-label{
+    position:absolute;left:50%;top:50%;transform-origin:0 0;
+    font-size:10px;font-weight:800;letter-spacing:.5px;color:#7ff6ff;
+    text-shadow:0 0 6px rgba(0,224,255,.75);white-space:nowrap;
+  }
+  .radar-bearing-tick{
+    position:absolute;left:50%;top:50%;transform-origin:0 0;
+    width:1px;background:rgba(0,224,255,.55);
+  }
+  .radar-bearing-tick.major{background:rgba(0,224,255,.9);}
+  /* Marqueur "Toi" en forme de flèche de cap (remplace l'ancien point rond) */
+  .radar-you-arrow{
+    width:0;height:0;
+    border-left:9px solid transparent;border-right:9px solid transparent;
+    border-bottom:20px solid #fff;
+    filter:drop-shadow(0 0 6px #00e0ff) drop-shadow(0 0 14px rgba(0,224,255,.85));
+    animation:radarYouPulse 1.8s ease-in-out infinite;
+  }
+  /* Toggle ÉVÉNEMENTS / LIEUX (filtre du type de point affiché) */
+  .radar-type-toggle{display:flex;gap:8px;margin-left:auto;flex-shrink:0;}
+  .radar-type-btn{
+    display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:999px;
+    font-size:11px;font-weight:800;letter-spacing:.3px;cursor:pointer;
+    background:rgba(5,10,27,.7);border:1px solid rgba(255,255,255,.14);color:var(--muted);
+    transition:opacity .15s ease, border-color .15s ease, box-shadow .15s ease;
+  }
+  .radar-type-btn .rtb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .radar-type-btn[data-type="events"] .rtb-dot{background:#ff4bd8;box-shadow:0 0 8px #ff4bd8;}
+  .radar-type-btn[data-type="places"] .rtb-dot{background:#00e0ff;box-shadow:0 0 8px #00e0ff;}
+  .radar-type-btn.active[data-type="events"]{border-color:#ff4bd8;color:#fff;box-shadow:0 0 14px rgba(255,75,216,.35);}
+  .radar-type-btn.active[data-type="places"]{border-color:#00e0ff;color:#fff;box-shadow:0 0 14px rgba(0,224,255,.35);}
+  /* Point "vedette" : plus gros, avec anneau coloré selon la catégorie */
+  .radar-blip.featured{width:24px;height:24px;}
+  .radar-blip.featured::before{
+    content:'';position:absolute;left:50%;top:50%;width:38px;height:38px;margin:-19px 0 0 -19px;
+    border-radius:50%;border:2px solid currentColor;opacity:.55;pointer-events:none;
+    animation:radarFeaturedPulse 2.2s ease-in-out infinite;
+  }
+  @keyframes radarFeaturedPulse{ 0%,100%{ transform:scale(1); opacity:.55; } 50%{ transform:scale(1.14); opacity:.28; } }
+  .radar-blip.featured.event{color:#ff4bd8;}
+  .radar-blip.featured.place{color:#00e0ff;}
+  .radar-spokes{position:absolute;inset:0;pointer-events:none;z-index:1;}
+  .radar-spoke{position:absolute;left:50%;bottom:50%;width:1px;margin-left:-0.5px;transform-origin:50% 100%;background:rgba(0,224,255,.14);}
+  .radar-spoke.major{width:1px;background:rgba(0,224,255,.26);}
   .radar-ring{position:absolute;left:50%;top:50%;border:1px solid rgba(0,224,255,.3);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;}
   .radar-ring.r1{width:25%;height:25%;}
   .radar-ring.r2{width:50%;height:50%;}
   .radar-ring.r3{width:75%;height:75%;}
   .radar-ring.r4{width:100%;height:100%;border-color:rgba(0,224,255,.4);}
+  .radar-ring.glow{width:100%;height:100%;border:2px solid #39ff8a;box-shadow:0 0 10px rgba(57,255,138,.9), 0 0 26px rgba(57,255,138,.6), inset 0 0 14px rgba(57,255,138,.35);}
+  .icon-btn.topbar-details-btn{
+    width:auto; min-width:0; padding:0 13px 0 10px; border-radius:20px; gap:5px;
+    background:rgba(0,224,255,.12); border:1px solid rgba(0,224,255,.45); color:#00E0FF;
+    font-size:11.5px; font-weight:800; letter-spacing:.2px;
+    box-shadow:0 0 14px rgba(0,224,255,.25);
+  }
+  .icon-btn.topbar-details-btn svg{ width:16px; height:16px; flex-shrink:0; }
+  .radar-details-popover{
+    position:fixed; top:64px; right:14px; z-index:60; width:min(78vw,300px);
+    background:linear-gradient(180deg,#0c1626,#070d18); border:1px solid rgba(0,224,255,.35);
+    border-radius:16px; padding:13px 15px; box-shadow:0 16px 40px rgba(0,0,0,.5), 0 0 24px rgba(0,224,255,.12);
+    opacity:0; transform:translateY(-6px); pointer-events:none; transition:opacity .18s ease, transform .18s ease;
+  }
+  .radar-details-popover.show{ opacity:1; transform:translateY(0); pointer-events:auto; }
+  .radar-details-popover p{ margin:0 0 9px; font-size:12px; line-height:1.45; color:var(--muted2); }
+  .radar-details-popover p:last-child{ margin-bottom:0; }
   .radar-crosshair{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:100%;height:100%;pointer-events:none;}
   .radar-crosshair::before,.radar-crosshair::after{content:'';position:absolute;background:rgba(0,224,255,.16);}
   .radar-crosshair::before{left:50%;top:0;bottom:0;width:1px;transform:translateX(-50%);}
   .radar-crosshair::after{top:50%;left:0;right:0;height:1px;transform:translateY(-50%);}
   .radar-sweep{position:absolute;left:50%;top:50%;width:100%;height:100%;border-radius:50%;transform:translate(-50%,-50%);
-    background:conic-gradient(from 0deg, rgba(0,224,255,.55), rgba(0,224,255,.16) 18deg, rgba(0,224,255,0) 42deg, rgba(0,224,255,0) 360deg);
-    animation:radarSweepSpin 5s linear infinite; pointer-events:none; mix-blend-mode:screen;}
+    background:conic-gradient(from 0deg, rgba(0,224,255,.8) 0deg, rgba(0,224,255,.5) 10deg, rgba(0,224,255,.2) 25deg, rgba(0,224,255,0) 50deg);
+    animation:radarSweepSpin 4s linear infinite; pointer-events:none; mix-blend-mode:screen; box-shadow:inset 0 0 50px rgba(0,224,255,.4);}
   @keyframes radarSweepSpin{ to{ transform:translate(-50%,-50%) rotate(360deg); } }
   .radar-you{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:4px;z-index:5;pointer-events:none;}
   .radar-you-dot{width:11px;height:11px;border-radius:50%;background:var(--flame);border:2px solid #fff;box-shadow:0 0 0 6px rgba(255,94,58,.2),0 0 16px rgba(255,94,58,.9);animation:radarYouPulse 1.8s ease-in-out infinite;}
   .radar-you-label{font-size:10px;font-weight:700;color:#fff;background:rgba(0,0,0,.55);padding:1px 6px;border-radius:8px;letter-spacing:.3px;}
   @keyframes radarYouPulse{ 0%,100%{ box-shadow:0 0 0 6px rgba(255,94,58,.2),0 0 16px rgba(255,94,58,.9);} 50%{ box-shadow:0 0 0 10px rgba(255,94,58,.08),0 0 22px rgba(255,94,58,1);} }
   .radar-blips{position:absolute;inset:0;pointer-events:none;}
-  .radar-blip{position:absolute;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;cursor:pointer;pointer-events:auto;animation:radarBlipPulse 2.4s ease-in-out infinite;transition:opacity .2s ease, filter .2s ease, width .18s ease, height .18s ease, background .18s ease, box-shadow .18s ease;}
-  .radar-blip.event{background:#FF6FD8;box-shadow:0 0 0 5px rgba(255,111,216,.16),0 0 14px rgba(255,111,216,.95);}
-  .radar-blip.place{background:#00E0FF;box-shadow:0 0 0 5px rgba(0,224,255,.16),0 0 14px rgba(0,224,255,.95);}
-  @keyframes radarBlipPulse{ 0%,100%{ transform:translate(-50%,-50%) scale(1); opacity:1;} 50%{ transform:translate(-50%,-50%) scale(1.18); opacity:.75;} }
+  .radar-blip{position:absolute;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;cursor:pointer;pointer-events:auto;animation:radarBlipPulse 2.4s ease-in-out infinite;transition:opacity .2s ease, filter .2s ease, width .18s ease, height .18s ease, background .18s ease, box-shadow .18s ease;}
+  .radar-blip.event{background:#FF6FD8;box-shadow:0 0 0 6px rgba(255,111,216,.15),0 0 16px rgba(255,111,216,.9), 0 0 24px rgba(255,111,216,.5);}
+  .radar-blip.place{background:#00E0FF;box-shadow:0 0 0 6px rgba(0,224,255,.15),0 0 16px rgba(0,224,255,.9), 0 0 24px rgba(0,224,255,.5);}
+  @keyframes radarBlipPulse{ 0%,100%{ transform:translate(-50%,-50%) scale(1); opacity:1;} 50%{ transform:translate(-50%,-50%) scale(1.22); opacity:.8;} }
   /* Point sélectionné : grossit, devient blanc, étiquette visible — sélection sans équivoque */
   .radar-blip.is-active{
     animation-play-state:paused;z-index:9;
@@ -441,10 +507,61 @@
     white-space:nowrap; pointer-events:none; z-index:11;
   }
 
+
+  /* Lecteur compact "radio flottante" : capsule pleine largeur, juste sous le babillard électronique
+     (design calqué sur la maquette de référence — console hi-tech cyan/violette) */
+  .music-mini-bar{
+    position:absolute; top:111px; left:14px; right:14px; z-index:901;
+    display:flex; align-items:center; gap:10px; padding:10px 44px 10px 12px;
+    border-radius:26px; border:1px solid rgba(0,224,255,.4);
+    background:linear-gradient(165deg, rgba(14,22,34,.97), rgba(3,7,13,.98));
+    box-shadow:0 10px 30px rgba(0,0,0,.5), 0 0 26px rgba(0,190,255,.16), inset 0 0 0 1px rgba(0,224,255,.06);
+    color:#fff; text-align:left; cursor:pointer; overflow:hidden;
+  }
+  .music-mini-bar::after{ content:''; position:absolute; left:16%; right:16%; bottom:0; height:2px; background:linear-gradient(90deg,transparent,rgba(0,224,255,.85),transparent); box-shadow:0 0 10px rgba(0,224,255,.7); }
+  .mmb-left{ display:flex; align-items:center; gap:9px; flex:1 1 auto; min-width:0; }
+  .mmb-orb{
+    width:38px; height:38px; flex:0 0 38px; border-radius:50%; position:relative; overflow:hidden;
+    background:radial-gradient(circle at 35% 30%, #8a6bff, #2b1d63 55%, #0a0716 100%);
+    box-shadow:0 0 0 1px rgba(140,120,255,.4), 0 0 14px rgba(122,92,255,.55);
+  }
+  .mmb-orb::after{ content:''; position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 65% 70%, rgba(0,224,255,.55), transparent 60%); animation:consoleOrbSpin 6s linear infinite; }
+  .mmb-meta{ min-width:0; display:flex; flex-direction:column; line-height:1.15; }
+  .mmb-meta b{ font-size:12.5px; font-weight:800; text-transform:uppercase; letter-spacing:.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mmb-meta em{ font-size:9px; font-style:normal; letter-spacing:.4px; color:var(--muted2); text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
+  .mmb-bmt{ display:flex; align-items:center; gap:4px; margin-top:3px; font-size:7.5px; font-weight:800; letter-spacing:.07em; color:#5fd8ff; opacity:.85; white-space:nowrap; }
+  .mmb-transport{ display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+  .mmb-tbtn{ background:none; border:none; color:#8fb9c9; width:22px; height:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
+  .mmb-tbtn svg{ width:16px; height:16px; }
+  .mmb-tbtn:active{ transform:scale(.88); }
+  .mmb-play{
+    width:38px; height:38px; flex:0 0 38px; border-radius:50%; border:1px solid rgba(0,224,255,.5);
+    background:radial-gradient(circle at 35% 30%, #0a1620, #050b12 70%);
+    color:#5fe8ff; display:flex; align-items:center; justify-content:center; cursor:pointer;
+    box-shadow:0 0 0 1px rgba(0,224,255,.15) inset, 0 0 16px rgba(0,200,255,.45);
+  }
+  .mmb-play svg{ width:15px; height:15px; filter:drop-shadow(0 0 4px rgba(0,224,255,.8)); }
+  .mmb-play:active{ transform:scale(.94); }
+  .mmb-visual{ flex:1 1 auto; min-width:0; max-width:150px; }
+  .music-mini-eq{ width:100%; height:26px; display:flex; align-items:flex-end; gap:2px; overflow:hidden; }
+  .music-mini-eq i{ flex:1; min-height:3px; border-radius:3px 3px 0 0; background:linear-gradient(180deg,#4fd1ff,#1a8dff); box-shadow:0 0 5px rgba(0,180,255,.35); }
+  .music-mini-eq i:nth-child(3n){ background:linear-gradient(180deg,#7CFFB2,#18b56f); box-shadow:0 0 5px rgba(70,255,170,.35); }
+  .music-mini-eq i:nth-child(4n){ background:linear-gradient(180deg,#b39bff,#6c4fe0); box-shadow:0 0 5px rgba(150,120,255,.35); }
+  .mmb-wave{ width:100%; height:9px; display:block; margin-top:2px; opacity:.75; }
+  .mmb-wave polyline{ fill:none; stroke:#5fe8ff; stroke-width:1.2; filter:drop-shadow(0 0 3px rgba(95,232,255,.8)); }
+  .mmb-progress-row{ display:flex; align-items:center; gap:5px; margin-top:3px; }
+  .mmb-progress-row span{ font-size:8px; font-weight:700; color:var(--muted2); flex-shrink:0; }
+  .mmb-progress{ flex:1; height:2px; border-radius:2px; background:rgba(255,255,255,.1); overflow:hidden; }
+  .mmb-progress i{ display:block; height:100%; width:0%; background:linear-gradient(90deg,#4fd1ff,#5fe8ff); box-shadow:0 0 5px rgba(95,232,255,.7); }
+  .mmb-icons{ position:absolute; top:8px; right:8px; display:flex; flex-direction:column; gap:6px; z-index:2; }
+  .mmb-icon-btn{ width:20px; height:20px; display:flex; align-items:center; justify-content:center; background:none; border:none; color:#7fb9cf; cursor:pointer; padding:0; }
+  .mmb-icon-btn svg{ width:15px; height:15px; }
+  .mmb-icon-btn:active{ transform:scale(.88); }
+
   /* map top controls */
   .map-controls{
-    position:absolute; top:114px; right:14px; z-index:900;
-    display:flex; flex-direction:column; gap:10px; align-items:flex-end;
+    position:absolute; right:14px; bottom:108px; z-index:900;
+    display:flex; flex-direction:column; gap:12px; align-items:flex-end;
     transform:translateZ(0);
   }
   .live-pill{
@@ -465,10 +582,10 @@
   .legend{
     position:absolute; left:14px; bottom:calc(76px + env(safe-area-inset-bottom) + 20px); z-index:900;
     background:linear-gradient(160deg, rgba(58,22,92,.94), rgba(24,14,42,.96)); border:1px solid rgba(224,51,158,.5); transform:translateZ(0);
-    border-radius:14px; padding:10px 12px; font-size:10.5px; color:var(--muted);
+    border-radius:14px; padding:8px 10px; font-size:9.5px; color:var(--muted);
     box-shadow:0 0 14px rgba(224,51,158,0.48), 0 0 40px rgba(139,47,217,0.3);
   }
-  .legend div{ display:flex; align-items:center; gap:7px; margin:3px 0; }
+  .legend div{ display:flex; align-items:center; gap:6px; margin:2px 0; }
   .legend span{ width:8px; height:8px; border-radius:50%; display:inline-block; }
   .legend-flame{ width:8px; height:8px; display:inline-flex; align-items:center; justify-content:center; font-size:11px; line-height:1; }
   .legend-divider{ height:1px; background:linear-gradient(90deg, rgba(224,51,158,.5), rgba(139,47,217,.5)); margin:6px 0; }
@@ -483,7 +600,6 @@
   .legend-chip.off span{ background:transparent !important; border:1px solid var(--muted); }
 
   .filters-fab{
-    position:absolute; right:14px; bottom:128px; z-index:900;
     background:linear-gradient(135deg, var(--magenta2), var(--violet));
     border:none; color:#fff; font-weight:700; font-size:12.5px;
     padding:10px 16px; border-radius:24px; display:flex; align-items:center; gap:7px;
@@ -618,10 +734,7 @@
 
   /* ===== Découvrir view ===== */
   #view-decouvrir{
-    background:
-      radial-gradient(120% 45% at 50% 0%, rgba(154,31,240,.26) 0%, transparent 65%),
-      radial-gradient(90% 40% at 15% 60%, rgba(255,94,58,.11) 0%, transparent 68%),
-      rgba(6,10,20,.82);
+    background:#000;
     padding-top:78px; padding-bottom:calc(90px + env(safe-area-inset-bottom)); overflow-y:auto; -webkit-overflow-scrolling:touch;
   }
   .discover-head{ padding:0 20px 12px; display:flex; align-items:center; gap:12px; }
@@ -1398,15 +1511,8 @@
   .city-heat .heat-row{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted);margin-top:7px}.city-heat .heat-row b{color:var(--text)}
   .mission-card.done{border-color:rgba(198,255,46,.35);background:rgba(198,255,46,.07)}
 
-  /* ===== Lecteur de musique ===== */
-  .music-fab{
-    position:absolute; right:14px; bottom:182px; z-index:900;
-    width:46px; height:46px; border-radius:50%;
-    background:linear-gradient(135deg, var(--flame), var(--flame2));
-    border:none; color:#fff; display:flex; align-items:center; justify-content:center;
-    box-shadow:0 6px 22px rgba(255,94,58,.4), 0 0 16px rgba(255,176,32,0.7); cursor:pointer;
-  }
-  .music-fab svg{ width:20px; height:20px; }
+  /* ===== Lecteur de musique (le bouton flottant a été retiré : le mini-lecteur
+     est maintenant ancré en haut de la carte, donc plus besoin de doublon ici) ===== */
   .music-overlay{position:fixed;inset:0;z-index:1450;background:rgba(10,5,18,.75);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:.25s;}
   .music-overlay.show{opacity:1;pointer-events:auto;}
   .music-sheet{
@@ -1432,24 +1538,64 @@
   .music-chips{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px;margin-bottom:14px;}
   .music-chip{white-space:nowrap;border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:999px;padding:8px 13px;font-size:11.5px;font-weight:700;cursor:pointer;flex-shrink:0;}
   .music-chip.active{background:rgba(255,94,58,.16);border-color:rgba(255,176,32,.5);color:#ffd9ad;}
-  .music-now-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
-  .music-now-title{font-weight:800;font-size:15px;margin:0 0 2px;}
-  .music-now-sub{font-size:10.5px;letter-spacing:.6px;color:var(--muted2);text-transform:uppercase;margin:0;}
   .music-live{display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;color:var(--online);flex-shrink:0;padding-top:2px;}
   .music-live .dot{width:7px;height:7px;border-radius:50%;background:var(--online);box-shadow:0 0 7px var(--online);}
-  .music-eq-wrap{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:16px;padding:14px 12px 10px;margin-bottom:14px;}
-  .music-eq{display:flex;align-items:flex-end;gap:4px;height:90px;}
-  .music-eq-bar{flex:1;border-radius:4px 4px 0 0;background:linear-gradient(180deg,var(--flame2),var(--flame));min-height:6px;transition:height .5s ease;}
-  .music-eq-bar:nth-child(-n+5){background:linear-gradient(180deg,#7ee0c9,#1d9e75);}
-  .music-eq-bar:nth-child(n+6):nth-child(-n+11){background:linear-gradient(180deg,var(--violet2),var(--violet));}
-  .music-eq.playing .music-eq-bar{animation:musicEqBounce 1.1s ease-in-out infinite alternate;}
-  .music-eq-bar:nth-child(odd){animation-duration:.9s;}
-  .music-eq-bar:nth-child(3n){animation-duration:1.3s;}
+
+  /* ===== Console hi-tech (lecteur) — inspirée d'un poste de radio futuriste ===== */
+  .console{
+    position:relative; border-radius:22px; padding:16px 16px 14px; margin-bottom:14px;
+    background:linear-gradient(165deg, rgba(16,26,38,.96), rgba(4,9,15,.98));
+    border:1px solid rgba(0,224,255,.32);
+    box-shadow:0 0 0 1px rgba(0,224,255,.07) inset, 0 0 34px rgba(0,190,255,.16), 0 14px 34px rgba(0,0,0,.5);
+    overflow:hidden;
+  }
+  .console::before{ content:''; position:absolute; inset:0 0 auto 0; height:40%; background:linear-gradient(180deg, rgba(255,255,255,.06), transparent); pointer-events:none; }
+  .console::after{ content:''; position:absolute; left:14%; right:14%; bottom:0; height:2px; background:linear-gradient(90deg, transparent, rgba(0,224,255,.85), transparent); box-shadow:0 0 12px rgba(0,224,255,.7); }
+  .console-top{ position:relative; display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+  .console-orb{
+    flex-shrink:0; width:44px; height:44px; border-radius:50%; position:relative;
+    background:radial-gradient(circle at 35% 30%, #8a6bff, #2b1d63 55%, #0a0716 100%);
+    box-shadow:0 0 0 1px rgba(140,120,255,.4), 0 0 16px rgba(122,92,255,.55);
+  }
+  .console-orb-core{ position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 65% 70%, rgba(0,224,255,.55), transparent 60%); animation:consoleOrbSpin 6s linear infinite; }
+  @keyframes consoleOrbSpin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
+  .console-meta{ flex:1; min-width:0; }
+  .console-meta .music-now-title{ font-weight:800; font-size:14px; margin:0 0 2px; text-transform:uppercase; letter-spacing:.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .console-meta .music-now-sub{ font-size:10px; letter-spacing:.5px; color:var(--muted2); text-transform:uppercase; margin:0; }
+  .console-tags{ display:flex; align-items:center; gap:5px; margin-top:5px; font-size:8.5px; font-weight:800; letter-spacing:.08em; color:#5fd8ff; opacity:.85; }
+  .console-live{ display:flex; align-items:center; gap:5px; font-size:9.5px; font-weight:800; color:#39ff8a; flex-shrink:0; align-self:flex-start; }
+  .console-live .dot{ width:6px; height:6px; border-radius:50%; background:#39ff8a; box-shadow:0 0 7px #39ff8a; }
+  .console-transport{ display:flex; align-items:center; justify-content:center; gap:18px; margin-bottom:4px; }
+  .console-tbtn{ background:none; border:none; color:#8fb9c9; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .console-tbtn svg{ width:18px; height:18px; }
+  .console-tbtn:active{ transform:scale(.88); }
+  .console-play{
+    width:56px; height:56px; border-radius:50%; flex-shrink:0; border:1px solid rgba(0,224,255,.5);
+    background:radial-gradient(circle at 35% 30%, #0a1620, #050b12 70%);
+    color:#5fe8ff; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 0 1px rgba(0,224,255,.15) inset, 0 0 22px rgba(0,200,255,.45);
+  }
+  .console-play svg{ width:20px; height:20px; filter:drop-shadow(0 0 5px rgba(0,224,255,.8)); }
+  .console-play:active{ transform:scale(.94); }
+  .console-visual{ position:relative; margin-top:12px; background:rgba(0,0,0,.35); border:1px solid rgba(0,224,255,.14); border-radius:16px; padding:12px 12px 10px; }
+  .console-eq{ display:flex; align-items:flex-end; gap:3px; height:64px; }
+  .music-eq-bar{ flex:1; border-radius:3px 3px 0 0; min-height:4px; transition:height .5s ease; background:linear-gradient(180deg,#4fd1ff,#1a8dff); box-shadow:0 0 6px rgba(0,180,255,.35); }
+  .music-eq-bar:nth-child(3n){ background:linear-gradient(180deg,#7CFFB2,#18b56f); box-shadow:0 0 6px rgba(70,255,170,.35); }
+  .music-eq-bar:nth-child(4n){ background:linear-gradient(180deg,#b39bff,#6c4fe0); box-shadow:0 0 6px rgba(150,120,255,.35); }
+  .console-eq.playing .music-eq-bar{ animation:musicEqBounce 1.1s ease-in-out infinite alternate; }
+  .music-eq-bar:nth-child(odd){ animation-duration:.9s; }
+  .music-eq-bar:nth-child(3n){ animation-duration:1.3s; }
   @keyframes musicEqBounce{ from{ transform:scaleY(.35); } to{ transform:scaleY(1); } }
-  .music-eq-labels{display:flex;justify-content:space-between;font-size:9.5px;letter-spacing:1px;color:var(--muted2);margin-top:8px;text-transform:uppercase;}
+  .console-wave{ width:100%; height:16px; display:block; margin-top:6px; opacity:.8; }
+  .console-wave polyline{ fill:none; stroke:#5fe8ff; stroke-width:1.3; filter:drop-shadow(0 0 3px rgba(95,232,255,.8)); }
+  .console-progress-row{ display:flex; align-items:center; gap:8px; margin-top:8px; }
+  .console-time{ font-size:9.5px; font-weight:700; color:var(--muted2); flex-shrink:0; min-width:28px; }
+  .console-time:last-child{ text-align:right; }
+  .console-progress{ flex:1; height:3px; border-radius:3px; background:rgba(255,255,255,.1); overflow:hidden; }
+  .console-progress i{ display:block; height:100%; width:0%; background:linear-gradient(90deg,#4fd1ff,#5fe8ff); box-shadow:0 0 6px rgba(95,232,255,.7); }
+  .console-status{ font-size:10px; color:#5c8a97; margin-top:8px; text-align:center; }
+
   .music-controls-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
-  .music-play{width:52px;height:52px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--flame),var(--flame2));border:none;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px rgba(255,94,58,.6);}
-  .music-play svg{width:20px;height:20px;}
   .music-volume-row{flex:1;display:flex;align-items:center;gap:8px;}
   .music-volume-row svg{width:16px;height:16px;color:var(--muted);flex-shrink:0;}
   .music-volume-slider{flex:1;}
@@ -1862,6 +2008,40 @@
   .cc-tab-btn.active{color:var(--magenta2);border-bottom-color:var(--magenta2)}
   .cc-tab-content{display:none}.cc-tab-content.active{display:block}
   @media(min-width:600px){.cc-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.cc-card.wide{grid-column:1/-1}}
+
+/* ===== CALENDRIER — design cyan/noir de la maquette ===== */
+#view-calendrier{background:#050607;overflow-y:auto;padding:0 0 110px;color:#f7f9fb;}
+.calendar-page{padding:78px 16px 18px;}
+.calendar-head{display:flex;align-items:flex-start;gap:11px;margin:0 0 5px;}
+.calendar-head-icon{width:30px;height:30px;color:#5fe8ff;filter:drop-shadow(0 0 7px rgba(0,224,255,.45));flex:none;margin-top:2px;}
+.calendar-head h2{font-family:'Playfair Display',Georgia,serif;font-size:27px;line-height:1.05;margin:0;font-weight:800;letter-spacing:-.4px;}
+.calendar-sub{margin:0 0 20px 1px;color:#777d82;font-size:11px;font-weight:500;}
+.calendar-month-row{display:flex;align-items:center;justify-content:space-between;margin:0 1px 11px;}
+.calendar-month-title{font-size:13px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:#a8adb1;}
+.calendar-nav-btn{width:30px;height:30px;border-radius:50%;border:1px solid rgba(0,224,255,.25);background:rgba(0,224,255,.05);color:#65eaff;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.calendar-week{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;color:#35383b;font-size:10px;font-weight:900;letter-spacing:1px;margin-bottom:8px;}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:5px;}
+.cal-day{height:61px;display:flex;align-items:center;justify-content:center;position:relative;font-size:14px;color:#9a9da1;font-weight:500;}
+.cal-day.muted{color:#303337;}
+.cal-day.today{color:#111;background:#fff;border-radius:50%;width:58px;height:58px;justify-self:center;font-weight:900;box-shadow:0 0 18px rgba(255,255,255,.08);}
+.cal-day.has-event{color:#dfeff2;}
+.cal-day.selected{color:#071015;background:#62d5ef;border-radius:50%;width:58px;height:58px;justify-self:center;font-weight:900;box-shadow:0 0 22px rgba(95,232,255,.58);}
+.cal-dot{position:absolute;bottom:5px;width:4px;height:4px;border-radius:50%;background:#5fe8ff;box-shadow:0 0 7px rgba(95,232,255,.9);}
+.cal-day.selected .cal-dot{background:#071015;box-shadow:none;}
+.calendar-events-title{display:flex;align-items:center;justify-content:space-between;margin:15px 0 8px;color:#62676b;font-size:11px;font-weight:900;letter-spacing:1.1px;text-transform:uppercase;}
+.calendar-free-pill{border:1px solid rgba(95,232,255,.28);border-radius:999px;padding:6px 11px;color:#6de4ff;font-size:10px;letter-spacing:1px;background:rgba(95,232,255,.05);}
+.calendar-event-card{display:flex;align-items:center;gap:13px;padding:11px;border-radius:18px;background:#142022;border:1px solid rgba(95,232,255,.22);box-shadow:0 0 20px rgba(0,224,255,.05);margin-bottom:12px;}
+.calendar-date-badge{width:78px;height:78px;border-radius:15px;background:#63d6ee;color:#071014;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none;font-weight:900;line-height:1;box-shadow:0 0 15px rgba(95,232,255,.15);}
+.calendar-date-badge strong{font-size:23px}.calendar-date-badge span{font-size:11px;margin-top:4px;letter-spacing:.7px;}
+.calendar-event-main{min-width:0;flex:1;}.calendar-event-title{font-size:15px;font-weight:800;line-height:1.18;margin-bottom:7px;}.calendar-event-meta{display:flex;flex-wrap:wrap;gap:7px;color:#858c90;font-size:10px;line-height:1.2;}.calendar-event-meta b{color:#63dff5;font-weight:800;}
+.calendar-event-close{width:40px;height:40px;border:0;border-radius:50%;background:#293336;color:#fff;font-size:23px;flex:none;}
+.calendar-list-card{border:1px solid rgba(255,255,255,.08);background:#111313;border-radius:18px;padding:13px 12px;margin-top:8px;}
+.calendar-list-title{font-size:11px;font-weight:900;letter-spacing:1px;color:#676b6e;margin-bottom:8px;text-transform:uppercase;}
+.calendar-list-row{display:flex;align-items:center;gap:7px;padding:8px 0;border-top:1px solid rgba(255,255,255,.045);font-size:11px;color:#888d91;}.calendar-list-row:first-of-type{border-top:0}.calendar-list-row .date{font-weight:800;color:#9ba0a4;white-space:nowrap}.calendar-list-row .add{margin-left:auto;color:#66d9ef;font-weight:700;white-space:nowrap;}
+.calendar-radio{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);width:min(400px,calc(100% - 28px));z-index:980;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:34px;border:1px solid rgba(95,232,255,.48);background:linear-gradient(180deg,rgba(8,13,15,.98),rgba(2,5,7,.99));box-shadow:0 0 28px rgba(0,190,255,.16),0 10px 25px rgba(0,0,0,.45);}
+.calendar-radio .radio-dot{width:15px;height:15px;border-radius:50%;background:#62d6ee;box-shadow:0 0 14px rgba(95,232,255,.8);flex:none}.calendar-radio .radio-name{font-size:12px;font-weight:900;letter-spacing:.8px;white-space:nowrap}.calendar-radio .radio-heart{font-size:17px;color:#5fe8ff}.calendar-radio .radio-spacer{flex:1}.calendar-radio .radio-eq{display:flex;gap:3px;align-items:flex-end;height:27px}.calendar-radio .radio-eq i{display:block;width:3px;border-radius:3px;background:#5fe8ff;box-shadow:0 0 7px rgba(95,232,255,.6)}.calendar-radio .radio-eq i:nth-child(1){height:14px}.calendar-radio .radio-eq i:nth-child(2){height:22px}.calendar-radio .radio-eq i:nth-child(3){height:17px}.calendar-radio .radio-eq i:nth-child(4){height:25px}.calendar-radio .radio-play{width:48px;height:48px;border-radius:50%;border:0;background:#62d6ee;color:#061015;font-size:19px;font-weight:900;box-shadow:0 0 18px rgba(95,232,255,.35);}
+@media(max-width:380px){.calendar-page{padding-left:13px;padding-right:13px}.calendar-head h2{font-size:25px}.calendar-event-title{font-size:14px}.calendar-date-badge{width:70px;height:70px}.bottomnav .navbtn{font-size:7.2px;padding:3px 2px}.bottomnav .navbtn svg{width:16px;height:16px}}
+
 </style>
 
 <style id="mobile-final-lower-only">
@@ -1938,6 +2118,141 @@
 }
 </style>
 
+<style id="lavibe-radar-finition-2026-09-13">
+/* ===== LA VIBE — RADAR finition premium inspirée du visuel de référence ===== */
+#view-decouvrir .discover-head{
+  position:relative; z-index:10; display:flex; align-items:center; gap:12px;
+  margin:10px 12px 10px; padding:12px 16px;
+  border:1px solid rgba(139,47,224,.58); border-radius:24px;
+  background:linear-gradient(135deg,rgba(19,7,48,.96),rgba(4,12,31,.96));
+  box-shadow:0 0 22px rgba(139,47,224,.16), inset 0 0 24px rgba(0,224,255,.04);
+}
+#view-decouvrir .discover-head::after{
+  content:''; position:absolute; left:54px; right:40%; bottom:7px; height:2px;
+  background:linear-gradient(90deg,#a83dff,#00e0ff,transparent); box-shadow:0 0 10px #8b2fe0;
+}
+#view-decouvrir .discover-head-bolt{
+  width:42px; height:42px; display:grid; place-items:center; border-radius:50%;
+  color:#d66cff; font-size:23px; border:2px solid #9d36ff;
+  box-shadow:0 0 10px #8b2fe0, inset 0 0 12px rgba(0,224,255,.15);
+  text-shadow:0 0 12px #d66cff;
+}
+#view-decouvrir .discover-head-text h2{
+  margin:0; font-family:Inter,sans-serif; font-size:22px; font-weight:900; letter-spacing:2px;
+  color:#c867ff; text-shadow:0 0 12px rgba(177,64,255,.75);
+}
+#view-decouvrir .discover-head-text h2::before{content:'RADAR'; font-size:0;}
+#view-decouvrir .discover-head-text h2{font-size:0;}
+#view-decouvrir .discover-head-text h2::after{content:'RADAR'; font-size:22px;}
+#view-decouvrir .discover-search{margin:0 12px 10px; border-color:rgba(0,224,255,.3); background:rgba(5,10,27,.9);}
+#view-decouvrir .radar-map-card{
+  margin:0 12px 14px; border-radius:28px; overflow:hidden;
+  border:1px solid rgba(0,224,255,.42);
+  background:radial-gradient(circle at 50% 45%,rgba(0,67,92,.32),rgba(2,5,17,.98) 68%);
+  box-shadow:0 0 30px rgba(0,224,255,.10), 0 20px 60px rgba(0,0,0,.5), inset 0 0 50px rgba(98,0,255,.08);
+}
+#view-decouvrir .radar-scope{
+  aspect-ratio:1/1; min-height:0; max-height:none; height:auto; width:100%;
+  background:
+    radial-gradient(circle at 50% 50%,rgba(0,224,255,.07),transparent 47%),
+    radial-gradient(circle,rgba(120,235,255,.55) 1px,transparent 1.6px),
+    linear-gradient(rgba(0,224,255,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,224,255,.05) 1px,transparent 1px),
+    #02050f;
+  background-position:0 0,0 0,0 0,0 0;
+  background-size:auto,38px 38px,38px 38px,38px 38px;
+}
+#view-decouvrir .radar-scope::before{
+  background:radial-gradient(circle at 50% 50%,rgba(0,224,255,.10),transparent 48%), radial-gradient(circle,transparent 58%,rgba(0,0,0,.48) 100%);
+}
+#view-decouvrir .radar-dial{
+  width:min(92%,620px); height:min(92%,620px); left:50%; top:50%;
+  background:radial-gradient(circle at 50% 50%,rgba(0,38,57,.38),rgba(1,8,17,.75) 68%,rgba(0,0,0,.95) 100%);
+  box-shadow:inset 0 0 55px rgba(0,0,0,.9),0 0 26px rgba(0,224,255,.18),0 0 70px rgba(98,0,255,.08);
+}
+#view-decouvrir .radar-ticks{
+  background:repeating-conic-gradient(from 0deg,rgba(0,224,255,.95) 0deg .8deg,transparent .8deg 3deg);
+  -webkit-mask-image:radial-gradient(circle,transparent 0 90%,black 90.5% 100%);
+  mask-image:radial-gradient(circle,transparent 0 90%,black 90.5% 100%);
+}
+#view-decouvrir .radar-spoke{background:rgba(0,224,255,.13);}
+#view-decouvrir .radar-spoke.major{background:rgba(0,224,255,.4);width:1.4px;}
+#view-decouvrir .radar-ring{position:absolute;left:50%;top:50%;inset:auto;transform:translate(-50%,-50%);border:1px solid rgba(0,224,255,.32);border-radius:50%;z-index:1;pointer-events:none;animation:none;}
+#view-decouvrir .radar-ring.r1{width:16.6%;height:16.6%;}
+#view-decouvrir .radar-ring.r2{width:33.3%;height:33.3%;}
+#view-decouvrir .radar-ring.r3{width:50%;height:50%;border-color:rgba(0,224,255,.42);}
+#view-decouvrir .radar-ring.r4{width:66.6%;height:66.6%;border-color:rgba(0,224,255,.5);}
+#view-decouvrir .radar-ring.r5{width:83.3%;height:83.3%;border-color:rgba(0,224,255,.62);}
+#view-decouvrir .radar-ring.r6{width:100%;height:100%;border-color:rgba(0,224,255,.8);box-shadow:0 0 14px rgba(0,224,255,.25);}
+#view-decouvrir .radar-ring.glow{width:100%;height:100%;border:2px solid #00e0ff;box-shadow:0 0 10px rgba(0,224,255,.75),0 0 28px rgba(0,224,255,.35),inset 0 0 16px rgba(0,224,255,.18);}
+/* Anneau pointillé décoratif, tourne lentement en sens inverse du balayage : effet "scanner satellite" */
+#view-decouvrir .radar-dash-ring{
+  position:absolute;left:50%;top:50%;width:92%;height:92%;transform:translate(-50%,-50%);
+  border-radius:50%;border:1px dashed rgba(120,235,255,.28);z-index:1;pointer-events:none;
+  animation:radarDashSpin 46s linear infinite reverse;
+}
+@keyframes radarDashSpin{ from{transform:translate(-50%,-50%) rotate(0deg);} to{transform:translate(-50%,-50%) rotate(360deg);} }
+/* Grain/scanlines fines façon écran cathodique, très subtil, pour l'aspect "hi-tech" */
+#view-decouvrir .radar-scope::after{
+  content:''; position:absolute; inset:0; pointer-events:none; z-index:5; mix-blend-mode:overlay; opacity:.5;
+  background:repeating-linear-gradient(0deg,rgba(0,224,255,.05) 0 1px,transparent 1px 3px);
+}
+/* Pings concentriques qui émanent de "Toi", façon écho radar */
+#view-decouvrir .radar-you-ping{
+  position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;
+  border:2px solid rgba(0,224,255,.8); z-index:2; pointer-events:none;
+  animation:radarPing 2.6s cubic-bezier(.2,.6,.4,1) infinite;
+}
+#view-decouvrir .radar-you-ping.delay{ animation-delay:1.3s; }
+@keyframes radarPing{
+  0%{ width:18px;height:18px;margin:-9px 0 0 -9px; opacity:.85; border-width:2px; }
+  100%{ width:150px;height:150px;margin:-75px 0 0 -75px; opacity:0; border-width:1px; }
+}
+/* HUD façon interface de bord : lectures rapides dans les coins du scope */
+#view-decouvrir .radar-hud{
+  position:absolute; z-index:6; font-size:9.5px; font-weight:800; letter-spacing:.09em;
+  color:#7ff6ff; text-transform:uppercase; display:flex; align-items:center; gap:5px;
+  text-shadow:0 0 8px rgba(0,224,255,.6); pointer-events:none;
+}
+#view-decouvrir .radar-hud b{color:#fff;}
+#view-decouvrir .radar-hud-tl{ top:14px; left:16px; }
+#view-decouvrir .radar-hud-tr{ top:14px; right:16px; }
+#view-decouvrir .radar-hud-dot{ width:6px;height:6px;border-radius:50%;background:#39ff8a;box-shadow:0 0 8px #39ff8a; animation:radarHudBlink 1.6s ease-in-out infinite; }
+@keyframes radarHudBlink{ 0%,100%{opacity:1;} 50%{opacity:.25;} }
+#view-decouvrir .radar-crosshair::before,#view-decouvrir .radar-crosshair::after{background:rgba(0,224,255,.48);box-shadow:0 0 6px rgba(0,224,255,.22);}
+#view-decouvrir .radar-sweep{
+  background:conic-gradient(from 0deg,rgba(0,224,255,.88) 0deg,rgba(0,224,255,.40) 9deg,rgba(0,224,255,.12) 22deg,transparent 48deg);
+  box-shadow:inset 0 0 50px rgba(0,224,255,.3); opacity:.72;
+}
+#view-decouvrir .radar-you-dot{
+  width:18px;height:18px;background:#00e0ff;border:3px solid #fff;
+  box-shadow:0 0 0 7px rgba(0,224,255,.18),0 0 20px #00e0ff,0 0 38px rgba(0,224,255,.75);
+}
+#view-decouvrir .radar-you-label{background:rgba(3,8,18,.78);border:1px solid rgba(0,224,255,.4);color:#fff;}
+#view-decouvrir .radar-blip.event{background:#ff4bd8;box-shadow:0 0 0 6px rgba(255,75,216,.14),0 0 17px #ff4bd8,0 0 30px rgba(255,75,216,.48);}
+#view-decouvrir .radar-blip.place{background:#00e0ff;box-shadow:0 0 0 6px rgba(0,224,255,.13),0 0 17px #00e0ff,0 0 30px rgba(0,224,255,.46);}
+#view-decouvrir .radar-blip.is-active{background:#fff!important;box-shadow:0 0 0 8px rgba(255,255,255,.3),0 0 30px #fff,0 0 52px rgba(0,224,255,.65);}
+#view-decouvrir .radar-blip-label{background:#fff;color:#090512;border:1px solid rgba(255,255,255,.65);box-shadow:0 4px 18px rgba(0,224,255,.22);}
+#view-decouvrir .radar-scale-tick{font-size:9px;color:#7ff6ff;background:rgba(2,8,17,.72);border:1px solid rgba(0,224,255,.16);}
+#view-decouvrir .radar-premium-info{
+  margin:0 12px 12px; padding:14px 16px; border-radius:22px;
+  border:1px solid rgba(109,45,255,.75); background:linear-gradient(135deg,rgba(20,7,48,.94),rgba(3,12,28,.94));
+  box-shadow:0 0 22px rgba(98,0,255,.14), inset 0 0 22px rgba(0,224,255,.035);
+  color:#dbe8ff; font-size:12.5px; line-height:1.45; font-weight:650;
+}
+#view-decouvrir .radar-premium-info strong{color:#00e0ff;}
+#view-decouvrir .radar-legend{display:flex;justify-content:space-around;gap:8px;padding:4px 18px 20px;font-size:11px;color:#b9c9ef;}
+#view-decouvrir .radar-legend span{display:flex;align-items:center;gap:7px;}
+#view-decouvrir .radar-legend i{width:11px;height:11px;border-radius:50%;display:inline-block;box-shadow:0 0 10px currentColor;}
+#view-decouvrir .radar-legend .ev{color:#ff4bd8;background:#ff4bd8;}
+#view-decouvrir .radar-legend .pl{color:#00e0ff;background:#00e0ff;}
+#view-decouvrir .radar-legend .me{color:#fff;background:#00e0ff;border:2px solid #fff;}
+@media(max-width:480px){
+  #view-decouvrir .discover-head{margin-top:8px;}
+  #view-decouvrir .radar-map-card{border-radius:22px;}
+  #view-decouvrir .radar-premium-info{font-size:12px;}
+}
+</style>
 </head>
 <body>
   <div class="cc-modal" id="ccInspector" onclick="if(event.target===this)ccCloseModal('ccInspector')"><div class="cc-panel"></div></div>
@@ -1975,6 +2290,11 @@ window.dbg = function(){};
     </button>
   </div>
 
+  <!-- Popover "+ Détails" : contient les explications retirées du haut de la page Radar -->
+  <div class="radar-details-popover" id="radarDetailsPopover">
+    <p>Plus un point est éloigné du centre, plus le lieu ou l'événement est loin de toi. Appuie sur un point pour le découvrir.</p>
+  </div>
+
   <!-- ===== CARTE (HOME) ===== -->
   <div class="view active" id="view-carte">
     <div class="map-wrap" id="mapWrap"><div class="now-live-chip" id="nowLiveChip">🔥 NOW actif</div>
@@ -1982,15 +2302,50 @@ window.dbg = function(){};
         <span class="lft-dot"></span>
         <div class="live-feed-ticker-viewport"><div class="live-feed-ticker-track" id="liveFeedTrack"></div></div>
       </div>
+
+      <!-- ===== LECTEUR COMPACT HI-TECH : directement sous le babillard ===== -->
+      <div class="music-mini-bar" id="btn-music-mini" aria-label="Lecteur radio">
+        <div class="mmb-left" id="mmbOpenZone">
+          <span class="mmb-orb"></span>
+          <div class="mmb-meta">
+            <b id="musicMiniTitle">PLATEAU · 24/7</b>
+            <em id="musicMiniSub">CE SOIR RADIO</em>
+            <span class="mmb-bmt"><svg viewBox="0 0 24 24" fill="currentColor" style="width:9px;height:9px;flex-shrink:0;"><rect x="3" y="10" width="3" height="8"/><rect x="10.5" y="5" width="3" height="13"/><rect x="18" y="13" width="3" height="5"/></svg>BASS MID TREBLE</span>
+          </div>
+        </div>
+        <div class="mmb-transport">
+          <button class="mmb-tbtn" id="musicMiniPrevBtn" aria-label="Piste précédente"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+          <button class="mmb-play" id="musicMiniPlayBtn" aria-label="Lecture/Pause"><svg id="musicMiniPlayIcon" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+          <button class="mmb-tbtn" id="musicMiniNextBtn" aria-label="Piste suivante"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></button>
+        </div>
+        <div class="mmb-visual">
+          <span class="music-mini-eq" id="musicMiniEq" aria-hidden="true"></span>
+          <svg class="mmb-wave" viewBox="0 0 100 16" preserveAspectRatio="none"><polyline id="musicMiniWaveLine" points="0,8 100,8"/></svg>
+          <div class="mmb-progress-row">
+            <span id="musicMiniTimeCur">0:00</span>
+            <div class="mmb-progress"><i id="musicMiniProgressFill"></i></div>
+            <span id="musicMiniTimeDur">0:00</span>
+          </div>
+        </div>
+        <div class="mmb-icons">
+          <button class="mmb-icon-btn" id="mmbCollapseBtn" aria-label="Ouvrir le lecteur complet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+          <button class="mmb-icon-btn" id="mmbVolumeBtn" aria-label="Volume"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></button>
+          <button class="mmb-icon-btn" id="mmbSettingsBtn" aria-label="Réglages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="1.6" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="16" cy="12" r="1.6" fill="currentColor" stroke="none"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="10" cy="18" r="1.6" fill="currentColor" stroke="none"/></svg></button>
+        </div>
+      </div>
+
       <div id="leafletMap"></div>
       <div class="map-vignette"></div>
     </div>
 
     <div class="map-controls">
-      <div class="live-pill"><span class="lv"></span> <b id="liveCount">2&nbsp;568</b>&nbsp;en ligne</div>
-      <div class="map-count-pill" id="mapCountPill"><span class="mcp-dot"></span> <b id="mapCountNum">0</b>&nbsp;sur la carte</div>
       <button class="icon-btn" id="btn-recenter" aria-label="Recentrer sur moi">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+      </button>
+      <div class="live-pill"><span class="lv"></span> <b id="liveCount">2&nbsp;568</b>&nbsp;en ligne</div>
+      <button class="filters-fab" id="btn-filters-fab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="16" cy="12" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="10" cy="18" r="2" fill="currentColor" stroke="none"/></svg>
+        Filtres <span class="filters-badge" id="filtersBadge" style="display:none;">0</span>
       </button>
     </div>
 
@@ -2001,16 +2356,27 @@ window.dbg = function(){};
       <div class="legend-divider"></div>
     </div>
 
-    <button class="music-fab" id="btn-music-fab" aria-label="Lecteur de musique">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-    </button>
-
-    <button class="filters-fab" id="btn-filters-fab">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="16" cy="12" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="10" cy="18" r="2" fill="currentColor" stroke="none"/></svg>
-      Filtres <span class="filters-badge" id="filtersBadge" style="display:none;">0</span>
-    </button>
     <div class="radar-ring"></div><div class="radar-ring r2"></div><div class="radar-ring r3"></div>
 
+  </div>
+
+
+  <!-- ===== CALENDRIER ===== -->
+  <div class="view" id="view-calendrier">
+    <div class="calendar-page">
+      <div class="calendar-head">
+        <svg class="calendar-head-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 9h18"/></svg>
+        <div><h2>Calendrier</h2></div>
+      </div>
+      <p class="calendar-sub">Événements sous les faisceaux turquoises • auto J'Suis Partant</p>
+      <div class="calendar-month-row"><button class="calendar-nav-btn" id="calPrev" aria-label="Mois précédent">‹</button><div class="calendar-month-title" id="calMonthTitle"></div><button class="calendar-nav-btn" id="calNext" aria-label="Mois suivant">›</button></div>
+      <div class="calendar-week"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+      <div class="calendar-events-title"><span id="calEventsTitle">MES ÉVÉNEMENTS</span><span class="calendar-free-pill">GRATUIT ✓</span></div>
+      <div id="calendarSelectedEvents"></div>
+      <div class="calendar-list-card"><div class="calendar-list-title">Tous les events gratuits</div><div id="calendarFreeList"></div></div>
+    </div>
+    <div class="calendar-radio" id="calendarRadio"><span class="radio-dot"></span><span class="radio-name">L'ENVie RADIO</span><span class="radio-heart">♥</span><span class="radio-spacer"></span><span class="radio-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><button class="radio-play" id="calendarRadioPlay" aria-label="Lecture/Pause">Ⅱ</button></div>
   </div>
 
   <!-- ===== CHAT NOW (chat de groupe éphémère, remis à zéro chaque jour) ===== -->
@@ -2062,23 +2428,42 @@ window.dbg = function(){};
         <button class="music-chip" data-title="Despacito — Luis Fonsi" data-sub="Youtube · Sélection">Despacito</button>
       </div>
 
-      <div class="music-now-row">
-        <div>
-          <p class="music-now-title" id="musicNowTitle">Nebula Drift — Nightwave</p>
-          <p class="music-now-sub" id="musicNowSub">Youtube · Neon beach mix</p>
+      <div class="console">
+        <div class="console-top">
+          <div class="console-orb"><span class="console-orb-core"></span></div>
+          <div class="console-meta">
+            <p class="music-now-title" id="musicNowTitle">Nebula Drift — Nightwave</p>
+            <p class="music-now-sub" id="musicNowSub">Youtube · Neon beach mix</p>
+            <div class="console-tags"><svg viewBox="0 0 24 24" fill="currentColor" style="width:11px;height:11px;"><rect x="3" y="10" width="3" height="8"/><rect x="10.5" y="5" width="3" height="13"/><rect x="18" y="13" width="3" height="5"/></svg>BASS · MID · TREBLE</div>
+          </div>
+          <div class="console-live" id="musicLiveTag"><span class="dot"></span>Live</div>
         </div>
-        <div class="music-live"><span class="dot"></span>Live</div>
-      </div>
 
-      <div class="music-eq-wrap">
-        <div class="music-eq playing" id="musicEq"></div>
-        <div class="music-eq-labels"><span>Bass</span><span>Mid</span><span>Treble</span></div>
+        <div class="console-transport">
+          <button class="console-tbtn" id="musicPrevBtn" aria-label="Piste précédente"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+          <button class="console-play" id="musicPlayBtn" aria-label="Lecture/Pause">
+            <svg id="musicPlayIcon" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+          </button>
+          <button class="console-tbtn" id="musicNextBtn" aria-label="Piste suivante"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></button>
+        </div>
+
+        <div id="youtubePlayerWrap" style="display:none;margin:12px 0 0;border:1px solid rgba(0,234,255,.28);border-radius:18px;overflow:hidden;background:#000;box-shadow:0 0 20px rgba(0,190,255,.12);">
+          <div id="youtubePlayer" style="width:100%;aspect-ratio:16/9;"></div>
+        </div>
+
+        <div class="console-visual">
+          <div class="console-eq playing" id="musicEq"></div>
+          <svg class="console-wave" viewBox="0 0 100 22" preserveAspectRatio="none"><polyline id="musicWaveLine" points="0,11 100,11"/></svg>
+          <div class="console-progress-row">
+            <span class="console-time" id="musicTimeCur">0:00</span>
+            <div class="console-progress"><i id="musicProgressFill"></i></div>
+            <span class="console-time" id="musicTimeDur">0:00</span>
+          </div>
+        </div>
+        <div id="musicSourceStatus" class="console-status">EQ réel actif pour les fichiers audio locaux/directs.</div>
       </div>
 
       <div class="music-controls-row">
-        <button class="music-play" id="musicPlayBtn" aria-label="Lecture/Pause">
-          <svg id="musicPlayIcon" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
-        </button>
         <div class="music-volume-row">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
           <input type="range" class="music-volume-slider" id="musicVolumeSlider" min="0" max="100" value="72">
@@ -2105,7 +2490,10 @@ window.dbg = function(){};
       <div class="discover-head-bolt">✴</div>
       <div class="discover-head-text">
         <h2>Le Radar Montréal</h2>
-        <p id="discoverSub">Lieux et activités gratuites, choisis pour la saison</p>
+      </div>
+      <div class="radar-type-toggle" id="radarTypeToggle">
+        <button class="radar-type-btn active" data-type="events" onclick="setRadarTypeFilter('events')"><span class="rtb-dot"></span>Événements</button>
+        <button class="radar-type-btn active" data-type="places" onclick="setRadarTypeFilter('places')"><span class="rtb-dot"></span>Lieux</button>
       </div>
     </div>
 
@@ -2115,23 +2503,38 @@ window.dbg = function(){};
       <button id="discoverSearchClear" style="display:none;" aria-label="Effacer">✕</button>
     </div>
 
-    <div class="radar-hint">Plus un point est éloigné du centre, plus le lieu ou l'événement est loin de toi. Appuie sur un point pour le découvrir.</div>
-
     <div class="radar-map-card">
       <div class="radar-scope" id="radarScope">
         <div class="radar-dial" id="radarDial">
           <div class="radar-ticks"></div>
+          <div class="radar-spokes" id="radarSpokes"></div>
+          <div class="radar-bearing" id="radarBearing"></div>
           <div class="radar-ring r1"></div>
           <div class="radar-ring r2"></div>
           <div class="radar-ring r3"></div>
           <div class="radar-ring r4"></div>
+          <div class="radar-ring r5"></div>
+          <div class="radar-ring r6"></div>
+          <div class="radar-ring glow"></div>
+          <div class="radar-dash-ring"></div>
           <div class="radar-crosshair"></div>
           <div class="radar-sweep"></div>
-          <div class="radar-you"><span class="radar-you-dot"></span><span class="radar-you-label">Toi</span></div>
+          <div class="radar-you">
+            <span class="radar-you-ping"></span>
+            <span class="radar-you-ping delay"></span>
+            <span class="radar-you-arrow"></span>
+            <span class="radar-you-label">Toi</span>
+          </div>
+          <div class="radar-scale" id="radarScale"></div>
           <div class="radar-blips" id="radarBlips"></div>
+          <div class="radar-hud radar-hud-tl">PORTÉE <b>9&nbsp;KM</b></div>
+          <div class="radar-hud radar-hud-tr"><span class="radar-hud-dot"></span>SCAN ACTIF</div>
         </div>
       </div>
     </div>
+
+    <div class="radar-premium-info">Plus un point est éloigné du centre, plus le lieu ou l'événement est loin de toi. <strong>Appuie sur un point pour le découvrir.</strong></div>
+    <div class="radar-legend" aria-label="Légende du radar"><span><i class="ev"></i>Événements</span><span><i class="pl"></i>Lieux</span><span><i class="me"></i>Ta position</span></div>
 
     <div id="discoverSections">
       <div class="discover-section" id="secPartenaires" style="display:none;">
@@ -2930,6 +3333,10 @@ window.dbg = function(){};
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6c-1.7-1.7-4.5-1.7-6.2 0L12 7.2 9.4 4.6c-1.7-1.7-4.5-1.7-6.2 0-1.7 1.7-1.7 4.5 0 6.2L12 19.4l8.8-8.6c1.7-1.7 1.7-4.5 0-6.2z"/></svg>
       Le Radar
     </button>
+    <button class="navbtn" data-tab="calendrier">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 9h18"/></svg>
+      Calendrier
+    </button>
     <button class="navbtn navbtn-now" data-tab="now" id="navNowBtn">
       <span class="navnow-ring">🔥</span>
       NOW
@@ -2962,20 +3369,20 @@ const USER_LOC = { lat:45.5357584, lng:-73.5690103 };
 const LAUNCH_AT = ""; // ex: "2026-08-22T21:00:00-04:00"
 
 const DEMO_PROFILES = [
-  {id:1, hot:true, availabilityMin:0, name:"Émilie", age:28, sexe:"Femme", avatar:"https://i.pravatar.cc/400?img=45", status:"online", zone:"Plateau", address:"Rue Saint-Denis, Le Plateau", intention:"Rencontre spontanée", vibeEmoji:"🍸", vibeText:"Envie de sortir prendre un verre, là maintenant.", tags:["Spontané","Chill","Fêtarde"], height:"165 cm", langues:"Français, Anglais", lastSeen:"À l'instant", bio:"À la recherche de bonnes vibes et de nouvelles rencontres.", lat:USER_LOC.lat+0.0012, lng:USER_LOC.lng-0.0009},
-  {id:2, name:"Sophie", age:27, sexe:"Femme", avatar:"https://i.pravatar.cc/400?img=32", status:"online", zone:"Hochelaga", address:"Rue Ontario, Hochelaga", intention:"Connexion casual", vibeEmoji:"☕", vibeText:"Juste envie de jaser autour d'un café tranquille.", tags:["Discussion","Café","Sortie"], height:"170 cm", langues:"Français", lastSeen:"En ligne", bio:"Café tranquille ou sortie improvisée, je suis partante pour les deux.", lat:USER_LOC.lat-0.0045, lng:USER_LOC.lng+0.0060},
-  {id:3, name:"Julien", age:31, sexe:"Homme", avatar:"https://i.pravatar.cc/400?img=13", status:"recent", zone:"Mile End", address:"Avenue du Parc, Mile End", intention:"Voir où ça mène", vibeEmoji:"🎸", vibeText:"Envie de musique live et de découvrir du nouveau monde.", tags:["Musique","Chill"], height:"180 cm", langues:"Français, Anglais", lastSeen:"Il y a 12 min", bio:"Guitare, vinyles et bons vieux diners du Mile End.", lat:USER_LOC.lat+0.0070, lng:USER_LOC.lng+0.0015},
-  {id:4, hot:true, name:"Mélanie", age:26, sexe:"Femme", avatar:"https://i.pravatar.cc/400?img=47", status:"online", zone:"Centre-ville", address:"Rue Sainte-Catherine, Centre-ville", intention:"Sortie / Activité", vibeEmoji:"🌆", vibeText:"Envie de terrasse et de découvrir un nouveau bar ce soir.", tags:["Fêtarde","Romantique"], height:"163 cm", langues:"Français, Anglais, Espagnol", lastSeen:"En ligne", bio:"J'adore la vibe des terrasses le soir, viens on essaie un nouveau bar.", lat:USER_LOC.lat-0.0095, lng:USER_LOC.lng+0.0110},
-  {id:5, name:"Alex", age:29, sexe:"Homme", avatar:"https://i.pravatar.cc/400?img=15", status:"offline", zone:"Rosemont", address:"Rue Masson, Rosemont", intention:"Relation sérieuse", vibeEmoji:"🕯️", vibeText:"Envie de quelque chose de vrai, sans se presser.", tags:["Discret","Chill"], height:"178 cm", langues:"Français", lastSeen:"Il y a 3 h", bio:"Pas pressé, j'aime prendre le temps de connaître les gens.", lat:USER_LOC.lat-0.0060, lng:USER_LOC.lng-0.0090},
-  {id:6, hot:true, name:"Camille", age:25, sexe:"Femme", avatar:"https://i.pravatar.cc/400?img=33", status:"recent", zone:"Vieux-Montréal", address:"Rue Saint-Paul, Vieux-Montréal", intention:"Flirt", vibeEmoji:"💫", vibeText:"D'humeur à flirter et improviser une soirée.", tags:["Romantique","Discussion"], height:"168 cm", langues:"Français, Anglais", lastSeen:"Il y a 5 min", bio:"Amoureuse des vieilles pierres et des soirées improvisées.", lat:USER_LOC.lat-0.0120, lng:USER_LOC.lng-0.0040},
-  {id:7, name:"Marc-André", age:33, sexe:"Homme", avatar:"https://i.pravatar.cc/400?img=51", status:"online", zone:"Plateau", address:"Rue Rachel, Le Plateau", intention:"Sortie / Activité", vibeEmoji:"🍺", vibeText:"Envie d'une bière de micro et de bonne compagnie.", tags:["Sportif","Chill"], height:"183 cm", langues:"Français", lastSeen:"En ligne", bio:"Vélo le jour, bière de micro le soir. Toujours partant.", lat:USER_LOC.lat+0.0025, lng:USER_LOC.lng+0.0050},
-  {id:8, hot:true, name:"Laurie", age:24, sexe:"Femme", avatar:"https://i.pravatar.cc/400?img=44", status:"online", zone:"Petite-Italie", address:"Boulevard Saint-Laurent, Petite-Italie", intention:"Rencontre spontanée", vibeEmoji:"🍕", vibeText:"Envie de pizza, de vin nature pis de rire fort.", tags:["Fêtarde","Spontané"], height:"160 cm", langues:"Français, Italien", lastSeen:"En ligne", bio:"Pizza, vin nature et danse improvisée dans la cuisine.", lat:USER_LOC.lat+0.0050, lng:USER_LOC.lng-0.0065},
-  {id:9, name:"Gabrielle", age:30, sexe:"Femme", avatar:"https://i.pravatar.cc/400?img=48", status:"offline", zone:"Outremont", address:"Avenue Bernard, Outremont", intention:"Voir où ça mène", vibeEmoji:"🌳", vibeText:"Envie d'une marche tranquille et d'une vraie discussion.", tags:["Discret","Romantique"], height:"166 cm", langues:"Français, Anglais", lastSeen:"Il y a 1 j", bio:"Grande marcheuse de parc, toujours un café à la main.", lat:USER_LOC.lat+0.0090, lng:USER_LOC.lng-0.0105},
-  {id:10, name:"Nicolas", age:28, sexe:"Homme", avatar:"https://i.pravatar.cc/400?img=14", status:"recent", zone:"Mile End", address:"Rue Saint-Viateur, Mile End", intention:"Connexion casual", vibeEmoji:"🥯", vibeText:"Envie d'un bagel pis de jaser sans prise de tête.", tags:["Chill","Discussion"], height:"176 cm", langues:"Français, Anglais", lastSeen:"Il y a 20 min", bio:"Bagels et longues discussions, dans le désordre.", lat:USER_LOC.lat+0.0065, lng:USER_LOC.lng+0.0090},
-  {id:11, name:"Béatrice", age:27, sexe:"Femme", avatar:"https://i.pravatar.cc/400?img=41", status:"online", zone:"Hochelaga", address:"Rue Ontario, Hochelaga", intention:"Sortie / Activité", vibeEmoji:"🎤", vibeText:"D'humeur à découvrir un nouveau bar à shows ce soir.", tags:["Fêtarde","Sortie"], height:"171 cm", langues:"Français", lastSeen:"En ligne", bio:"Toujours partante pour découvrir un nouveau bar à shows.", lat:USER_LOC.lat-0.0035, lng:USER_LOC.lng+0.0078},
-  {id:12, name:"Simon", age:32, sexe:"Homme", avatar:"https://i.pravatar.cc/400?img=52", status:"offline", zone:"Centre-ville", address:"Rue Peel, Centre-ville", intention:"Relation sérieuse", vibeEmoji:"💬", vibeText:"Envie de vraies conversations, pas de petits jeux.", tags:["Discret","Chill"], height:"185 cm", langues:"Français, Anglais", lastSeen:"Il y a 6 h", bio:"J'aime les vraies conversations plus que les petits jeux.", lat:USER_LOC.lat-0.0085, lng:USER_LOC.lng+0.0035},
-  {id:13, name:"Charlie", age:26, sexe:"Non-binaire", avatar:"https://i.pravatar.cc/400?img=25", status:"online", zone:"Plateau", address:"Rue Gilford, Le Plateau", intention:"Rencontre spontanée", vibeEmoji:"🎧", vibeText:"Envie d'une bière improvisée sur une terrasse.", tags:["Chill","Discussion"], height:"172 cm", langues:"Français, Anglais", lastSeen:"En ligne", bio:"Toujours partant·e pour une bière improvisée sur une terrasse.", lat:USER_LOC.lat+0.0038, lng:USER_LOC.lng-0.0055},
-  {id:14, name:"Sam", age:29, sexe:"Non-binaire", avatar:"https://i.pravatar.cc/400?img=36", status:"recent", zone:"Mile End", address:"Rue Fairmount, Mile End", intention:"Voir où ça mène", vibeEmoji:"🚶", vibeText:"Envie d'une longue marche et d'un show improvisé.", tags:["Spontané","Musique"], height:"169 cm", langues:"Français", lastSeen:"Il y a 8 min", bio:"Shows de musique locale et longues marches dans le Mile End.", lat:USER_LOC.lat-0.0028, lng:USER_LOC.lng+0.0072},
+  {id:1, hot:true, availabilityMin:0, name:"Émilie", age:28, sexe:"Femme", avatar:"https://i.pravatar.cc/400?img=45", status:"online", zone:"Plateau", address:"Rue Saint-Denis, Le Plateau", intention:"Rencontre spontanée", vibeEmoji:"🍸", vibeText:"Envie de sortir prendre un verre, là maintenant.", tags:["Spontané","Chill","Fêtarde"], height:"165 cm", langues:"Français, Anglais", lastSeen:"À l'instant", bio:"À la recherche de bonnes vibes et de nouvelles rencontres.", lat:45.5240, lng:-73.5814},
+  {id:2, name:"Sophie", age:27, sexe:"Femme", avatar:"https://i.pravatar.cc/400?img=32", status:"online", zone:"Hochelaga", address:"Rue Ontario, Hochelaga", intention:"Connexion casual", vibeEmoji:"☕", vibeText:"Juste envie de jaser autour d'un café tranquille.", tags:["Discussion","Café","Sortie"], height:"170 cm", langues:"Français", lastSeen:"En ligne", bio:"Café tranquille ou sortie improvisée, je suis partante pour les deux.", lat:45.5455, lng:-73.5410},
+  {id:3, name:"Julien", age:31, sexe:"Homme", avatar:"https://i.pravatar.cc/400?img=13", status:"recent", zone:"Mile End", address:"Avenue du Parc, Mile End", intention:"Voir où ça mène", vibeEmoji:"🎸", vibeText:"Envie de musique live et de découvrir du nouveau monde.", tags:["Musique","Chill"], height:"180 cm", langues:"Français, Anglais", lastSeen:"Il y a 12 min", bio:"Guitare, vinyles et bons vieux diners du Mile End.", lat:45.5248, lng:-73.6055},
+  {id:4, hot:true, name:"Mélanie", age:26, sexe:"Femme", avatar:"https://i.pravatar.cc/400?img=47", status:"online", zone:"Centre-ville", address:"Rue Sainte-Catherine, Centre-ville", intention:"Sortie / Activité", vibeEmoji:"🌆", vibeText:"Envie de terrasse et de découvrir un nouveau bar ce soir.", tags:["Fêtarde","Romantique"], height:"163 cm", langues:"Français, Anglais, Espagnol", lastSeen:"En ligne", bio:"J'adore la vibe des terrasses le soir, viens on essaie un nouveau bar.", lat:45.5010, lng:-73.5690},
+  {id:5, name:"Alex", age:29, sexe:"Homme", avatar:"https://i.pravatar.cc/400?img=15", status:"offline", zone:"Rosemont", address:"Rue Masson, Rosemont", intention:"Relation sérieuse", vibeEmoji:"🕯️", vibeText:"Envie de quelque chose de vrai, sans se presser.", tags:["Discret","Chill"], height:"178 cm", langues:"Français", lastSeen:"Il y a 3 h", bio:"Pas pressé, j'aime prendre le temps de connaître les gens.", lat:45.5470, lng:-73.5745},
+  {id:6, hot:true, name:"Camille", age:25, sexe:"Femme", avatar:"https://i.pravatar.cc/400?img=33", status:"recent", zone:"Vieux-Montréal", address:"Rue Saint-Paul, Vieux-Montréal", intention:"Flirt", vibeEmoji:"💫", vibeText:"D'humeur à flirter et improviser une soirée.", tags:["Romantique","Discussion"], height:"168 cm", langues:"Français, Anglais", lastSeen:"Il y a 5 min", bio:"Amoureuse des vieilles pierres et des soirées improvisées.", lat:45.5080, lng:-73.5555},
+  {id:7, name:"Marc-André", age:33, sexe:"Homme", avatar:"https://i.pravatar.cc/400?img=51", status:"online", zone:"Plateau", address:"Rue Rachel, Le Plateau", intention:"Sortie / Activité", vibeEmoji:"🍺", vibeText:"Envie d'une bière de micro et de bonne compagnie.", tags:["Sportif","Chill"], height:"183 cm", langues:"Français", lastSeen:"En ligne", bio:"Vélo le jour, bière de micro le soir. Toujours partant.", lat:45.5222, lng:-73.5836},
+  {id:8, hot:true, name:"Laurie", age:24, sexe:"Femme", avatar:"https://i.pravatar.cc/400?img=44", status:"online", zone:"Petite-Italie", address:"Boulevard Saint-Laurent, Petite-Italie", intention:"Rencontre spontanée", vibeEmoji:"🍕", vibeText:"Envie de pizza, de vin nature pis de rire fort.", tags:["Fêtarde","Spontané"], height:"160 cm", langues:"Français, Italien", lastSeen:"En ligne", bio:"Pizza, vin nature et danse improvisée dans la cuisine.", lat:45.5385, lng:-73.6120},
+  {id:9, name:"Gabrielle", age:30, sexe:"Femme", avatar:"https://i.pravatar.cc/400?img=48", status:"offline", zone:"Outremont", address:"Avenue Bernard, Outremont", intention:"Voir où ça mène", vibeEmoji:"🌳", vibeText:"Envie d'une marche tranquille et d'une vraie discussion.", tags:["Discret","Romantique"], height:"166 cm", langues:"Français, Anglais", lastSeen:"Il y a 1 j", bio:"Grande marcheuse de parc, toujours un café à la main.", lat:45.5195, lng:-73.6105},
+  {id:10, name:"Nicolas", age:28, sexe:"Homme", avatar:"https://i.pravatar.cc/400?img=14", status:"recent", zone:"Mile End", address:"Rue Saint-Viateur, Mile End", intention:"Connexion casual", vibeEmoji:"🥯", vibeText:"Envie d'un bagel pis de jaser sans prise de tête.", tags:["Chill","Discussion"], height:"176 cm", langues:"Français, Anglais", lastSeen:"Il y a 20 min", bio:"Bagels et longues discussions, dans le désordre.", lat:45.5228, lng:-73.6025},
+  {id:11, name:"Béatrice", age:27, sexe:"Femme", avatar:"https://i.pravatar.cc/400?img=41", status:"online", zone:"Hochelaga", address:"Rue Ontario, Hochelaga", intention:"Sortie / Activité", vibeEmoji:"🎤", vibeText:"D'humeur à découvrir un nouveau bar à shows ce soir.", tags:["Fêtarde","Sortie"], height:"171 cm", langues:"Français", lastSeen:"En ligne", bio:"Toujours partante pour découvrir un nouveau bar à shows.", lat:45.5438, lng:-73.5380},
+  {id:12, name:"Simon", age:32, sexe:"Homme", avatar:"https://i.pravatar.cc/400?img=52", status:"offline", zone:"Centre-ville", address:"Rue Peel, Centre-ville", intention:"Relation sérieuse", vibeEmoji:"💬", vibeText:"Envie de vraies conversations, pas de petits jeux.", tags:["Discret","Chill"], height:"185 cm", langues:"Français, Anglais", lastSeen:"Il y a 6 h", bio:"J'aime les vraies conversations plus que les petits jeux.", lat:45.5030, lng:-73.5655},
+  {id:13, name:"Charlie", age:26, sexe:"Non-binaire", avatar:"https://i.pravatar.cc/400?img=25", status:"online", zone:"Plateau", address:"Rue Gilford, Le Plateau", intention:"Rencontre spontanée", vibeEmoji:"🎧", vibeText:"Envie d'une bière improvisée sur une terrasse.", tags:["Chill","Discussion"], height:"172 cm", langues:"Français, Anglais", lastSeen:"En ligne", bio:"Toujours partant·e pour une bière improvisée sur une terrasse.", lat:45.5250, lng:-73.5805},
+  {id:14, name:"Sam", age:29, sexe:"Non-binaire", avatar:"https://i.pravatar.cc/400?img=36", status:"recent", zone:"Mile End", address:"Rue Fairmount, Mile End", intention:"Voir où ça mène", vibeEmoji:"🚶", vibeText:"Envie d'une longue marche et d'un show improvisé.", tags:["Spontané","Musique"], height:"169 cm", langues:"Français", lastSeen:"Il y a 8 min", bio:"Shows de musique locale et longues marches dans le Mile End.", lat:45.5245, lng:-73.6060},
 ];
 
 // PROFILES est la source de vérité utilisée par toute l'app (carte, babillard, Découvrir, chat).
@@ -4488,22 +4895,101 @@ function projectOnRadar(lat,lng,size){
   const scale=Math.min(dist,RADAR_RANGE_METERS)/RADAR_RANGE_METERS;
   const angle=Math.atan2(dx,dy); // angle depuis le nord, sens horaire
   const radius=(size/2-14)*scale;
-  return { x: size/2 + Math.sin(angle)*radius, y: size/2 - Math.cos(angle)*radius };
+  return { x: size/2 + Math.sin(angle)*radius, y: size/2 - Math.cos(angle)*radius, scale };
+}
+function formatRadarKm(meters){
+  const km=meters/1000;
+  return (km>=10 ? Math.round(km) : Math.round(km*10)/10).toString().replace('.',',')+' km';
+}
+let radarActiveTypes = new Set(['events','places']);
+function setRadarTypeFilter(type){
+  if(radarActiveTypes.has(type)){
+    if(radarActiveTypes.size>1) radarActiveTypes.delete(type); // toujours garder au moins un type visible
+  } else {
+    radarActiveTypes.add(type);
+  }
+  document.querySelectorAll('.radar-type-btn').forEach(btn=>{
+    btn.classList.toggle('active', radarActiveTypes.has(btn.dataset.type));
+  });
+  document.querySelectorAll('.radar-blip').forEach(blip=>{
+    const isEventBlip = blip.classList.contains('event');
+    const show = isEventBlip ? radarActiveTypes.has('events') : radarActiveTypes.has('places');
+    blip.style.display = show ? '' : 'none';
+  });
+}
+function renderRadarBearing(size){
+  const host=document.getElementById('radarBearing');
+  if(!host) return;
+  host.innerHTML='';
+  const radius=size/2;
+  const labelRadius=radius-16; // rayon des chiffres, juste sous les graduations
+  for(let deg=0; deg<360; deg+=10){
+    const rad=(deg-90)*Math.PI/180; // 0° = plein nord (haut)
+    const isMajor = deg % 30 === 0;
+    const label=document.createElement('span');
+    label.className='radar-bearing-label';
+    label.textContent=String(deg).padStart(3,'0');
+    if(isMajor){ label.style.fontWeight='900'; label.style.opacity='1'; } else { label.style.opacity='.65'; label.style.fontSize='8.5px'; }
+    const lx=Math.cos(rad)*labelRadius, ly=Math.sin(rad)*labelRadius;
+    label.style.transform=`translate(${lx}px, ${ly}px) translate(-50%,-50%)`;
+    host.appendChild(label);
+  }
+}
+function renderRadarSpokes(size){
+  const host=document.getElementById('radarSpokes');
+  if(!host) return;
+  host.innerHTML='';
+  const radius=size/2-14; // même rayon utile que les graduations et les points
+  for(let deg=0; deg<360; deg+=15){
+    const isMajor = deg % 90 === 0;
+    const spoke=document.createElement('div');
+    spoke.className='radar-spoke'+(isMajor?' major':'');
+    spoke.style.height=radius+'px';
+    spoke.style.transform=`rotate(${deg}deg)`;
+    host.appendChild(spoke);
+  }
+}
+function renderRadarScale(size){
+  const scaleHost=document.getElementById('radarScale');
+  if(!scaleHost) return;
+  scaleHost.innerHTML='';
+  // Un repère par anneau (r1..r6 = 16,6/33,3/50/66,6/83,3/100% du rayon), aligné plein sud pour rester lisible
+  [1/6,2/6,3/6,4/6,5/6,1].forEach(fraction=>{
+    const radius=(size/2-14)*fraction;
+    const tick=document.createElement('span');
+    tick.className='radar-scale-tick';
+    tick.style.top=radius+'px';
+    tick.textContent=formatRadarKm(RADAR_RANGE_METERS*fraction);
+    scaleHost.appendChild(tick);
+  });
 }
 function renderRadarMap(){
   const blipsHost=document.getElementById('radarBlips');
   if(!blipsHost) return;
   const size=layoutRadarDial();
   if(!size) return;
+  renderRadarScale(size);
+  renderRadarBearing(size);
+  renderRadarSpokes(size);
   blipsHost.innerHTML='';
   let count=0;
+  let featuredEventDone=false, featuredPlaceDone=false;
   const addBlip=(lat,lng,cls,name,fullLabel,onClick)=>{
     if(lat==null || lng==null) return;
-    const {x,y}=projectOnRadar(lat,lng,size);
+    const {x,y,scale}=projectOnRadar(lat,lng,size);
     const el=document.createElement('div');
-    el.className='radar-blip '+cls;
+    let isFeatured=false;
+    if(cls==='event' && !featuredEventDone){ isFeatured=true; featuredEventDone=true; }
+    if(cls==='place' && !featuredPlaceDone){ isFeatured=true; featuredPlaceDone=true; }
+    el.className='radar-blip '+cls+(isFeatured?' featured':'');
     el.style.left=x+'px'; el.style.top=y+'px';
+    if(!isFeatured){
+      // Taille variable selon la distance réelle : plus c'est proche, plus gros le point (couleurs inchangées)
+      const dotSize=Math.round(11 + (1-scale)*9);
+      el.style.width=dotSize+'px'; el.style.height=dotSize+'px';
+    }
     el.style.animationDelay=(Math.random()*2)+'s';
+    if(!radarActiveTypes.has(cls==='event'?'events':'places')) el.style.display='none';
     el.title=fullLabel||'';
     const labelEl=document.createElement('span');
     labelEl.className='radar-blip-label';
@@ -5224,83 +5710,169 @@ async function cnSendMessage(){
 document.getElementById('cnClose').addEventListener('click', closeChatNow);
 document.getElementById('chatNowOverlay').addEventListener('click', e=>{ if(e.target.id==='chatNowOverlay') closeChatNow(); });
 
-/* ================= LECTEUR DE MUSIQUE ================= */
+/* ================= LECTEUR DE MUSIQUE — VERSION RÉELLE ================= */
 (function(){
   const overlay = document.getElementById('musicOverlay');
   const eq = document.getElementById('musicEq');
+  const sourceStatus = document.getElementById('musicSourceStatus');
+  const ytWrap = document.getElementById('youtubePlayerWrap');
   const BAR_COUNT = 16;
-  for(let i=0;i<BAR_COUNT;i++){
-    const bar = document.createElement('div');
-    bar.className = 'music-eq-bar';
-    bar.style.height = (18 + Math.random()*72) + '%';
-    bar.style.animationDelay = (Math.random()*0.6).toFixed(2) + 's';
-    eq.appendChild(bar);
-  }
-  function randomizeBars(){
-    eq.querySelectorAll('.music-eq-bar').forEach(bar=>{ bar.style.height = (18 + Math.random()*72) + '%'; });
-  }
-  let barInterval = setInterval(randomizeBars, 900);
-
-  function openMusic(){ overlay.classList.add('show'); }
-  function closeMusic(){ overlay.classList.remove('show'); }
-  document.getElementById('btn-music-fab').addEventListener('click', openMusic);
-  document.getElementById('musicClose').addEventListener('click', closeMusic);
-  overlay.addEventListener('click', e=>{ if(e.target.id==='musicOverlay') closeMusic(); });
-
-  let playing = true;
+  const linkInput = document.getElementById('musicLinkInput');
   const playBtn = document.getElementById('musicPlayBtn');
   const playIcon = document.getElementById('musicPlayIcon');
-  playBtn.addEventListener('click', ()=>{
-    playing = !playing;
-    eq.classList.toggle('playing', playing);
-    if(playing){
-      playIcon.innerHTML = '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>';
-      barInterval = setInterval(randomizeBars, 900);
-    } else {
-      playIcon.innerHTML = '<polygon points="7 4 20 12 7 20 7 4"/>';
-      clearInterval(barInterval);
-    }
-  });
-
   const volSlider = document.getElementById('musicVolumeSlider');
   const volPct = document.getElementById('musicVolumePct');
-  volSlider.addEventListener('input', ()=>{ volPct.textContent = volSlider.value + '%'; });
-
   const bassSlider = document.getElementById('musicBassSlider');
   const bassVal = document.getElementById('musicBassVal');
-  bassSlider.addEventListener('input', ()=>{ bassVal.textContent = parseFloat(bassSlider.value).toFixed(1) + ' dB'; });
   const trebleSlider = document.getElementById('musicTrebleSlider');
   const trebleVal = document.getElementById('musicTrebleVal');
-  trebleSlider.addEventListener('input', ()=>{ trebleVal.textContent = parseFloat(trebleSlider.value).toFixed(1) + ' dB'; });
+  const connectRow = document.getElementById('musicConnectRow');
+  const addBtn = document.getElementById('musicAddBtn');
+  const miniBar = document.getElementById('btn-music-mini');
+  const miniPlayIcon = document.getElementById('musicMiniPlayIcon');
+  const miniTitle = document.getElementById('musicMiniTitle');
+  const miniSub = document.getElementById('musicMiniSub');
+  const miniEq = document.getElementById('musicMiniEq');
+  const miniWaveLine = document.getElementById('musicMiniWaveLine');
+  const miniTimeCur = document.getElementById('musicMiniTimeCur');
+  const miniTimeDur = document.getElementById('musicMiniTimeDur');
+  const miniProgressFill = document.getElementById('musicMiniProgressFill');
+  const prevBtn = document.getElementById('musicPrevBtn');
+  const nextBtn = document.getElementById('musicNextBtn');
+  const waveLine = document.getElementById('musicWaveLine');
+  const timeCur = document.getElementById('musicTimeCur');
+  const timeDur = document.getElementById('musicTimeDur');
+  const progressFill = document.getElementById('musicProgressFill');
+  function fmtTime(s){ if(!isFinite(s)||s<0)s=0; const m=Math.floor(s/60), sec=Math.floor(s%60); return m+':'+String(sec).padStart(2,'0'); }
+  const waveHistory = new Array(26).fill(11);
+  const audio = document.createElement('audio');
+  audio.preload = 'metadata'; audio.style.display='none'; document.body.appendChild(audio);
+  let audioCtx=null, analyser=null, sourceNode=null, freqData=null, ytPlayer=null, ytReady=false;
+  let activeSource='none';
+  for(let i=0;i<BAR_COUNT;i++){const bar=document.createElement('div');bar.className='music-eq-bar';bar.style.height='3%';eq.appendChild(bar);}
+  for(let i=0;i<12;i++){const bar=document.createElement('i');bar.style.height='3%';miniEq.appendChild(bar);}
+  function initAnalyzer(){
+    if(audioCtx)return;
+    audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    analyser=audioCtx.createAnalyser(); analyser.fftSize=128; analyser.smoothingTimeConstant=.72;
+    sourceNode=audioCtx.createMediaElementSource(audio); sourceNode.connect(analyser); analyser.connect(audioCtx.destination);
+    freqData=new Uint8Array(analyser.frequencyBinCount);
+  }
+  function drawEq(){
+    if(analyser && activeSource==='audio'){
+      analyser.getByteFrequencyData(freqData);
+      const all=[...eq.querySelectorAll('.music-eq-bar')], mini=[...miniEq.querySelectorAll('i')];
+      all.forEach((b,i)=>{const k=Math.floor(i*freqData.length/all.length);b.style.height=Math.max(3,(freqData[k]/255)*96)+'%';});
+      mini.forEach((b,i)=>{const k=Math.floor(i*freqData.length/mini.length);b.style.height=Math.max(3,(freqData[k]/255)*100)+'%';});
+      // Trace d'onde réelle (moyenne du bas du spectre), pas d'animation inventée
+      let sum=0; const bandEnd=Math.max(4,Math.floor(freqData.length*0.35));
+      for(let i=0;i<bandEnd;i++) sum+=freqData[i];
+      const avg=sum/bandEnd/255; // 0..1
+      waveHistory.shift(); waveHistory.push(11 - avg*9);
+      if(waveLine) waveLine.setAttribute('points', waveHistory.map((y,i)=>`${(i/(waveHistory.length-1))*100},${y.toFixed(1)}`).join(' '));
+      if(miniWaveLine) miniWaveLine.setAttribute('points', waveHistory.map((y,i)=>`${(i/(waveHistory.length-1))*100},${(y*0.7+2.4).toFixed(1)}`).join(' '));
+    }
+    requestAnimationFrame(drawEq);
+  }
+  drawEq();
+  function stopEqVisual(){eq.classList.remove('playing');if(miniPlayIcon)miniPlayIcon.innerHTML='<polygon points="7 4 20 12 7 20 7 4"/>';}
+  function setPlayIcon(on){
+    const playSvg=on?'<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>':'<polygon points="7 4 20 12 7 20 7 4"/>';
+    playIcon.innerHTML=playSvg; playBtn.setAttribute('aria-label',on?'Pause':'Lecture');
+    if(miniPlayIcon){ miniPlayIcon.innerHTML=playSvg; }
+  }
+  function openMusic(){overlay.classList.add('show');}
+  function closeMusic(){overlay.classList.remove('show');}
+  document.getElementById('mmbOpenZone').addEventListener('click',openMusic);
+  document.getElementById('mmbCollapseBtn').addEventListener('click',openMusic);
+  document.getElementById('musicMiniPrevBtn').addEventListener('click',e=>{e.stopPropagation(); prevBtn.click();});
+  document.getElementById('musicMiniNextBtn').addEventListener('click',e=>{e.stopPropagation(); nextBtn.click();});
+  document.getElementById('musicMiniPlayBtn').addEventListener('click',e=>{e.stopPropagation(); playBtn.click();});
+  const mmbVolumeBtn=document.getElementById('mmbVolumeBtn'), mmbSettingsBtn=document.getElementById('mmbSettingsBtn');
+  if(mmbVolumeBtn) mmbVolumeBtn.addEventListener('click',e=>{e.stopPropagation(); openMusic();});
+  if(mmbSettingsBtn) mmbSettingsBtn.addEventListener('click',e=>{e.stopPropagation(); openMusic();});
+  document.getElementById('musicClose').addEventListener('click',closeMusic); overlay.addEventListener('click',e=>{if(e.target.id==='musicOverlay')closeMusic();});
 
-  const nowTitle = document.getElementById('musicNowTitle');
-  const nowSub = document.getElementById('musicNowSub');
-  document.getElementById('musicChips').addEventListener('click', e=>{
-    const chip = e.target.closest('.music-chip');
-    if(!chip) return;
-    document.querySelectorAll('.music-chip').forEach(c=>c.classList.remove('active'));
-    chip.classList.add('active');
-    if(chip.dataset.title) nowTitle.textContent = chip.dataset.title;
-    if(chip.dataset.sub) nowSub.textContent = chip.dataset.sub;
-    randomizeBars();
-  });
+  function youtubeId(url){
+    try{const u=new URL(url);if(u.hostname.includes('youtu.be'))return u.pathname.slice(1).split('/')[0];if(u.hostname.includes('youtube.com'))return u.searchParams.get('v')||(u.pathname.match(/\/embed\/([^/?]+)/)||[])[1]||(u.pathname.match(/\/shorts\/([^/?]+)/)||[])[1];}catch(e){} return null;
+  }
+  function youtubePlaylistId(url){try{const u=new URL(url);return u.searchParams.get('list');}catch(e){return null;}}
+  function loadYTApi(cb){
+    if(window.YT&&window.YT.Player){cb();return;}
+    window.__laVibeYTQueue=window.__laVibeYTQueue||[]; window.__laVibeYTQueue.push(cb);
+    if(window.__laVibeYTLoading)return; window.__laVibeYTLoading=true;
+    const sc=document.createElement('script');sc.src='https://www.youtube.com/iframe_api';document.head.appendChild(sc);
+    const old=window.onYouTubeIframeAPIReady; window.onYouTubeIframeAPIReady=function(){if(old)old();ytReady=true;(window.__laVibeYTQueue||[]).splice(0).forEach(fn=>fn());};
+  }
+  function showYT(){ytWrap.style.display='block';sourceStatus.textContent='YouTube actif · EQ spectral réel non disponible sur un flux YouTube intégré (aucune fausse animation).';}
+  function hideYT(){ytWrap.style.display='none';sourceStatus.textContent='EQ réel actif pour les fichiers audio locaux/directs.';}
+  function createYT(opts){
+    loadYTApi(()=>{
+      if(ytPlayer){ytPlayer.destroy();ytPlayer=null;}
+      ytPlayer=new YT.Player('youtubePlayer',Object.assign({height:'100%',width:'100%',playerVars:{playsinline:1,controls:1,rel:0}},opts,{events:{onReady:e=>{e.target.setVolume(Number(volSlider.value)||72);},onStateChange:e=>{if(e.data===1){activeSource='youtube';setPlayIcon(true);eq.classList.add('playing');}else if(e.data===2||e.data===0){setPlayIcon(false);eq.classList.remove('playing');}}}}));
+    });
+  }
+  function loadPlaylist(url){
+    const list=youtubePlaylistId(url); if(!list){sourceStatus.textContent='Lien de playlist YouTube invalide.';return false;}
+    activeSource='youtube'; hideYT(); showYT(); nowSub.textContent='Bibliothèque YouTube · playlist chargée';
+    createYT({videoId:undefined,playerVars:{listType:'playlist',list:list,playsinline:1,controls:1,rel:0}}); return true;
+  }
+  function loadVideo(id){activeSource='youtube';showYT();createYT({videoId:id,playerVars:{playsinline:1,controls:1,rel:0}});}
+  const nowTitle=document.getElementById('musicNowTitle'), nowSub=document.getElementById('musicNowSub');
 
-  document.getElementById('musicConnectRow').addEventListener('click', ()=>{
-    document.getElementById('musicConnectRow').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>Bibliothèque YouTube connectée';
+  playBtn.addEventListener('click',async()=>{
+    if(activeSource==='youtube'&&ytPlayer){const st=ytPlayer.getPlayerState();if(st===1)ytPlayer.pauseVideo();else ytPlayer.playVideo();return;}
+    if(!audio.src){nowSub.textContent='Ajoute un fichier audio ou un lien direct .mp3/.m4a/.ogg/.wav';return;}
+    initAnalyzer(); if(audioCtx.state==='suspended')await audioCtx.resume();
+    try{if(audio.paused)await audio.play();else audio.pause();}catch(e){nowSub.textContent='Lecture bloquée : appuie encore sur ▶';}
   });
+  audio.addEventListener('play',()=>{activeSource='audio';setPlayIcon(true);eq.classList.add('playing');});
+  audio.addEventListener('pause',()=>{setPlayIcon(false);eq.classList.remove('playing');});
+  audio.addEventListener('ended',()=>{setPlayIcon(false);eq.classList.remove('playing');});
+  audio.addEventListener('error',()=>{nowSub.textContent='Lien audio non lisible par le navigateur.';setPlayIcon(false);stopEqVisual();});
+  audio.addEventListener('loadedmetadata',()=>{ if(timeDur) timeDur.textContent=fmtTime(audio.duration); if(miniTimeDur) miniTimeDur.textContent=fmtTime(audio.duration); });
+  audio.addEventListener('timeupdate',()=>{
+    if(timeCur) timeCur.textContent=fmtTime(audio.currentTime);
+    if(miniTimeCur) miniTimeCur.textContent=fmtTime(audio.currentTime);
+    if(audio.duration){
+      const pct=Math.min(100,(audio.currentTime/audio.duration)*100);
+      if(progressFill) progressFill.style.width=pct+'%';
+      if(miniProgressFill) miniProgressFill.style.width=pct+'%';
+    }
+  });
+  function cycleChip(dir){
+    const chips=[...document.querySelectorAll('.music-chip')];
+    if(!chips.length)return;
+    let idx=chips.findIndex(c=>c.classList.contains('active'));
+    if(idx===-1)idx=0;
+    idx=(idx+dir+chips.length)%chips.length;
+    chips[idx].click();
+  }
+  prevBtn && prevBtn.addEventListener('click',()=>cycleChip(-1));
+  nextBtn && nextBtn.addEventListener('click',()=>cycleChip(1));
+  volSlider.addEventListener('input',()=>{const v=Math.max(0,Math.min(100,Number(volSlider.value)||0));audio.volume=v/100;volPct.textContent=v+'%';if(ytPlayer&&ytPlayer.setVolume)ytPlayer.setVolume(v);});
+  audio.volume=Number(volSlider.value)/100;
+  bassSlider.addEventListener('input',()=>bassVal.textContent=parseFloat(bassSlider.value).toFixed(1)+' dB');
+  trebleSlider.addEventListener('input',()=>trebleVal.textContent=parseFloat(trebleSlider.value).toFixed(1)+' dB');
 
-  const linkInput = document.getElementById('musicLinkInput');
-  document.getElementById('musicAddBtn').addEventListener('click', ()=>{
-    const val = linkInput.value.trim();
-    if(!val) return;
-    nowTitle.textContent = 'Nouvelle toune ajoutée';
-    nowSub.textContent = 'Youtube · Lien collé';
-    document.querySelectorAll('.music-chip').forEach(c=>c.classList.remove('active'));
-    linkInput.value = '';
-    randomizeBars();
+  document.getElementById('musicChips').addEventListener('click',e=>{const chip=e.target.closest('.music-chip');if(!chip)return;document.querySelectorAll('.music-chip').forEach(c=>c.classList.remove('active'));chip.classList.add('active');if(chip.dataset.title)nowTitle.textContent=chip.dataset.title;if(chip.dataset.sub)nowSub.textContent=chip.dataset.sub;});
+  connectRow.addEventListener('click',()=>{
+    const url=prompt('Colle le lien de ta playlist YouTube publique ou non répertoriée :','https://www.youtube.com/playlist?list=');
+    if(url)loadPlaylist(url);
   });
+  addBtn.addEventListener('click',()=>{
+    const val=linkInput.value.trim();if(!val)return;
+    const list=youtubePlaylistId(val), yt=youtubeId(val);
+    if(list){loadPlaylist(val);nowTitle.textContent='Ma bibliothèque YouTube';nowSub.textContent='Playlist YouTube';}
+    else if(yt){loadVideo(yt);nowTitle.textContent='YouTube — vidéo sélectionnée';nowSub.textContent='Lecture YouTube intégrée';}
+    else if(/\.(mp3|m4a|aac|ogg|oga|wav|webm)(\?.*)?$/i.test(val)){hideYT();activeSource='audio';audio.src=val;audio.load();nowTitle.textContent='Nouvelle toune';nowSub.textContent='Fichier audio direct';audio.play().catch(()=>nowSub.textContent='Prêt — appuie sur ▶ pour lancer la lecture');}
+    else{nowSub.textContent='Colle un lien YouTube, une playlist ou un lien direct audio.';return;}
+    linkInput.value='';
+  });
+  linkInput.addEventListener('keydown',e=>{if(e.key==='Enter')addBtn.click();});
+  setPlayIcon(false);volPct.textContent=volSlider.value+'%';
+  sourceStatus.textContent='Aucune fausse visualisation : EQ réel seulement quand le navigateur peut analyser le flux audio.';
 })();
-
 
 /* ================= MENU PROFIL DEPUIS LE CHAT (voir profil / message privé / favoris / bloquer) ================= */
 // Ensemble des ids bloqués dans les deux sens (moi → eux, ou eux → moi) — les deux parties
@@ -5513,18 +6085,36 @@ filtersBackdrop.addEventListener('click', closeFilters);
 const ICON_FILTERS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="16" cy="12" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="10" cy="18" r="2" fill="currentColor" stroke="none"/></svg>`;
 const ICON_SETTINGS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`;
 const btnTopbarRight = document.getElementById('btn-filters-top');
+const radarDetailsPopover = document.getElementById('radarDetailsPopover');
+const ICON_INFO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.6" r="1" fill="currentColor" stroke="none"/></svg>`;
+function closeRadarDetails(){ radarDetailsPopover.classList.remove('show'); }
+function toggleRadarDetails(){ radarDetailsPopover.classList.toggle('show'); }
+document.addEventListener('click', (e)=>{
+  if(!radarDetailsPopover.classList.contains('show')) return;
+  if(radarDetailsPopover.contains(e.target) || e.target.closest('#btn-filters-top')) return;
+  closeRadarDetails();
+});
 function updateTopbarRightButton(tab){
   if(tab === 'profil'){
     btnTopbarRight.style.display = 'none';
+    closeRadarDetails();
+  } else if(tab === 'decouvrir'){
+    btnTopbarRight.classList.add('topbar-details-btn');
+    btnTopbarRight.innerHTML = ICON_INFO + '<span>Détails</span>';
+    btnTopbarRight.setAttribute('aria-label','Détails');
+    btnTopbarRight.style.display = '';
   } else {
+    btnTopbarRight.classList.remove('topbar-details-btn');
     btnTopbarRight.innerHTML = ICON_SETTINGS;
     btnTopbarRight.setAttribute('aria-label','Paramètres');
     btnTopbarRight.style.display = '';
+    closeRadarDetails();
   }
 }
 btnTopbarRight.addEventListener('click', ()=>{
   const label = btnTopbarRight.getAttribute('aria-label');
-  if(label === 'Paramètres') openSettings();
+  if(label === 'Détails') toggleRadarDetails();
+  else if(label === 'Paramètres') openSettings();
   else openFilters();
 });
 updateTopbarRightButton('carte'); // Carte est l'onglet actif par défaut au chargement (pas de passage par switchTab)
@@ -5966,8 +6556,8 @@ function ccAuthorized(){return CC_ROLE==='admin'||CC_ROLE==='operator'}
 function ccSetSync(text,ok=false){const e=document.getElementById('ccSyncState');if(e){e.textContent=(ok?'🟢 ':'⚠️ ')+text;e.style.borderColor=ok?'rgba(78,220,130,.3)':'rgba(255,176,32,.3)';}}
 async function ccLoadRole(){
   CC_ROLE=null;
-  if(!supabaseClient||!currentUserId){ccSetSync('Local / non connecté');ccHideNav();return false}
-  try{const {data,error}=await supabaseClient.from('ce_soir_admins').select('role,actif').eq('user_id',currentUserId).maybeSingle(); if(!error&&data?.actif!==false&&['admin','operator'].includes(data?.role)){CC_ROLE=data.role;ccShowNav();ccSetSync('Supabase · '+data.role,true);return true}}catch(e){}
+  if(!supabaseClient||!currentUserId){ccSetSync('Local / non connecté');ccHideNav();alert('DIAGNOSTIC : pas connecté (currentUserId = '+currentUserId+')');return false}
+  try{const {data,error}=await supabaseClient.from('ce_soir_admins').select('role,actif').eq('user_id',currentUserId).maybeSingle(); if(!error&&data?.actif!==false&&['admin','operator'].includes(data?.role)){CC_ROLE=data.role;ccShowNav();ccSetSync('Supabase · '+data.role,true);return true} alert('DIAGNOSTIC\nuser_id : '+currentUserId+'\nerror : '+(error?error.message:'aucune')+'\ndata : '+JSON.stringify(data))}catch(e){alert('DIAGNOSTIC exception : '+(e.message||e))}
   ccHideNav();ccSetSync('Accès opérateur non autorisé');return false;
 }
 function ccShowNav(){const b=document.getElementById('navControlBtn');if(b)b.style.display='flex'}
@@ -6223,7 +6813,7 @@ async function ccResolveReport(id,action){
 }
 document.querySelectorAll('[data-ccrfilter]').forEach(b=>b.addEventListener('click',()=>{CC_RFILTER=b.dataset.ccrfilter;ccRenderReports()}));
 
-const views = { carte:'view-carte', decouvrir:'view-decouvrir', now:'view-now', babillard:'view-babillard', messages:'view-messages', profil:'view-profil', controle:'view-controle' };
+const views = { carte:'view-carte', decouvrir:'view-decouvrir', calendrier:'view-calendrier', now:'view-now', babillard:'view-babillard', messages:'view-messages', profil:'view-profil', controle:'view-controle' };
 document.querySelectorAll('.navbtn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     if(btn.dataset.tab==='now'){
@@ -6254,6 +6844,7 @@ function switchTab(tab){
   const ticker = document.getElementById('ghostTicker');
   if(ticker) ticker.style.opacity = (tab === 'carte') ? '1' : '0';
   if(tab==='decouvrir') renderDiscoverFeed();
+  if(tab==='calendrier') renderCalendar();
   if(tab==='now') renderNow();
   if(tab==='babillard') renderBabillard();
   if(tab==='messages') renderConvList();
@@ -6261,6 +6852,61 @@ function switchTab(tab){
   if(typeof setMenuBtnIcon === 'function') setMenuBtnIcon(tab);
   if(typeof updateTopbarRightButton === 'function') updateTopbarRightButton(tab);
 }
+
+
+function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+/* ===== CALENDRIER UI ===== */
+let calendarCursor = new Date(); calendarCursor.setDate(1);
+let calendarSelectedKey = null;
+function calendarEvents(){
+  const raw=(DISCOVER_PLACES||[]).filter(p=>p && p.isEvenement!==false);
+  return raw.map((p,i)=>{
+    const d=p.startAt||p.start_at||p.date||null;
+    const dt=d?new Date(d):null;
+    return {id:p.id??i,title:p.nom||p.titre||'Événement',zone:p.zone||p.lieu||p.adresse||'Lieu non précisé',start:d,dt,price:p.prix??'Gratuit',emoji:p.emoji||'•'};
+  }).filter(e=>e.dt && !Number.isNaN(e.dt.getTime()));
+}
+function calKey(dt){return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`}
+function calTime(e){if(!e.dt)return 'heure non précisée'; return e.dt.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'});}
+function renderCalendar(){
+  const grid=document.getElementById('calendarGrid'); if(!grid)return;
+  const y=calendarCursor.getFullYear(), m=calendarCursor.getMonth();
+  const monthName=new Intl.DateTimeFormat('fr-CA',{month:'long',year:'numeric'}).format(calendarCursor);
+  document.getElementById('calMonthTitle').textContent=monthName;
+  const evs=calendarEvents(); const byDay={}; evs.forEach(e=>{const k=calKey(e.dt);(byDay[k]||(byDay[k]=[])).push(e)});
+  const first=new Date(y,m,1); let monday=(first.getDay()+6)%7; const days=new Date(y,m+1,0).getDate();
+  let out='';
+  for(let i=0;i<monday;i++)out+=`<div class="cal-day muted"></div>`;
+  for(let d=1;d<=days;d++){
+    const dt=new Date(y,m,d),k=calKey(dt), has=!!byDay[k], selected=calendarSelectedKey===k;
+    const now=new Date(); const today=k===calKey(now);
+    const cls=['cal-day',has?'has-event':'',today&&!selected?'today':'',selected?'selected':''].filter(Boolean).join(' ');
+    out+=`<button class="${cls}" data-cal-day="${k}">${d}${has?'<i class="cal-dot"></i>':''}</button>`;
+  }
+  while((monday+days)%7) {out+='<div class="cal-day muted"></div>';monday++;}
+  grid.innerHTML=out;
+  grid.querySelectorAll('[data-cal-day]').forEach(b=>b.addEventListener('click',()=>{calendarSelectedKey=b.dataset.calDay;renderCalendar();}));
+  if(!calendarSelectedKey || !byDay[calendarSelectedKey]){
+    const todayKey=calKey(new Date()); calendarSelectedKey=byDay[todayKey]?todayKey:Object.keys(byDay).sort()[0]||null;
+    if(calendarSelectedKey) renderCalendarSelected(byDay[calendarSelectedKey]); else renderCalendarSelected([]);
+  } else renderCalendarSelected(byDay[calendarSelectedKey]||[]);
+  renderCalendarFreeList(evs);
+}
+function renderCalendarSelected(evs){
+  const root=document.getElementById('calendarSelectedEvents'); if(!root)return;
+  const label=document.getElementById('calEventsTitle');
+  if(!evs.length){label.textContent='MES ÉVÉNEMENTS • AUCUN';root.innerHTML='<div style="padding:12px;color:#666;font-size:11px;">Aucun événement cette journée.</div>';return;}
+  const dt=evs[0].dt; label.textContent=`MES ÉVÉNEMENTS • ${evs.length}`;
+  root.innerHTML=evs.map(e=>`<div class="calendar-event-card"><div class="calendar-date-badge"><strong>${dt.getDate()}</strong><span>${dt.toLocaleDateString('fr-CA',{month:'short'}).replace('.','').toUpperCase()}</span></div><div class="calendar-event-main"><div class="calendar-event-title">${escapeHtml(e.title)} <b style="color:#64dff4">✓</b></div><div class="calendar-event-meta"><span>◷ <b>${calTime(e)}</b></span><span>⌖ ${escapeHtml(e.zone)}</span><span>♧ ${e.price==='0'||e.price===0?'Gratuit':escapeHtml(String(e.price||'Gratuit'))}</span></div></div><button class="calendar-event-close" aria-label="Fermer">×</button></div>`).join('');
+}
+function renderCalendarFreeList(evs){
+ const root=document.getElementById('calendarFreeList');if(!root)return;
+ const list=evs.slice().sort((a,b)=>a.dt-b.dt).slice(0,5);
+ root.innerHTML=list.length?list.map(e=>`<div class="calendar-list-row"><span class="date">${e.dt.getDate()} ${e.dt.toLocaleDateString('fr-CA',{month:'short'}).replace('.','').toUpperCase()}</span><span>• ${escapeHtml(e.title)}</span><span class="add">+ Ajouter</span></div>`).join(''):'<div class="calendar-list-row"><span>Aucun événement à afficher.</span></div>';
+}
+document.getElementById('calPrev')?.addEventListener('click',()=>{calendarCursor.setMonth(calendarCursor.getMonth()-1);calendarSelectedKey=null;renderCalendar()});
+document.getElementById('calNext')?.addEventListener('click',()=>{calendarCursor.setMonth(calendarCursor.getMonth()+1);calendarSelectedKey=null;renderCalendar()});
+document.getElementById('calendarRadioPlay')?.addEventListener('click',()=>{document.getElementById('btn-music-mini')?.click();});
 
 /* ================= DÉCOUVRIR (lieux) ================= */
 function placeCardHTML(place, wide){
