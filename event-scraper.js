@@ -272,10 +272,20 @@ async function runScraper() {
 }
 
 // ===== AUTO-RUN =====
-// Lancer immédiatement
-runScraper();
+// ===== AUTO-RUN =====
+const isOnce = process.argv.includes('--once');
 
-// Puis chaque 4h
-setInterval(runScraper, 4 * 60 * 60 * 1000);
+// Lancer immédiatement
+runScraper().then(() => {
+  if (isOnce) {
+    console.log('✅ Passage unique terminé, arrêt du script.');
+    process.exit(0);
+  }
+});
+
+// Puis chaque 4h (seulement si pas en mode --once, ex: en local ou sur Railway)
+if (!isOnce) {
+  setInterval(runScraper, 4 * 60 * 60 * 1000);
+}
 
 // Pour tester rapidement: node event-scraper.js
