@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "Scrape événements gratuits Montréal (données ouvertes Ville de Montréal) → Supabase",
   "main": "event-scraper.js",
-  "scripts": {
+"scripts": {
     "start": "node event-scraper.js",
-    "dev": "node event-scraper.js"
+    "dev": "node event-scraper.js",
+    "once": "node event-scraper.js --once"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.0",
