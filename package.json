@@ -1,17 +1,14 @@
 {
   "name": "ce-soir-event-scraper",
   "version": "1.0.0",
-  "description": "Scrape événements gratuits Montréal → Supabase (table evenements)",
+  "description": "Scrape événements gratuits Montréal (données ouvertes Ville de Montréal) → Supabase",
   "main": "event-scraper.js",
   "scripts": {
     "start": "node event-scraper.js",
-    "once": "node event-scraper.js --once",
     "dev": "node event-scraper.js"
   },
-  "engines": {
-    "node": ">=18"
-  },
   "dependencies": {
-    "@supabase/supabase-js": "^2.38.0"
+    "@supabase/supabase-js": "^2.38.0",
+    "dotenv": "^16.4.5"
   }
 }

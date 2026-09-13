@@ -6,13 +6,21 @@
  * et injecte dans Supabase table `evenements`
  */
 
+require('dotenv').config();
 const https = require('https');
 const http = require('http');
 const { createClient } = require('@supabase/supabase-js');
 
 // ===== CONFIG =====
-const SUPABASE_URL = "https://xdqyciiydyrcihlawbew.supabase.co";
-const SUPABASE_KEY = "sb_publishable_16T1u36mEqGc2efn9rk7Nw_d_cQ6LnI";
+// Ces valeurs viennent maintenant des variables d'environnement (.env en local,
+// "Variables" dans Railway en prod) au lieu d'être écrites en dur dans le code.
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  console.error('❌ SUPABASE_URL et/ou SUPABASE_KEY manquants. Copie .env.example vers .env et remplis les valeurs (ou configure les variables sur Railway).');
+  process.exit(1);
+}
 
 let supabase;
 
