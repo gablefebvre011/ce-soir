@@ -1,0 +1,27 @@
+name: Event Scraper La Vibe
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'   # toutes les 4 heures
+  workflow_dispatch: {}      # permet aussi de le lancer manuellement depuis GitHub
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Installer les dépendances
+        run: npm install
+
+      - name: Lancer le scraper (un seul passage — le cron gère la répétition)
+        run: npm run once
