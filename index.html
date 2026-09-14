@@ -94,7 +94,9 @@
       radial-gradient(120% 70% at 50% 30%, rgba(112,20,232,.16) 0%, transparent 65%);
   }
   #app[data-tab="carte"] .panorama-bg{ background-position:0% center; opacity:.12; }
-  #app[data-tab="decouvrir"] .panorama-bg{ background-position:25% center; }
+  #app[data-tab="decouvrir"] .panorama-bg{ opacity:0 !important; pointer-events:none; }
+  #app[data-tab="decouvrir"] .panorama-veil{ background:#000 !important; opacity:1 !important; }
+
   #app[data-tab="now"] .panorama-bg{ background-position:50% center; }
   #app[data-tab="babillard"] .panorama-bg{ background-position:75% center; }
   #app[data-tab="messages"] .panorama-bg,
@@ -171,6 +173,7 @@
   .icon-btn svg{width:18px;height:18px;}
   .icon-btn-avatar{ padding:0; overflow:hidden; background:rgba(255,255,255,.06); }
   .topbar-avatar-img{ width:100%; height:100%; object-fit:cover; border-radius:50%; display:block; }
+  .topbar-actions{ display:flex; align-items:center; gap:8px; }
   .brand{
     display:flex; align-items:center; gap:4px;
     font-family:'Great Vibes',cursive; font-style:normal; font-weight:400; font-size:36px; letter-spacing:.3px;
@@ -519,7 +522,7 @@
     color:#fff; text-align:left; cursor:pointer; overflow:hidden;
   }
   .music-mini-bar::after{ content:''; position:absolute; left:16%; right:16%; bottom:0; height:2px; background:linear-gradient(90deg,transparent,rgba(0,224,255,.85),transparent); box-shadow:0 0 10px rgba(0,224,255,.7); }
-  .mmb-left{ display:flex; align-items:center; gap:9px; flex:1 1 auto; min-width:0; }
+  .mmb-left{ display:flex; align-items:center; gap:9px; flex:1 1 auto; min-width:0; max-width:38%; }
   .mmb-orb{
     width:38px; height:38px; flex:0 0 38px; border-radius:50%; position:relative; overflow:hidden;
     background:radial-gradient(circle at 35% 30%, #8a6bff, #2b1d63 55%, #0a0716 100%);
@@ -542,7 +545,7 @@
   }
   .mmb-play svg{ width:15px; height:15px; filter:drop-shadow(0 0 4px rgba(0,224,255,.8)); }
   .mmb-play:active{ transform:scale(.94); }
-  .mmb-visual{ flex:1 1 auto; min-width:0; max-width:150px; }
+  .mmb-visual{ flex:1 1 auto; min-width:0; }
   .music-mini-eq{ width:100%; height:26px; display:flex; align-items:flex-end; gap:2px; overflow:hidden; }
   .music-mini-eq i{ flex:1; min-height:3px; border-radius:3px 3px 0 0; background:linear-gradient(180deg,#4fd1ff,#1a8dff); box-shadow:0 0 5px rgba(0,180,255,.35); }
   .music-mini-eq i:nth-child(3n){ background:linear-gradient(180deg,#7CFFB2,#18b56f); box-shadow:0 0 5px rgba(70,255,170,.35); }
@@ -581,9 +584,9 @@
 
   .legend{
     position:absolute; left:14px; bottom:calc(76px + env(safe-area-inset-bottom) + 20px); z-index:900;
-    background:linear-gradient(160deg, rgba(58,22,92,.94), rgba(24,14,42,.96)); border:1px solid rgba(224,51,158,.5); transform:translateZ(0);
+    background:linear-gradient(165deg, rgba(14,22,34,.97), rgba(3,7,13,.98)); border:1px solid rgba(198,255,46,.4); transform:translateZ(0);
     border-radius:14px; padding:8px 10px; font-size:9.5px; color:var(--muted);
-    box-shadow:0 0 14px rgba(224,51,158,0.48), 0 0 40px rgba(139,47,217,0.3);
+    box-shadow:0 10px 30px rgba(0,0,0,.5), 0 0 26px rgba(198,255,46,.22), inset 0 0 0 1px rgba(198,255,46,.08);
   }
   .legend div{ display:flex; align-items:center; gap:6px; margin:2px 0; }
   .legend span{ width:8px; height:8px; border-radius:50%; display:inline-block; }
@@ -600,10 +603,10 @@
   .legend-chip.off span{ background:transparent !important; border:1px solid var(--muted); }
 
   .filters-fab{
-    background:linear-gradient(135deg, var(--magenta2), var(--violet));
-    border:none; color:#fff; font-weight:700; font-size:12.5px;
+    background:linear-gradient(165deg, rgba(14,22,34,.97), rgba(3,7,13,.98));
+    border:1px solid rgba(198,255,46,.4); color:#fff; font-weight:700; font-size:12.5px;
     padding:10px 16px; border-radius:24px; display:flex; align-items:center; gap:7px;
-    box-shadow:0 6px 26px rgba(139,47,217,.4), 0 0 16px rgba(194,85,255,0.9), 0 0 43px rgba(139,47,217,0.6); cursor:pointer;
+    box-shadow:0 10px 30px rgba(0,0,0,.5), 0 0 26px rgba(198,255,46,.22), inset 0 0 0 1px rgba(198,255,46,.08); cursor:pointer;
   }
   .filters-fab svg{ width:14px; height:14px; }
   .filters-badge{
@@ -645,6 +648,25 @@
   }
   .navbtn-now.active{ color:var(--flame); }
   .navbtn-now.active .navnow-ring{ box-shadow:0 0 30px rgba(255,94,58,0.95); transform:scale(1.06); }
+
+  /* [Supprimé] Ancien bouton NOW du topbar (haut à droite) : déclenche le même toggle que le nav du bas,
+     mais habillé comme une pastille ronde discrète pour ne rien obstruer. */
+  .topbar-now-btn{
+    display:flex !important; flex-direction:row !important; align-items:center; justify-content:center;
+    width:38px; height:38px; min-width:38px; min-height:44px; padding:0 !important; margin:0; gap:0 !important;
+    border-radius:50%; position:relative; cursor:pointer;
+    background:rgba(255,94,58,.14); border:2px solid var(--flame); color:var(--flame) !important;
+    box-shadow:0 0 10px rgba(255,94,58,.35);
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .topbar-now-btn:hover{ transform:scale(1.06); }
+  .topbar-now-btn:active{ transform:scale(0.94); }
+  .topbar-now-btn svg{ width:17px; height:17px; transform:none !important; filter:none !important; }
+  .topbar-now-btn .topbar-now-dot{
+    position:absolute; top:-2px; right:-2px; width:9px; height:9px; border-radius:50%;
+    background:linear-gradient(135deg,var(--premium),var(--premium2));
+    box-shadow:0 0 6px rgba(255,207,92,.85); border:1.5px solid var(--bg);
+  }
 
   /* ===== Profile bottom sheet ===== */
   .sheet-backdrop{
@@ -924,6 +946,12 @@
     background:linear-gradient(135deg,var(--flame2),#ff8f6e); border:none; color:#0a0e1a;
     font-size:24px; font-weight:800; box-shadow:0 8px 20px rgba(255,94,58,.4); cursor:pointer; z-index:30;
     animation:glowPulse 2.2s ease-in-out infinite;
+  }
+  .bab-fab-label{
+    position:absolute; right:78px; bottom:108px; z-index:30; max-width:120px;
+    font-family:'Inter',system-ui,sans-serif; font-size:13px; font-weight:700; line-height:1.25;
+    color:var(--text); text-align:right; pointer-events:none;
+    text-shadow:0 1px 6px rgba(0,0,0,.5);
   }
   .bab-form-input{
     width:100%; background:rgba(255,255,255,.04); border:1px solid var(--line); border-radius:12px;
@@ -2251,6 +2279,121 @@
   #view-decouvrir .discover-head{margin-top:8px;}
   #view-decouvrir .radar-map-card{border-radius:22px;}
   #view-decouvrir .radar-premium-info{font-size:12px;}
+
+
+  /* ===== RADAR IMMERSIF — univers plein écran ===== */
+  #view-decouvrir{
+    background:#000 !important;
+    padding-top:78px;
+    padding-bottom:calc(92px + env(safe-area-inset-bottom));
+    overflow-y:auto;
+    overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  #view-decouvrir::-webkit-scrollbar{width:0;height:0;}
+  #view-decouvrir .discover-head{
+    position:relative; z-index:20;
+    margin:0 12px 8px; padding:10px 10px 12px;
+    border:0; background:transparent;
+  }
+  #view-decouvrir .discover-head-bolt{
+    width:38px;height:38px;border-radius:50%;font-size:18px;
+    background:radial-gradient(circle at 35% 30%,#36fff0,#0099c7 45%,#06151d 72%);
+    border:1px solid rgba(0,224,255,.55);
+    box-shadow:0 0 12px rgba(0,224,255,.55), inset 0 0 18px rgba(0,224,255,.25);
+  }
+  #view-decouvrir .discover-head-text h2{font-size:0 !important;}
+  #view-decouvrir .discover-head-text h2::after{content:'RADAR';font-size:22px;color:#e7fbff;letter-spacing:2.6px;text-shadow:0 0 14px rgba(0,224,255,.75);}
+  #view-decouvrir .radar-type-toggle{
+    margin-left:auto; display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:flex-end;
+  }
+  #view-decouvrir .radar-type-btn{padding:7px 10px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.2px;background:rgba(2,11,17,.76);}
+  #view-decouvrir .discover-search{
+    position:relative; z-index:20; margin:0 18px 10px; height:38px;
+    border-radius:999px; background:rgba(2,9,14,.78); border:1px solid rgba(0,224,255,.18);
+    box-shadow:0 0 18px rgba(0,224,255,.05), inset 0 0 18px rgba(0,224,255,.02);
+    backdrop-filter:blur(10px);
+  }
+  #view-decouvrir .radar-map-card{
+    margin:0; border:0; border-radius:0; background:#000; box-shadow:none; overflow:visible;
+  }
+  #view-decouvrir .radar-scope{
+    position:relative; width:100%; aspect-ratio:1/1; height:auto; min-height:0; max-height:none;
+    background:
+      radial-gradient(circle at 50% 50%,rgba(0,224,255,.09),transparent 44%),
+      radial-gradient(circle at 50% 50%,rgba(51,0,102,.08),transparent 66%),
+      #000;
+    overflow:hidden;
+  }
+  #view-decouvrir .radar-dial{
+    width:min(96%,650px) !important;height:min(96%,650px) !important;
+    background:
+      radial-gradient(circle at 50% 50%,rgba(0,38,57,.26),rgba(1,9,14,.74) 60%,#000 100%) !important;
+    box-shadow:inset 0 0 70px rgba(0,0,0,.96), 0 0 32px rgba(0,224,255,.09), inset 0 0 34px rgba(0,224,255,.07) !important;
+  }
+  #view-decouvrir .radar-ring{border-color:rgba(0,224,255,.28) !important;}
+  #view-decouvrir .radar-ring.r1{width:16.6%;height:16.6%;}
+  #view-decouvrir .radar-ring.r2{width:33.3%;height:33.3%;}
+  #view-decouvrir .radar-ring.r3{width:50%;height:50%;}
+  #view-decouvrir .radar-ring.r4{width:66.6%;height:66.6%;}
+  #view-decouvrir .radar-ring.r5{width:83.3%;height:83.3%;}
+  #view-decouvrir .radar-ring.r6{width:100%;height:100%;border-color:rgba(0,224,255,.62) !important;}
+  #view-decouvrir .radar-ring.glow{width:100%;height:100%;border:1px solid rgba(57,255,138,.62);box-shadow:0 0 8px rgba(57,255,138,.48),0 0 25px rgba(57,255,138,.18), inset 0 0 14px rgba(57,255,138,.08);}
+  #view-decouvrir .radar-sweep{opacity:.62 !important; animation-duration:5.2s !important;}
+  #view-decouvrir .radar-blip{
+    opacity:.12;
+    filter:saturate(.65) brightness(.76);
+    transition:opacity .35s ease, filter .35s ease, width .18s ease, height .18s ease, box-shadow .35s ease;
+  }
+  #view-decouvrir .radar-blip.featured{opacity:.22;}
+  #view-decouvrir .radar-blip.radar-detected,
+  #view-decouvrir .radar-blip.featured.radar-detected{
+    opacity:1 !important; filter:saturate(1.28) brightness(1.18); animation:radarBlipPulse 1.15s ease-in-out infinite !important;
+  }
+  #view-decouvrir .radar-blip.radar-fading{
+    opacity:.12 !important; filter:saturate(.7) brightness(.8);
+  }
+  #view-decouvrir .radar-blip.is-active{opacity:1 !important; filter:none;}
+  #view-decouvrir .radar-hud{
+    background:rgba(2,7,11,.65); border:1px solid rgba(0,224,255,.16); color:rgba(195,246,255,.82);
+    backdrop-filter:blur(6px);
+  }
+  #view-decouvrir .radar-hud b{color:#fff;}
+  #view-decouvrir .radar-premium-info{
+    margin:0 18px 7px; padding:9px 12px; border-radius:14px;
+    background:linear-gradient(90deg,rgba(0,224,255,.055),rgba(98,0,255,.045));
+    border:1px solid rgba(0,224,255,.12); color:#7e9aa2; font-size:10.5px; font-weight:650;
+  }
+  #view-decouvrir .radar-legend{padding:3px 18px 12px; font-size:10px; color:#748e96;}
+  #view-decouvrir .radar-legend .me{display:none;}
+  #view-decouvrir #discoverSections{position:relative;z-index:18;padding-bottom:18px;}
+  #view-decouvrir .discover-section{
+    margin:0 14px 12px; padding:0; border:0; background:transparent;
+  }
+  #view-decouvrir .discover-section-head{
+    padding:9px 4px; border-bottom:1px solid rgba(255,255,255,.06);
+  }
+  #view-decouvrir .discover-section-head h3{font-size:13px;letter-spacing:.3px;color:#d6f5f8;}
+  #view-decouvrir .radar-signal-card{
+    position:relative; margin:4px 14px 14px; padding:0; min-height:0;
+    border-radius:20px; border:1px solid rgba(0,224,255,.18);
+    background:linear-gradient(145deg,rgba(5,21,28,.95),rgba(4,7,13,.96));
+    box-shadow:0 12px 35px rgba(0,0,0,.38), inset 0 0 28px rgba(0,224,255,.035);
+    overflow:hidden; display:none;
+  }
+  #view-decouvrir .radar-signal-card.show{display:block;animation:radarCardIn .28s ease-out both;}
+  @keyframes radarCardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  #view-decouvrir .radar-signal-card .rsc-inner{padding:15px 16px 16px;}
+  #view-decouvrir .radar-signal-card .rsc-kicker{font-size:9px;font-weight:900;letter-spacing:1.4px;color:#49f7ff;text-transform:uppercase;margin-bottom:5px;}
+  #view-decouvrir .radar-signal-card h3{margin:0 0 5px;font-size:17px;color:#fff;}
+  #view-decouvrir .radar-signal-card p{margin:0;color:#9cb2b8;font-size:11.5px;line-height:1.45;}
+  #view-decouvrir .radar-signal-card .rsc-actions{display:flex;gap:8px;margin-top:12px;}
+  #view-decouvrir .radar-signal-card button{flex:1;border-radius:999px;padding:9px 12px;font-size:11px;font-weight:900;cursor:pointer;border:1px solid rgba(0,224,255,.22);background:rgba(0,224,255,.08);color:#dfffff;}
+  #view-decouvrir .radar-signal-card button.primary{background:linear-gradient(135deg,#00bcd4,#7a31ff);border-color:transparent;box-shadow:0 0 18px rgba(0,224,255,.18);}
+  #view-decouvrir .radar-target-highlight{animation:radarTargetFlash 1.8s ease both !important;}
+  @keyframes radarTargetFlash{0%{box-shadow:0 0 0 0 rgba(0,224,255,0)}25%{box-shadow:0 0 0 6px rgba(0,224,255,.32)}100%{box-shadow:0 0 0 0 rgba(0,224,255,0)}}
+  #view-decouvrir .discover-empty-global{margin:16px 14px;color:#91aab0;}
 }
 </style>
 </head>
@@ -2285,9 +2428,11 @@ window.dbg = function(){};
       <svg id="btnMenuBackIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
     </button>
     <div class="brand">La Vibe<span class="heart">♥</span></div>
-    <button class="icon-btn" id="btn-filters-top" aria-label="Filtres">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="16" cy="12" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="10" cy="18" r="2" fill="currentColor" stroke="none"/></svg>
-    </button>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="btn-filters-top" aria-label="Filtres">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="16" cy="12" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="10" cy="18" r="2" fill="currentColor" stroke="none"/></svg>
+      </button>
+    </div>
   </div>
 
   <!-- Popover "+ Détails" : contient les explications retirées du haut de la page Radar -->
@@ -2342,11 +2487,11 @@ window.dbg = function(){};
       <button class="icon-btn" id="btn-recenter" aria-label="Recentrer sur moi">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
       </button>
-      <div class="live-pill"><span class="lv"></span> <b id="liveCount">2&nbsp;568</b>&nbsp;en ligne</div>
       <button class="filters-fab" id="btn-filters-fab">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="16" cy="12" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="10" cy="18" r="2" fill="currentColor" stroke="none"/></svg>
         Filtres <span class="filters-badge" id="filtersBadge" style="display:none;">0</span>
       </button>
+      <div class="live-pill"><span class="lv"></span> <b id="liveCount">2&nbsp;568</b>&nbsp;en ligne</div>
     </div>
 
     <div class="legend">
@@ -2366,7 +2511,7 @@ window.dbg = function(){};
     <div class="calendar-page">
       <div class="calendar-head">
         <svg class="calendar-head-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 9h18"/></svg>
-        <div><h2>Calendrier</h2></div>
+        <div><h2>Le programme</h2></div>
       </div>
       <p class="calendar-sub">Événements sous les faisceaux turquoises • auto J'Suis Partant</p>
       <div class="calendar-month-row"><button class="calendar-nav-btn" id="calPrev" aria-label="Mois précédent">‹</button><div class="calendar-month-title" id="calMonthTitle"></div><button class="calendar-nav-btn" id="calNext" aria-label="Mois suivant">›</button></div>
@@ -2423,17 +2568,17 @@ window.dbg = function(){};
       <div class="music-chips" id="musicChips">
         <button class="music-chip" data-title="Tes playlists" data-sub="Toutes tes listes">Mes playlists</button>
         <button class="music-chip" data-title="Tes favoris" data-sub="Titres aimés">♥ Liked</button>
-        <button class="music-chip active" data-title="Nebula Drift — Nightwave" data-sub="Youtube · Neon beach mix">Nebula Drift</button>
-        <button class="music-chip" data-title="Ed Sheeran — Mix" data-sub="Youtube · Sélection">Ed Sheeran</button>
-        <button class="music-chip" data-title="Despacito — Luis Fonsi" data-sub="Youtube · Sélection">Despacito</button>
+        <button class="music-chip active" data-title="PLATEAU · 24/7" data-sub="CE SOIR RADIO · Groove ambiant en direct" data-stream="https://ice1.somafm.com/groovesalad-128-mp3">📡 PLATEAU 24/7</button>
+        <button class="music-chip" data-title="Tes playlists" data-sub="Toutes tes listes">Mes playlists</button>
+        <button class="music-chip" data-title="Tes favoris" data-sub="Titres aimés">♥ Liked</button>
       </div>
 
       <div class="console">
         <div class="console-top">
           <div class="console-orb"><span class="console-orb-core"></span></div>
           <div class="console-meta">
-            <p class="music-now-title" id="musicNowTitle">Nebula Drift — Nightwave</p>
-            <p class="music-now-sub" id="musicNowSub">Youtube · Neon beach mix</p>
+            <p class="music-now-title" id="musicNowTitle">PLATEAU · 24/7</p>
+            <p class="music-now-sub" id="musicNowSub">CE SOIR RADIO · Groove ambiant en direct</p>
             <div class="console-tags"><svg viewBox="0 0 24 24" fill="currentColor" style="width:11px;height:11px;"><rect x="3" y="10" width="3" height="8"/><rect x="10.5" y="5" width="3" height="13"/><rect x="18" y="13" width="3" height="5"/></svg>BASS · MID · TREBLE</div>
           </div>
           <div class="console-live" id="musicLiveTag"><span class="dot"></span>Live</div>
@@ -2536,6 +2681,18 @@ window.dbg = function(){};
     <div class="radar-premium-info">Plus un point est éloigné du centre, plus le lieu ou l'événement est loin de toi. <strong>Appuie sur un point pour le découvrir.</strong></div>
     <div class="radar-legend" aria-label="Légende du radar"><span><i class="ev"></i>Événements</span><span><i class="pl"></i>Lieux</span><span><i class="me"></i>Ta position</span></div>
 
+    <div class="radar-signal-card" id="radarSignalCard" aria-live="polite">
+      <div class="rsc-inner">
+        <div class="rsc-kicker" id="radarSignalKicker">SIGNAL DÉTECTÉ</div>
+        <h3 id="radarSignalTitle">—</h3>
+        <p id="radarSignalMeta">—</p>
+        <div class="rsc-actions">
+          <button class="primary" id="radarSignalViewBtn">Voir le détail</button>
+          <button id="radarSignalCloseBtn">Fermer</button>
+        </div>
+      </div>
+    </div>
+
     <div id="discoverSections">
       <div class="discover-section" id="secPartenaires" style="display:none;">
         <div class="discover-section-head"><h3>⭐ Partenaires La Vibe</h3><span id="partnerCount"></span></div>
@@ -2610,6 +2767,7 @@ window.dbg = function(){};
       <p>Reviens plus tard ou change de filtre.</p>
     </div>
 
+    <span class="bab-fab-label" id="babFabLabel">Créer une<br>annonce</span>
     <button class="bab-fab" id="babFab" title="Publier une annonce">+</button>
   </div>
 
@@ -2874,6 +3032,8 @@ window.dbg = function(){};
       <h2>Toi</h2>
       <p>Montréal · Le Plateau</p>
     </div>
+
+    <button class="btn-secondary settings-row" id="btnOpenProgramme" style="margin:4px 20px 18px;width:calc(100% - 40px);"><span class="settings-row-label">Le programme 📅</span><span class="settings-row-arrow">›</span></button>
 
     <div class="section-title">Présentation</div>
     <div class="my-vibe-card">
@@ -3332,10 +3492,6 @@ window.dbg = function(){};
     <button class="navbtn" data-tab="decouvrir">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6c-1.7-1.7-4.5-1.7-6.2 0L12 7.2 9.4 4.6c-1.7-1.7-4.5-1.7-6.2 0-1.7 1.7-1.7 4.5 0 6.2L12 19.4l8.8-8.6c1.7-1.7 1.7-4.5 0-6.2z"/></svg>
       Le Radar
-    </button>
-    <button class="navbtn" data-tab="calendrier">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 9h18"/></svg>
-      Calendrier
     </button>
     <button class="navbtn navbtn-now" data-tab="now" id="navNowBtn">
       <span class="navnow-ring">🔥</span>
@@ -4396,7 +4552,7 @@ document.getElementById('referralShareBtn').addEventListener('click', async ()=>
 })();
 
 function expireHotIfNeeded(){
-  if(hotUntil && Date.now()>hotUntil){ hotUntil=0; myHot=false; localStorage.removeItem('ceSoirHotUntil'); localStorage.setItem('ceSoirMyHot','0'); refreshMyHotUI(); refreshMyHotMap(); const nb=document.getElementById('navNowBtn'); if(nb) nb.classList.add('now-pulse'); showToast('🌙 Ton mode NOW a expiré automatiquement.'); }
+  if(hotUntil && Date.now()>hotUntil){ hotUntil=0; myHot=false; localStorage.removeItem('ceSoirHotUntil'); localStorage.setItem('ceSoirMyHot','0'); refreshMyHotUI(); refreshMyHotMap(); document.querySelectorAll('#navNowBtn,#topNowBtn').forEach(nb=> nb.classList.add('now-pulse')); showToast('🌙 Ton mode NOW a expiré automatiquement.'); }
 }
 expireHotIfNeeded();
 
@@ -4963,6 +5119,87 @@ function renderRadarScale(size){
     scaleHost.appendChild(tick);
   });
 }
+let radarBlipModels = [];
+let radarSweepLoopStarted = false;
+let radarLastSweepIndex = -1;
+let radarSelectedModel = null;
+function radarPointAngleDeg(lat,lng){
+  const dLat=(lat-USER_LOC.lat)*Math.PI/180;
+  const dLng=(lng-USER_LOC.lng)*Math.PI/180;
+  const latRad=USER_LOC.lat*Math.PI/180;
+  const x=dLng*Math.cos(latRad);
+  const y=dLat;
+  let deg=Math.atan2(x,y)*180/Math.PI;
+  if(deg<0) deg+=360;
+  return deg;
+}
+function radarDistanceLabel(lat,lng){
+  const p=projectOnRadar(lat,lng,1000);
+  const km=(p.scale*RADAR_RANGE_METERS)/1000;
+  return (km<10?km.toFixed(1):Math.round(km)).replace('.',',')+' km';
+}
+function showRadarSignalCard(model){
+  radarSelectedModel=model;
+  const card=document.getElementById('radarSignalCard');
+  if(!card) return;
+  const kicker=document.getElementById('radarSignalKicker');
+  const title=document.getElementById('radarSignalTitle');
+  const meta=document.getElementById('radarSignalMeta');
+  const viewBtn=document.getElementById('radarSignalViewBtn');
+  if(kicker) kicker.textContent=model.kind==='event'?'ÉVÉNEMENT DÉTECTÉ':'LIEU DÉTECTÉ';
+  if(title) title.textContent=model.name||'Signal';
+  if(meta) meta.textContent=[model.zone||null, model.distance||null, model.category||null].filter(Boolean).join(' · ') || 'Disponible dans le Radar';
+  if(viewBtn){
+    viewBtn.onclick=()=>{
+      switchTab('decouvrir');
+      setTimeout(()=>{
+        if(model.placeId!=null){
+          const el=document.querySelector(`[data-place-id="${CSS.escape(String(model.placeId))}"]`);
+          if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.classList.add('radar-target-highlight'); setTimeout(()=>el.classList.remove('radar-target-highlight'),1800); }
+        }
+      },100);
+      card.classList.remove('show');
+    };
+  }
+  card.classList.add('show');
+  card.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function hideRadarSignalCard(){
+  const card=document.getElementById('radarSignalCard');
+  if(card) card.classList.remove('show');
+  document.querySelectorAll('.radar-blip.is-active').forEach(b=>b.classList.remove('is-active'));
+  radarSelectedModel=null;
+}
+function startRadarSweepLogic(){
+  if(radarSweepLoopStarted) return;
+  radarSweepLoopStarted=true;
+  const speedMs=5200;
+  const start=performance.now();
+  const loop=(now)=>{
+    const angle=((now-start)%speedMs)/speedMs*360;
+    const idx=Math.floor(angle/3);
+    if(idx!==radarLastSweepIndex){
+      radarLastSweepIndex=idx;
+      radarBlipModels.forEach(model=>{
+        let diff=Math.abs(model.angle-angle); diff=Math.min(diff,360-diff);
+        if(diff<3.2){
+          model.el.classList.remove('radar-fading');
+          model.el.classList.add('radar-detected');
+          clearTimeout(model._fadeTimer);
+          model._fadeTimer=setTimeout(()=>{
+            if(model.el && !model.el.classList.contains('is-active')){
+              model.el.classList.remove('radar-detected');
+              model.el.classList.add('radar-fading');
+              setTimeout(()=>model.el.classList.remove('radar-fading'),2600);
+            }
+          },900);
+        }
+      });
+    }
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+}
 function renderRadarMap(){
   const blipsHost=document.getElementById('radarBlips');
   if(!blipsHost) return;
@@ -4972,58 +5209,46 @@ function renderRadarMap(){
   renderRadarBearing(size);
   renderRadarSpokes(size);
   blipsHost.innerHTML='';
+  radarBlipModels=[];
   let count=0;
   let featuredEventDone=false, featuredPlaceDone=false;
-  const addBlip=(lat,lng,cls,name,fullLabel,onClick)=>{
+  const addBlip=(lat,lng,cls,name,fullLabel,onClick,meta={})=>{
     if(lat==null || lng==null) return;
     const {x,y,scale}=projectOnRadar(lat,lng,size);
     const el=document.createElement('div');
-    let isFeatured=false;
-    if(cls==='event' && !featuredEventDone){ isFeatured=true; featuredEventDone=true; }
-    if(cls==='place' && !featuredPlaceDone){ isFeatured=true; featuredPlaceDone=true; }
+    const isFeatured=(cls==='event'&&!featuredEventDone)||(cls==='place'&&!featuredPlaceDone);
+    if(cls==='event') featuredEventDone ||= isFeatured;
+    if(cls==='place') featuredPlaceDone ||= isFeatured;
     el.className='radar-blip '+cls+(isFeatured?' featured':'');
     el.style.left=x+'px'; el.style.top=y+'px';
-    if(!isFeatured){
-      // Taille variable selon la distance réelle : plus c'est proche, plus gros le point (couleurs inchangées)
-      const dotSize=Math.round(11 + (1-scale)*9);
-      el.style.width=dotSize+'px'; el.style.height=dotSize+'px';
-    }
-    el.style.animationDelay=(Math.random()*2)+'s';
+    if(!isFeatured){ const dotSize=Math.round(11 + (1-scale)*9); el.style.width=dotSize+'px'; el.style.height=dotSize+'px'; }
+    el.style.animationDelay=(Math.random()*1.8)+'s';
     if(!radarActiveTypes.has(cls==='event'?'events':'places')) el.style.display='none';
     el.title=fullLabel||'';
-    const labelEl=document.createElement('span');
-    labelEl.className='radar-blip-label';
-    labelEl.textContent=name||'';
-    el.appendChild(labelEl);
-    el.addEventListener('click',()=>{
+    const labelEl=document.createElement('span'); labelEl.className='radar-blip-label'; labelEl.textContent=name||''; el.appendChild(labelEl);
+    const model={el,angle:radarPointAngleDeg(lat,lng),name,kind:cls,zone:meta.zone||'',category:meta.category||'',distance:radarDistanceLabel(lat,lng),placeId:meta.placeId};
+    el.addEventListener('click',(ev)=>{
+      ev.stopPropagation();
       document.querySelectorAll('.radar-blip').forEach(b=>{ b.classList.remove('is-active'); b.classList.add('is-dimmed'); });
-      el.classList.remove('is-dimmed');
-      el.classList.add('is-active');
-      setTimeout(onClick, 220);
+      el.classList.remove('is-dimmed'); el.classList.add('is-active');
+      showRadarSignalCard(model);
+      if(typeof onClick==='function') onClick(model);
     });
-    blipsHost.appendChild(el);
-    count++;
+    blipsHost.appendChild(el); radarBlipModels.push(model); count++;
   };
   (DISCOVER_PLACES||[]).forEach(place=>{
     const isEvent=!!place.isEvenement;
-    addBlip(place.lat,place.lng, isEvent?'event':'place', place.nom, `${place.nom}${place.zone?' · '+place.zone:''}`, ()=>{
-      switchTab('decouvrir'); setTimeout(()=>{
-        const el=document.querySelector(`[data-place-id="${CSS.escape(String(place.id))}"]`);
-        if(el){
-          el.scrollIntoView({behavior:'smooth',block:'center'});
-          el.classList.add('radar-target-highlight');
-          setTimeout(()=>el.classList.remove('radar-target-highlight'), 1800);
-        }
-      },80);
-    });
+    addBlip(place.lat,place.lng,isEvent?'event':'place',place.nom,`${place.nom}${place.zone?' · '+place.zone:''}`,null,{zone:place.zone,category:place.categorie,placeId:place.id});
   });
   (VENUES||[]).forEach(venue=>{
-    addBlip(venue.lat,venue.lng,'place', venue.nom||'Lieu', `${venue.nom||'Lieu'}${venue.categorie?' · '+venue.categorie:''}`, ()=> selectVenue(venue.id));
+    addBlip(venue.lat,venue.lng,'place',venue.nom||'Lieu',`${venue.nom||'Lieu'}${venue.categorie?' · '+venue.categorie:''}`,()=>selectVenue(venue.id),{category:venue.categorie});
   });
   const c=document.getElementById('radarMapCount'); if(c)c.textContent=`${count} repère${count>1?'s':''}`;
+  startRadarSweepLogic();
 }
 function initRadarMap(){
   renderRadarMap();
+  const close=document.getElementById('radarSignalCloseBtn'); if(close && !close.dataset.bound){ close.dataset.bound='1'; close.addEventListener('click',hideRadarSignalCard); }
 }
 function scheduleRadarMapResize(){
   clearTimeout(scheduleRadarMapResize._t);
@@ -5318,7 +5543,7 @@ if(supabaseClient){
 document.getElementById('signOutBtn').addEventListener('click', signOutUser);
 
 // NOW / radar
-if(!(myHot && hotUntil && Date.now()<hotUntil)) document.getElementById('navNowBtn').classList.add('now-pulse');
+if(!(myHot && hotUntil && Date.now()<hotUntil)) document.querySelectorAll('#navNowBtn,#topNowBtn').forEach(nb=> nb.classList.add('now-pulse'));
 function requestNowConsent(){
   document.getElementById('consentOverlay').classList.add('show');
 }
@@ -5335,7 +5560,7 @@ document.getElementById('consentConfirm').addEventListener('click',()=>{
   localStorage.setItem('ceSoirHotUntil', String(hotUntil));
   refreshMyHotUI();
   refreshMyHotMap();
-  document.getElementById('navNowBtn').classList.remove('now-pulse');
+  document.querySelectorAll('#navNowBtn,#topNowBtn').forEach(nb=> nb.classList.remove('now-pulse'));
   awardXP(10,'Consentement clair');
   showToast('🔥 Mode NOW activé pour 90 minutes');
 });
@@ -5855,7 +6080,7 @@ document.getElementById('chatNowOverlay').addEventListener('click', e=>{ if(e.ta
   bassSlider.addEventListener('input',()=>bassVal.textContent=parseFloat(bassSlider.value).toFixed(1)+' dB');
   trebleSlider.addEventListener('input',()=>trebleVal.textContent=parseFloat(trebleSlider.value).toFixed(1)+' dB');
 
-  document.getElementById('musicChips').addEventListener('click',e=>{const chip=e.target.closest('.music-chip');if(!chip)return;document.querySelectorAll('.music-chip').forEach(c=>c.classList.remove('active'));chip.classList.add('active');if(chip.dataset.title)nowTitle.textContent=chip.dataset.title;if(chip.dataset.sub)nowSub.textContent=chip.dataset.sub;});
+  document.getElementById('musicChips').addEventListener('click',e=>{const chip=e.target.closest('.music-chip');if(!chip)return;document.querySelectorAll('.music-chip').forEach(c=>c.classList.remove('active'));chip.classList.add('active');if(chip.dataset.title)nowTitle.textContent=chip.dataset.title;if(chip.dataset.sub)nowSub.textContent=chip.dataset.sub;if(chip.dataset.stream){hideYT();activeSource='audio';audio.src=chip.dataset.stream;audio.load();initAnalyzer();audio.play().catch(()=>{nowSub.textContent='Prêt — appuie sur ▶ pour lancer la radio';});}});
   connectRow.addEventListener('click',()=>{
     const url=prompt('Colle le lien de ta playlist YouTube publique ou non répertoriée :','https://www.youtube.com/playlist?list=');
     if(url)loadPlaylist(url);
@@ -5872,6 +6097,8 @@ document.getElementById('chatNowOverlay').addEventListener('click', e=>{ if(e.ta
   linkInput.addEventListener('keydown',e=>{if(e.key==='Enter')addBtn.click();});
   setPlayIcon(false);volPct.textContent=volSlider.value+'%';
   sourceStatus.textContent='Aucune fausse visualisation : EQ réel seulement quand le navigateur peut analyser le flux audio.';
+  // Radio par défaut préchargée : Play fonctionne dès le premier tap, sans avoir à coller un lien.
+  activeSource='audio'; audio.src='https://ice1.somafm.com/groovesalad-128-mp3'; audio.load();
 })();
 
 /* ================= MENU PROFIL DEPUIS LE CHAT (voir profil / message privé / favoris / bloquer) ================= */
@@ -5975,6 +6202,7 @@ document.getElementById('settingsClose').addEventListener('click', closeSettings
 document.getElementById('settingsOverlay').addEventListener('click', e=>{ if(e.target.id==='settingsOverlay') closeSettings(); });
 
 document.getElementById('settingsMyProfile').addEventListener('click', ()=>{ closeSettings(); switchTab('profil'); });
+document.getElementById('btnOpenProgramme')?.addEventListener('click', ()=> switchTab('calendrier'));
 document.getElementById('settingsPrivacyDocs').addEventListener('click', ()=> showToast('Bientôt disponible'));
 document.getElementById('settingsHelp').addEventListener('click', ()=> showToast('Bientôt disponible'));
 document.getElementById('settingsAbout').addEventListener('click', ()=> showToast('La Vibe — Be there. Now.'));
@@ -6477,7 +6705,7 @@ if(myHotToggle){ myHotToggle.checked=myHot; myHotToggle.addEventListener('change
   if(myHot){hotUntil=Date.now()+90*60*1000;localStorage.setItem('ceSoirHotUntil',String(hotUntil));awardXP(15,'Mode Envie activé');}
   else{hotUntil=0;localStorage.removeItem('ceSoirHotUntil');}
   refreshMyHotUI(); refreshMyHotMap();
-  const nb=document.getElementById('navNowBtn'); if(nb) nb.classList.toggle('now-pulse', !myHot); }); }
+  document.querySelectorAll('#navNowBtn,#topNowBtn').forEach(nb=> nb.classList.toggle('now-pulse', !myHot)); }); }
 refreshMyHotUI();
 updateMission(0);
 document.querySelectorAll('#myAvailability .status-option').forEach(btn=>btn.addEventListener('click',()=>{ myAvailabilityMin=parseInt(btn.dataset.min,10); localStorage.setItem('ceSoirAvailability',String(myAvailabilityMin)); refreshMyHotUI(); awardXP(3,'Disponibilité mise à jour'); }));
